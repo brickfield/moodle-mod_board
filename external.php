@@ -1,0 +1,194 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once("$CFG->libdir/externallib.php");
+require_once('locallib.php');
+
+class mod_board_external extends external_api {
+    /* GET HISTORY */
+    public static function board_history_parameters() {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'The board id', VALUE_REQUIRED),
+            'since' => new external_value(PARAM_INT, 'The last historyid', VALUE_REQUIRED)
+        ]);
+    }
+
+    public static function board_history($id, $since) {
+        return board_history($id, $since);
+    }
+
+    public static function board_history_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'id' => new external_value(PARAM_INT, 'id'),
+                    'boardid' => new external_value(PARAM_INT, 'boardid'),
+                    'action' => new external_value(PARAM_TEXT, 'action'),
+                    'columnid' => new external_value(PARAM_INT, 'columnid'),
+                    'noteid' => new external_value(PARAM_INT, 'noteid'),
+                    'userid' => new external_value(PARAM_INT, 'userid'),
+                    'content' => new external_value(PARAM_RAW, 'content')
+                )
+            )
+        );
+    }
+    
+    /* GET BOARD */
+    public static function get_board_parameters() {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'The board id', VALUE_REQUIRED)
+        ]);
+    }
+
+    public static function get_board($id) {
+        return board_get($id);
+    }
+
+    public static function get_board_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'id' => new external_value(PARAM_INT, 'column id'),
+                    'name' => new external_value(PARAM_TEXT, 'column name'),
+                    'notes' => new external_multiple_structure(
+                        new external_single_structure(
+                            array(
+                                'id' => new external_value(PARAM_INT, 'post id'),
+                                'userid' => new external_value(PARAM_INT, 'user id'),
+                                'content' => new external_value(PARAM_RAW, 'post content')
+                            ),
+                            'Posts'
+                        )
+                    )
+                )
+            )
+        );
+    }
+    
+    /* ADD COLUMN */
+    public static function add_column_parameters() {
+        return new external_function_parameters([
+            'boardid' => new external_value(PARAM_INT, 'The board id', VALUE_REQUIRED),
+            'name' => new external_value(PARAM_TEXT, 'The column name', VALUE_REQUIRED)
+        ]);
+    }
+
+    public static function add_column($boardid, $name) {
+        return board_add_column($boardid, $name);
+    }
+
+    public static function add_column_returns() {
+        return new external_single_structure([
+            'id' => new external_value(PARAM_INT, 'The new column id'),
+            'historyid' => new external_value(PARAM_INT, 'The last history id')
+        ]);
+    }
+    
+    /* UPDATE COLUMN */
+    public static function update_column_parameters() {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'The column id', VALUE_REQUIRED),
+            'name' => new external_value(PARAM_TEXT, 'The column name', VALUE_REQUIRED)
+        ]);
+    }
+
+    public static function update_column($id, $name) {
+        return board_update_column($id, $name);
+    }
+
+    public static function update_column_returns() {
+        return new external_single_structure([
+            'status' => new external_value(PARAM_BOOL, 'The update status'),
+            'historyid' => new external_value(PARAM_INT, 'The last history id')
+        ]);
+    }
+    
+    /* DELETE COLUMN */
+    public static function delete_column_parameters() {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'The column id', VALUE_REQUIRED)
+        ]);
+    }
+
+    public static function delete_column($id) {
+        return board_delete_column($id);
+    }
+
+    public static function delete_column_returns() {
+        return new external_single_structure([
+            'status' => new external_value(PARAM_BOOL, 'The delete status'),
+            'historyid' => new external_value(PARAM_INT, 'The last history id')
+        ]);
+    }
+    
+    /* ADD NOTE */
+    public static function add_note_parameters() {
+        return new external_function_parameters([
+            'columnid' => new external_value(PARAM_INT, 'The column id', VALUE_REQUIRED),
+            'content' => new external_value(PARAM_RAW, 'The note content', VALUE_REQUIRED)
+        ]);
+    }
+
+    public static function add_note($columnid, $content) {
+        return board_add_note($columnid, $content);
+    }
+
+    public static function add_note_returns() {
+        return new external_single_structure([
+            'id' => new external_value(PARAM_INT, 'The note id'),
+            'historyid' => new external_value(PARAM_INT, 'The last history id')
+        ]);
+    }
+    
+    /* UPDATE NOTE */
+    public static function update_note_parameters() {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'The note id', VALUE_REQUIRED),
+            'content' => new external_value(PARAM_RAW, 'The content', VALUE_REQUIRED)
+        ]);
+    }
+
+    public static function update_note($id, $content) {
+        return board_update_note($id, $content);
+    }
+
+    public static function update_note_returns() {
+        return new external_single_structure([
+            'status' => new external_value(PARAM_BOOL, 'The update status'),
+            'historyid' => new external_value(PARAM_INT, 'The last history id')
+        ]);
+    }
+    
+    /* DELETE NOTE */
+    public static function delete_note_parameters() {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'The note id', VALUE_REQUIRED)
+        ]);
+    }
+
+    public static function delete_note($id) {
+        return board_delete_note($id);
+    }
+
+    public static function delete_note_returns() {
+        return new external_single_structure([
+            'status' => new external_value(PARAM_BOOL, 'The delete status'),
+            'historyid' => new external_value(PARAM_INT, 'The last history id')
+        ]);
+    }
+}

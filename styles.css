@@ -1,0 +1,114 @@
+.mod_board {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: flex-start;
+    margin-bottom:30px;
+}
+
+.mod_board .board_column {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    flex-basis: 200px;
+    min-width: 200px;
+}
+
+.mod_board .board_column_header {
+    margin: 10px 10px 0px 10px;
+    padding: 10px;
+    border: 2px solid lightgray;
+    border-top: 0px;
+    border-left: 0px;
+    border-right: 0px;
+    font-size: 1.1em;
+    font-weight: 400;
+    position: relative;
+}
+
+.editablecolumn .board_column_header {
+    cursor: pointer;
+}
+
+.mod_board .board_column_content {
+    margin: 0px 10px;
+}
+
+.mod_board .board_button {
+    padding: 10px;
+    cursor: pointer;
+    border: 2px solid #EFEFEF;
+    border-radius: 5px;
+    margin-top:10px;
+}
+
+.mod_board .board_column_empty .board_button {
+    margin-top: 0px;
+}
+
+.mod_board .board_button .button_content {
+    text-align: center;
+    font-weight: 800;
+    font-size: 1.2em;
+}
+
+.board_column_empty .board_button .button_content {
+    font-size: 1.5em;
+}
+
+.mod_board .remove {
+    position: absolute;
+    top: 3px;
+    right: 5px;
+    color: indianred;
+    cursor: pointer;
+}
+
+.mod_board .remove:hover, .mod_board .remove:focus {
+    opacity: 0.8;
+}
+
+.mod_board .note_content {
+    border: 2px solid #cccccc;
+    border-radius: 5px;
+    margin-top: 10px;
+    position: relative;
+    padding: 6px 10px;
+}
+
+.mynote .note_content {
+    border: 2px solid lightblue;
+}
+
+.editablenote .note_content {
+    cursor: pointer;
+}
+
+.mod_board .note_content .note_text {
+    min-height: 18px;
+    font-size: 0.9em;
+}
+
+.editablenote .note_content:hover, .mod_board .board_button:hover, .editablenote .note_content:focus, .mod_board .board_button:focus {
+    background: #F1F1F1;
+}
+
+.mod_board .note_buttons {
+    display:flex;
+    flex-direction: row-reverse;
+}
+
+.mod_board .post_button, .mod_board .cancel_button {
+    border: 1px solid gray;
+    text-align: center;
+    border: 1px solid lightblue;
+    background: lightblue;
+    cursor: pointer;
+    display: inline-block;
+    text-align:middle;
+    padding: 2px 3px;
+    margin: 0px 2px;
+}
+
+.mod_board .post_button:hover, .mod_board .cancel_button:hover, .mod_board .post_button:focus, .mod_board .cancel_button:focus {
+    opacity: 0.8;
+}
