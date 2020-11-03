@@ -17,21 +17,36 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-function context_for_board($id) {
+function coursemodule_for_board($board) {
+    return get_coursemodule_from_instance('board', $board->id, $board->course, false, MUST_EXIST);
+}
+
+function get_board($id) {
     global $DB;
+    return $DB->get_record('board', array('id'=>$id));
+}
+
+function get_column($id) {
+    global $DB;
+    return $DB->get_record('board_columns', array('id'=>$id));
+}
+
+function get_note($id) {
+    global $DB;
+    return $DB->get_record('board_notes', array('id'=>$id));
+}
     
-    if (!$board = $DB->get_record('board', array('id'=>$id))) {
+function context_for_board($id) {
+    if (!$board = get_board($id)) {
         return null;
     }
     
-    $cm = get_coursemodule_from_instance('board', $board->id, $board->course, false, MUST_EXIST);
+    $cm = coursemodule_for_board($board);
     return context_module::instance($cm->id);
 }
 
 function context_for_column($id) {
-    global $DB;
-    
-    if (!$column = $DB->get_record('board_columns', array('id'=>$id))) {
+    if (!$column = get_column($id)) {
         return null;
     }
 
@@ -99,20 +114,36 @@ function board_history($boardid, $since) {
 function board_add_column($boardid, $name) {
     global $DB, $USER;
     
+    $name = substr($name, 0, 100);
+    
     require_capability_for_board($boardid);
     
     $transaction = $DB->start_delegated_transaction();
+    
     $columnid = $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $name));
     $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'add_column', 'columnid' => $columnid, 'userid' => $USER->id, 'content' => $name, 'timecreated' => time()));
     $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
     $transaction->allow_commit();
     
+    board_add_column_log($boardid, $name, $columnid);
+  
     clear_history();
     return array('id' => $columnid, 'historyid' => $historyid);
 }
 
+function board_add_column_log($boardid, $name, $columnid) {
+    $event = \mod_board\event\add_column::create(array(
+        'objectid' => $columnid,
+        'context' => context_module::instance(coursemodule_for_board(get_board($boardid))->id),
+        'other' => array('name' => $name)
+    ));
+    $event->trigger();
+}
+
 function board_update_column($id, $name) {
     global $DB, $USER;
+    
+    $name = substr($name, 0, 100);
     
     require_capability_for_column($id);
     
@@ -123,6 +154,8 @@ function board_update_column($id, $name) {
         $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'update_column', 'columnid' => $id, 'userid' => $USER->id, 'content' => $name, 'timecreated' => time()));
         $DB->update_record('board', array('id' => $id, 'historyid' => $historyid));
         $transaction->allow_commit();
+        
+        board_update_column_log($boardid, $name, $id);
     } else {
         $update = false;
         $historyid = 0;
@@ -130,6 +163,15 @@ function board_update_column($id, $name) {
     
     clear_history();
     return array('status' => $update, 'historyid' => $historyid);
+}
+
+function board_update_column_log($boardid, $name, $columnid) {
+    $event = \mod_board\event\update_column::create(array(
+        'objectid' => $columnid,
+        'context' => context_module::instance(coursemodule_for_board(get_board($boardid))->id),
+        'other' => array('name' => $name)
+    ));
+    $event->trigger();
 }
 
 function board_delete_column($id) {
@@ -145,6 +187,8 @@ function board_delete_column($id) {
         $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'delete_column', 'columnid' => $id, 'userid' => $USER->id, 'timecreated' => time()));
         $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
         $transaction->allow_commit();
+        
+        board_delete_column_log($boardid, $id);
     } else {
         $delete = false;
         $historyid = 0;
@@ -152,6 +196,14 @@ function board_delete_column($id) {
     
     clear_history();
     return array('status' => $delete, 'historyid' => $historyid);
+}
+
+function board_delete_column_log($boardid, $columnid) {
+    $event = \mod_board\event\delete_column::create(array(
+        'objectid' => $columnid,
+        'context' => context_module::instance(coursemodule_for_board(get_board($boardid))->id)
+    ));
+    $event->trigger();
 }
 
 function require_capability_for_note($id) {
@@ -187,6 +239,8 @@ function board_add_note($columnid, $content) {
         $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'add_note', 'columnid' => $columnid, 'noteid' => $noteid, 'userid' => $USER->id, 'content' => $content, 'timecreated' => time()));
         $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
         $transaction->allow_commit();
+        
+        board_add_note_log($boardid, $content, $columnid, $noteid);
     } else {
         $noteid = 0;
         $historyid = 0;
@@ -194,6 +248,15 @@ function board_add_note($columnid, $content) {
 
     clear_history();
     return array('id' => $noteid, 'historyid' => $historyid);
+}
+
+function board_add_note_log($boardid, $content, $columnid, $noteid) {
+    $event = \mod_board\event\add_note::create(array(
+        'objectid' => $noteid,
+        'context' => context_module::instance(coursemodule_for_board(get_board($boardid))->id),
+        'other' => array('columnid' => $columnid, 'content' => $content)
+    ));
+    $event->trigger();
 }
 
 function board_update_note($id, $content) {
@@ -209,6 +272,8 @@ function board_update_note($id, $content) {
         $update = $DB->update_record('board_notes', array('id' => $id, 'content' => $content));
         $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
         $transaction->allow_commit();
+        
+        board_update_note_log($boardid, $content, $columnid, $id);
     } else {
         $update = false;
         $historyid = 0;
@@ -216,6 +281,15 @@ function board_update_note($id, $content) {
     
     clear_history();
     return array('status' => $update, 'historyid' => $historyid);
+}
+
+function board_update_note_log($boardid, $content, $columnid, $noteid) {
+    $event = \mod_board\event\update_note::create(array(
+        'objectid' => $noteid,
+        'context' => context_module::instance(coursemodule_for_board(get_board($boardid))->id),
+        'other' => array('columnid' => $columnid, 'content' => $content)
+    ));
+    $event->trigger();
 }
 
 function board_delete_note($id) {
@@ -232,10 +306,21 @@ function board_delete_note($id) {
         $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'delete_note', 'columnid' => $columnid, 'noteid' => $id, 'userid' => $USER->id, 'timecreated' => time()));
         $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
         $transaction->allow_commit();
+        
+        board_delete_note_log($boardid, $columnid, $id);
     } else {
         $delete = false;
         $historyid = 0;
     }
     clear_history();
     return array('status' => $delete, 'historyid' => $historyid);
+}
+
+function board_delete_note_log($boardid, $columnid, $noteid) {
+    $event = \mod_board\event\delete_note::create(array(
+        'objectid' => $noteid,
+        'context' => context_module::instance(coursemodule_for_board(get_board($boardid))->id),
+        'other' => array('columnid' => $columnid)
+    ));
+    $event->trigger();
 }

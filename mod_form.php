@@ -36,6 +36,10 @@ class mod_board_mod_form extends moodleform_mod {
         $mform->addRule('name', null, 'required', null, 'client');
         $mform->addRule('name', get_string('maximumchars', '', 100), 'maxlength', 100, 'client');
         $this->standard_intro_elements();
+        
+        $mform->addElement('text', 'background_color', get_string('background_color', 'mod_board'), array('size'=>'50'));
+        $mform->setType('background_color', PARAM_TEXT);
+        $mform->addRule('background_color', get_string('maximumchars', '', 9), 'maxlength', 9, 'client');
 
         //-------------------------------------------------------
         $this->standard_coursemodule_elements();

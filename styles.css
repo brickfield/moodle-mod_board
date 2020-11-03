@@ -3,6 +3,7 @@
     flex-flow: row nowrap;
     align-items: flex-start;
     margin-bottom:30px;
+    padding-bottom: 10px;
 }
 
 .mod_board .board_column {
@@ -13,28 +14,42 @@
     min-width: 200px;
 }
 
+.mod_board .board_column.board_column_empty {
+    flex-basis: 60px;
+    min-width: 60px;
+    max-width: 60px;
+}
+
 .mod_board .board_column_header {
     margin: 10px 10px 0px 10px;
     padding: 10px;
     border: 2px solid lightgray;
-    border-top: 0px;
-    border-left: 0px;
-    border-right: 0px;
     font-size: 1.1em;
-    font-weight: 400;
+    font-weight: 800;
     position: relative;
 }
+.board_column_header .column_name  {
+    float: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: calc(100% - 20px);
+}
 
-.editablecolumn .board_column_header {
+.board_column_header .column_sort {
+    float: left;
+    width: 20px;
+    margin-top: 5px;
+}
+
+.editablecolumn .board_column_header .column_name, .board_column_header .column_sort {
     cursor: pointer;
 }
 
-.mod_board .board_column_content {
+.mod_board .board_column_content, .mod_board .board_column_newcontent {
     margin: 0px 10px;
 }
 
 .mod_board .board_button {
-    padding: 10px;
     cursor: pointer;
     border: 2px solid #EFEFEF;
     border-radius: 5px;
@@ -42,7 +57,7 @@
 }
 
 .mod_board .board_column_empty .board_button {
-    margin-top: 0px;
+    margin: 10px;
 }
 
 .mod_board .board_button .button_content {
@@ -69,8 +84,7 @@
 
 .mod_board .note_content {
     border: 2px solid #cccccc;
-    border-radius: 5px;
-    margin-top: 10px;
+    margin-top: 2px;
     position: relative;
     padding: 6px 10px;
 }

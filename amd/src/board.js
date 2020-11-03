@@ -59,11 +59,11 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'mod_board/jquer
         }
         
         var showNewNoteButtons = function() {
-            $('.board_column .board_column_content .board_button.newnote').show();
+            $('.board_column .board_column_newcontent .board_button.newnote').show();
         }
         
         var hideNewNoteButtons = function() {
-            $('.board_column .board_column_content .board_button.newnote').hide();
+            $('.board_column .board_column_newcontent .board_button.newnote').hide();
         }
         
         var stopNoteEdit = function() {
@@ -82,9 +82,13 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'mod_board/jquer
         }
         
         var startNoteEdit = function(ident) {
-            if (editingNote && editingNote!=ident) {
+            if (editingNote) {
+                if (editingNote==ident) {
+                    return;
+                }
                 stopNoteEdit();
             }
+            
             var pendingNote = getNote(0);
             if (pendingNote) {
                 pendingNote.remove();
@@ -213,6 +217,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'mod_board/jquer
                             note.remove();
                             showNewNoteButtons();
                             addNote(columnid, result.id, noteText.html(), {id: userId});
+                            sortNotes(column_content);
                         });
                         
                     } else { // update
@@ -239,26 +244,34 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'mod_board/jquer
                 });
             }
             
-            var lastOne = column_content.find(".board_note").last();
-            if (lastOne.length) {
-                note.insertAfter(lastOne);
+            if (ident) {
+                var lastOne = column_content.find(".board_note").last();
+                if (lastOne.length) {
+                    note.insertAfter(lastOne);
+                } else {
+                    column_content.prepend(note);
+                }
             } else {
-                column_content.prepend(note);
-            }
-            
-            if (!ident) {
+                $('.board_column[data-ident='+columnid+'] .board_column_newcontent').append(note);
                 noteText.dblclick(); // trigger edit of note
             }
         };
         
-        var addColumn = function(ident, name, notes) {
+        var addColumn = function(ident, name, notes, sort) {
             var iseditable = isEditor;
             var nameCache = null;
             var column = $('<div class="board_column board_column_hasdata" data-ident="'+ident+'"></div>');
             var column_header = $('<div class="board_column_header"></div>');
+            var column_sort = $('<div class="column_sort fa"></div>');
             var column_name = $('<div class="column_name" tabindex="0">'+name+'</div>');
             var column_content = $('<div class="board_column_content"></div>');
+            var column_newcontent = $('<div class="board_column_newcontent"></div>');
+            column_header.append(column_sort);
             column_header.append(column_name);
+            
+            column_sort.on('click', function() {
+                sortNotes(column_content, true);
+            });
             
             if (iseditable) {
                 column.addClass('editablecolumn');
@@ -288,6 +301,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'mod_board/jquer
             
             column.append(column_header);
             column.append(column_content);
+            column.append(column_newcontent);
             
             if (iseditable) {
                 column_name.on('dblclick keypress', function(e) {
@@ -319,16 +333,13 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'mod_board/jquer
                                 column_name.html(nameCache);
                                 nameCache = null;
                             });
-                        } else {
-                            column_name.html(nameCache);
-                            nameCache = null;
                         }
                     }
                 });
             }
 
-            column_content.append('<div class="board_button newnote" role="button" tabindex="0"><div class="button_content"><span class="fa '+options.noteicon+'"></span></div></div>');
-            column_content.on('click keypress', '.newnote', function(e) {
+            column_newcontent.append('<div class="board_button newnote" role="button" tabindex="0"><div class="button_content"><span class="fa '+options.noteicon+'"></span></div></div>');
+            column_newcontent.on('click keypress', '.newnote', function(e) {
                 if (e.type=='keypress') {
                     if (e.keyCode===13) {
                         e.preventDefault();
@@ -346,18 +357,24 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'mod_board/jquer
             } else {
                 $(".mod_board").append(column);
             }
-            
+                        
             if (notes) {
                 for (index in notes) {
                     addNote(ident, notes[index].id, notes[index].content, {id: notes[index].userid});
                 }
-            }            
+            }
+            sortNotes(column_content, true);
         };
         
         var addNewColumnButton = function() {
             var column = $('<div class="board_column board_column_empty"></div>');
+            var newBusy = false;
             column.append('<div class="board_button newcolumn" role="button" tabindex="0"><div class="button_content"><span class="fa '+options.columnicon+'"></span></div></div>');
             column.on('click keypress', '.newcolumn', function(e) {
+                if (newBusy) {
+                    return;
+                }
+                newBusy = true;
                 if (e.type=='keypress') {
                     if (e.keyCode===13) {
                         e.preventDefault();
@@ -369,6 +386,9 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'mod_board/jquer
                 serviceCall('add_column', {boardid: board.id, name: strings.default_column_heading}, function(result) {
                     addColumn(result.id, strings.default_column_heading);
                     lastHistoryId = result.historyid;
+                    newBusy = false;
+                }, function(error) {
+                    newBusy = false;
                 });
             });
             
@@ -445,6 +465,27 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'mod_board/jquer
         var stopUpdating = function() {
             clearTimeout(reloadTimer);
             reloadTimer = null;
+        }
+        
+        var sortNotes = function(content, toggle) {
+            var sort_col = $(content).parent().find('.column_sort');
+            var direction = $(content).data('sort');
+            if (toggle) {
+                direction = direction=='asc'?'desc':'asc';
+            }
+            
+            if (direction=='asc') {
+                sort_col.removeClass('fa-angle-down');
+                sort_col.addClass('fa-angle-up');
+            } else {
+                sort_col.removeClass('fa-angle-up');
+                sort_col.addClass('fa-angle-down');
+            }
+            $(content).data('sort', direction);
+            
+            $('> .board_note', $(content)).sort(direction=='asc'?asc:desc).appendTo($(content));
+            function desc(a, b) { return $(b).data("ident") < $(a).data("ident") ? -1 : 1; }
+            function asc(a, b) { return $(b).data("ident") < $(a).data("ident") ? 1 : -1; }
         }
         
         var init = function() {

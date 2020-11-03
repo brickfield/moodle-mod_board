@@ -69,5 +69,20 @@ function xmldb_board_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2020092201, 'board');
     }
     
+    if ($oldversion < 2020101801) {
+
+        // Define field background_color to be added to board.
+        $table = new xmldb_table('board');
+        $field = new xmldb_field('background_color', XMLDB_TYPE_CHAR, '10', null, null, null, null, 'historyid');
+
+        // Conditionally launch add field background_color.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2020101801, 'board');
+    }
+    
     return true;
 }

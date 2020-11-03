@@ -56,6 +56,12 @@ if (trim(strip_tags($board->intro))) {
     echo $OUTPUT->box_end();
 }
 
-echo '<div class="mod_board"></div>';
+$extra_background_color = '';
+if (!empty($board->background_color)) {
+    $color = '#' . str_replace('#', '', $board->background_color);
+    $extra_background_color = "style=\"background-color: {$color}\"";
+}
+
+echo '<div class="mod_board" ' . $extra_background_color . '></div>';
 
 echo $OUTPUT->footer();

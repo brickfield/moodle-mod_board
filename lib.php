@@ -73,7 +73,7 @@ function board_get_post_actions() {
  */
 function board_add_instance($data, $mform = null) {
     global $DB;
-
+    
     $boardid = $DB->insert_record('board', $data);
     if ($boardid) {
         $column_heading = get_string('default_column_heading', 'mod_board');
@@ -124,4 +124,17 @@ function board_delete_instance($id) {
     $DB->delete_records('board', array('id'=>$board->id));
 
     return true;
+}
+
+function board_extend_settings_navigation($settings, $boardnode) {
+    global $PAGE;
+
+    if (has_capability('mod/board:manageboard', $PAGE->cm->context)) {
+        $url = new moodle_url('/mod/board/download.php',
+                array('id'=>$PAGE->cm->id));
+        $node = navigation_node::create(get_string('export_csv', 'board'), $url,
+                navigation_node::TYPE_SETTING, null, null,
+                new pix_icon('i/export', ''));
+        $boardnode->add_node($node);
+    }
 }
