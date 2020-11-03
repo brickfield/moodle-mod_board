@@ -27,6 +27,7 @@
     font-size: 1.1em;
     font-weight: 800;
     position: relative;
+    background: #FFF;
 }
 .board_column_header .column_name  {
     float: left;
@@ -54,6 +55,7 @@
     border: 2px solid #EFEFEF;
     border-radius: 5px;
     margin-top:10px;
+    background: #FFF;
 }
 
 .mod_board .board_column_empty .board_button {
@@ -87,6 +89,7 @@
     margin-top: 2px;
     position: relative;
     padding: 6px 10px;
+    background: #FFF;
 }
 
 .mynote .note_content {
