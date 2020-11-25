@@ -75,17 +75,18 @@ function require_capability_for_column($id) {
 }
 
 function require_access_for_group($groupid, $boardid) {
+    $cm = coursemodule_for_board(get_board($boardid));
+    $context = context_module::instance($cm->id);
+    
     if (has_capability('mod/board:manageboard', $context)) {
         return true;
     }
     
-    $cm = coursemodule_for_board(get_board($boardid));
     $groupmode = groups_get_activity_groupmode($cm);
     if (!in_array($groupmode, [VISIBLEGROUPS, SEPARATEGROUPS])) {
         return true;
     }
     
-    $context = context_module::instance($cm->id);
     if (!can_access_group($groupid, $context)) {
         throw new Exception('Invalid group');
     }
