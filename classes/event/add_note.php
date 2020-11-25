@@ -32,12 +32,15 @@ class add_note extends \core\event\base {
         $obj = new \stdClass;
         $obj->userid = $this->userid;
         $obj->objectid = $this->objectid;
+        $obj->heading = $this->other['heading'];
         $obj->content = $this->other['content'];
+        $obj->media = (!empty($this->other['attachment']) && !empty($this->other['attachment']['type']))?($this->other['attachment']['info'].' '.$this->other['attachment']['url']):'';
         $obj->columnid = $this->other['columnid'];
+        $obj->groupid = isset($this->other['groupid'])? $this->other['groupid'] : null;
         return get_string('event_add_note_desc', 'mod_board', $obj);
     }
  
     public function get_legacy_logdata() {
-        return array($this->courseid, 'mod_board', 'add_note', null, $this->objectid, $this->other['content']);
+        return array($this->courseid, 'mod_board', 'add_note', null, $this->objectid, $this->other['heading'], $this->other['content'], $this->other['media']);
     }
 }

@@ -39,8 +39,6 @@ class mod_board_external extends external_api {
                     'id' => new external_value(PARAM_INT, 'id'),
                     'boardid' => new external_value(PARAM_INT, 'boardid'),
                     'action' => new external_value(PARAM_TEXT, 'action'),
-                    'columnid' => new external_value(PARAM_INT, 'columnid'),
-                    'noteid' => new external_value(PARAM_INT, 'noteid'),
                     'userid' => new external_value(PARAM_INT, 'userid'),
                     'content' => new external_value(PARAM_RAW, 'content')
                 )
@@ -70,7 +68,11 @@ class mod_board_external extends external_api {
                             array(
                                 'id' => new external_value(PARAM_INT, 'post id'),
                                 'userid' => new external_value(PARAM_INT, 'user id'),
-                                'content' => new external_value(PARAM_RAW, 'post content')
+                                'heading' => new external_value(PARAM_RAW, 'post heading'),
+                                'content' => new external_value(PARAM_RAW, 'post content'),
+                                'type' => new external_value(PARAM_INT, 'type'),
+                                'info' => new external_value(PARAM_TEXT, 'info'),
+                                'url' => new external_value(PARAM_TEXT, 'url')
                             ),
                             'Posts'
                         )
@@ -140,12 +142,18 @@ class mod_board_external extends external_api {
     public static function add_note_parameters() {
         return new external_function_parameters([
             'columnid' => new external_value(PARAM_INT, 'The column id', VALUE_REQUIRED),
-            'content' => new external_value(PARAM_RAW, 'The note content', VALUE_REQUIRED)
+            'heading' => new external_value(PARAM_TEXT, 'The note heading', VALUE_REQUIRED),
+            'content' => new external_value(PARAM_RAW, 'The note content', VALUE_REQUIRED),
+            'attachment' => new external_single_structure(array(
+                'type' => new external_value(PARAM_INT, 'type'),
+                'info' => new external_value(PARAM_TEXT, 'info'),
+                'url' => new external_value(PARAM_TEXT, 'url'),
+            ), 'Post Attachment', VALUE_OPTIONAL)
         ]);
     }
 
-    public static function add_note($columnid, $content) {
-        return board_add_note($columnid, $content);
+    public static function add_note($columnid, $heading, $content, $attachment) {
+        return board_add_note($columnid, $heading, $content, $attachment);
     }
 
     public static function add_note_returns() {
@@ -159,12 +167,18 @@ class mod_board_external extends external_api {
     public static function update_note_parameters() {
         return new external_function_parameters([
             'id' => new external_value(PARAM_INT, 'The note id', VALUE_REQUIRED),
-            'content' => new external_value(PARAM_RAW, 'The content', VALUE_REQUIRED)
+            'heading' => new external_value(PARAM_TEXT, 'The note heading', VALUE_REQUIRED),
+            'content' => new external_value(PARAM_RAW, 'The note content', VALUE_REQUIRED),
+            'attachment' => new external_single_structure(array(
+                'type' => new external_value(PARAM_INT, 'type'),
+                'info' => new external_value(PARAM_TEXT, 'info'),
+                'url' => new external_value(PARAM_TEXT, 'url'),
+            ), 'Post Attachment', VALUE_OPTIONAL)
         ]);
     }
 
-    public static function update_note($id, $content) {
-        return board_update_note($id, $content);
+    public static function update_note($id, $heading, $content, $attachment) {
+        return board_update_note($id, $heading, $content, $attachment);
     }
 
     public static function update_note_returns() {

@@ -16,6 +16,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 require('../../config.php');
+require_once('locallib.php');
 
 $id      = optional_param('id', 0, PARAM_INT); // Course Module ID
 $b       = optional_param('b', 0, PARAM_INT);  // Board instance ID
@@ -39,9 +40,13 @@ require_course_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/board:view', $context);
 
-$PAGE->set_url('/mod/board/view.php', array('id' => $cm->id));
+$pageurl = new moodle_url('/mod/board/view.php', array('id' => $cm->id));
+$PAGE->set_url($pageurl);
 
-$PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('params' => array('board' => $board, 'editor' => has_capability('mod/board:manageboard', $context), 'id' => $USER->id, 'columnicon' => $CFG->new_column_icon, 'noteicon' => $CFG->new_note_icon)));
+$isEditor = has_capability('mod/board:manageboard', $context);
+$groupmode = groups_get_activity_groupmode($cm);
+$readonlyboard = !$isEditor && $groupmode==VISIBLEGROUPS && !can_access_group(groups_get_activity_group($cm, true), $context);
+$PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('params' => array('board' => $board, 'editor' => $isEditor, 'readonly' => $readonlyboard, 'id' => $USER->id, 'columnicon' => $CFG->new_column_icon, 'noteicon' => $CFG->new_note_icon, 'mediaselection' => $CFG->media_selection)));
 
 $PAGE->set_heading($course->fullname);
 $PAGE->set_activity_record($board);
@@ -55,6 +60,11 @@ if (trim(strip_tags($board->intro))) {
     echo format_module_intro('board', $board, $cm->id);
     echo $OUTPUT->box_end();
 }
+
+echo $OUTPUT->box_start('mod_introbox', 'group_menu');
+echo groups_print_activity_menu($cm, $pageurl, true);
+echo $OUTPUT->box_end();
+ 
 
 $extra_background_color = '';
 if (!empty($board->background_color)) {

@@ -52,5 +52,15 @@ class mod_board_mod_form extends moodleform_mod {
         $mform->setType('revision', PARAM_INT);
         $mform->setDefault('revision', 1);
     }
+    
+    public function validation($data, $files) {
+        $errors = parent::validation($data, $files);
+
+        if (!empty($data['groupmode']) && empty($data['groupingid'])) {
+            $errors['groupingid'] = get_string('groupingid_required', 'mod_board');
+        }
+
+        return $errors;
+    }
 }
 

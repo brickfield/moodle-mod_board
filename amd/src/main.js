@@ -17,7 +17,7 @@ define(['mod_board/board'],
     function(Board) {
         return {
             initialize: function(params) {
-                new Board(params.board, {isEditor: params.editor, userId: params.id, columnicon: params.columnicon, noteicon: params.noteicon});
+                new Board(params.board, {isEditor: params.editor, userId: params.id, columnicon: params.columnicon, noteicon: params.noteicon, mediaselection: params.mediaselection, readonly: params.readonly});
             }
         };
     }

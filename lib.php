@@ -19,7 +19,9 @@ defined('MOODLE_INTERNAL') || die;
 
 function board_supports($feature) {
     switch($feature) {
-        case FEATURE_SHOW_DESCRIPTION:        return true;
+        case FEATURE_SHOW_DESCRIPTION: return true;
+        case FEATURE_GROUPS: return true;
+        case FEATURE_GROUPINGS: return true;
         default: return null;
     }
 }

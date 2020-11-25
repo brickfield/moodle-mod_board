@@ -84,5 +84,85 @@ function xmldb_board_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2020101801, 'board');
     }
     
+    if ($oldversion < 2020111000) {
+
+        // Define field heading to be added to board_notes.
+        $table = new xmldb_table('board_notes');
+        $field = new xmldb_field('heading', XMLDB_TYPE_CHAR, '100', null, null, null, null, 'content');
+
+        // Conditionally launch add field heading.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        
+        // Define field type to be added to board_notes.
+        $field = new xmldb_field('type', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'heading');
+
+        // Conditionally launch add field type.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        
+        // Define field info to be added to board_notes.
+        $field = new xmldb_field('info', XMLDB_TYPE_CHAR, '100', null, null, null, null, 'type');
+
+        // Conditionally launch add field info.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        
+        // Define field url to be added to board_notes.
+        $field = new xmldb_field('url', XMLDB_TYPE_CHAR, '200', null, null, null, null, 'info');
+
+        // Conditionally launch add field url.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        
+        // Define field columnid to be dropped from board_history.
+        $table = new xmldb_table('board_history');
+        $field = new xmldb_field('columnid');
+
+        // Conditionally launch drop field columnid.
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+        
+        // Define field noteid to be dropped from board_history.
+        $field = new xmldb_field('noteid');
+
+        // Conditionally launch drop field noteid.
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2020111000, 'board');
+    }
+    
+    if ($oldversion < 2020112300) {
+
+        // Define field groupid to be added to board_notes.
+        $table = new xmldb_table('board_notes');
+        $field = new xmldb_field('groupid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'userid');
+
+        // Conditionally launch add field groupid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        
+        // Define field groupid to be added to board_history.
+        $table = new xmldb_table('board_history');
+        $field = new xmldb_field('groupid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'boardid');
+
+        // Conditionally launch add field groupid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2020112300, 'board');
+    }
+   
     return true;
 }

@@ -32,12 +32,14 @@ class update_note extends \core\event\base {
         $obj = new \stdClass;
         $obj->userid = $this->userid;
         $obj->objectid = $this->objectid;
+        $obj->heading = $this->other['heading'];
         $obj->content = $this->other['content'];
+        $obj->media = (!empty($this->other['attachment']) && !empty($this->other['attachment']['type']))?($this->other['attachment']['info'].' '.$this->other['attachment']['url']):'';
         $obj->columnid = $this->other['columnid'];
         return get_string('event_update_note_desc', 'mod_board', $obj);
     }
  
     public function get_legacy_logdata() {
-        return array($this->courseid, 'mod_board', 'update_note', null, $this->objectid, $this->other['content']);
+        return array($this->courseid, 'mod_board', 'update_note', null, $this->objectid, $this->other['heading'], $this->other['content'], $this->other['media']);
     }
 }

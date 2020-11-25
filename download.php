@@ -54,7 +54,7 @@ while ($noterow < $maxnotes) {
     $line = [];
     foreach($boarddata AS $index => $column) {
         $notes = array_values($column->notes);
-        array_push($line, isset($notes[$noterow])?sanitize_note($notes[$noterow]->content):'');
+        array_push($line, isset($notes[$noterow])?sanitize_note($notes[$noterow]):'');
     }
     $noterow++;
     fputcsv($fp, $line);
@@ -63,7 +63,7 @@ while ($noterow < $maxnotes) {
 fclose($fp);
 exit();
 
-function sanitize_note($content) {
+function sanitize_note($note) {
     $breaks = array("<br />","<br>","<br/>");  
-    return str_ireplace($breaks, PHP_EOL, $content);  
+    return $note->heading . PHP_EOL . str_ireplace($breaks, PHP_EOL, $note->content) . (!empty($note->type)?(PHP_EOL . $note->info.' '.$note->url):'');
 }

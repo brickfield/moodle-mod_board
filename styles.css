@@ -104,6 +104,57 @@
     min-height: 18px;
     font-size: 0.9em;
 }
+.mod_board .note_content .note_heading {
+    min-height: 22px;
+    line-height:22px;
+    width:100%;
+    padding-bottom:5px;
+    border-bottom: 1px solid lightgray;
+    margin-bottom: 10px;
+}
+.mod_board .note_content .note_heading>textarea {
+    border: 0px !important;
+    padding: 0px !important;
+    margin: 0px !important;
+}
+.mod_board .note_content .note_attachment {
+    padding-top:10px;
+    margin: 0px;
+}
+.mod_board .note_content .preview {
+    padding-top:5px;
+    border-top: 1px solid lightgray;
+    margin-top: 10px;
+    width: 100%;
+}
+.mod_board .note_content .preview.notext {
+    padding-top: 0px;
+    border-top: 0px;
+    margin-top: 0px;
+}
+
+.mod_board .note_content .preview .preview_element {
+    width: 100%;
+}
+.mod_board .note_content .preview.wrapper_image .preview_element {
+    max-width: 100%;
+    margin: auto;
+    display: block;
+    width: auto;
+}
+.mod_board .note_content .preview.wrapper_youtube {
+    padding-top: 0px;
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+}
+.mod_board .note_content .preview iframe.preview_element {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
 
 .editablenote .note_content:hover, .mod_board .board_button:hover, .editablenote .note_content:focus, .mod_board .board_button:focus {
     background: #F1F1F1;
@@ -114,7 +165,7 @@
     flex-direction: row-reverse;
 }
 
-.mod_board .post_button, .mod_board .cancel_button {
+.mod_board .action_button {
     border: 1px solid gray;
     text-align: center;
     border: 1px solid lightblue;
@@ -125,7 +176,34 @@
     padding: 2px 3px;
     margin: 0px 2px;
 }
+.mod_board .attachment_button {
+    padding: 4px 10px;
+}
+.mod_board .spacer_button {
+    width: 10px;
+}
 
-.mod_board .post_button:hover, .mod_board .cancel_button:hover, .mod_board .post_button:focus, .mod_board .cancel_button:focus {
+.mod_board .action_button:hover, .mod_board .action_button:focus {
     opacity: 0.8;
+}
+
+.mod_board .note_attachment .type {
+    width: auto;
+}
+
+.mod_board .note_attachment .type_icon {
+    font-size: 20px;
+    padding: 4px 3px;
+    border: 1px solid lightgray;
+}
+
+.mod_board .note_attachment .with_type_icon {
+    flex: 1;
+    max-width: initial;
+}
+.mod_board .remove_attachment {
+    position: relative;
+    width: 100%;
+    text-align: right;
+    font-size: 0.9em;
 }
