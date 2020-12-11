@@ -115,7 +115,7 @@ function board_get($boardid) {
         if (!empty($groupid)) {
             $params['groupid'] = $groupid;
         }
-        $column->notes = $DB->get_records('board_notes', $params, 'id', 'id, userid, heading, content, type, info, url');
+        $column->notes = $DB->get_records('board_notes', $params, 'id', 'id, userid, heading, content, type, info, url, timecreated');
     }
     
     clear_history();
@@ -278,7 +278,7 @@ function board_add_note($columnid, $heading, $content, $attachment) {
         $type = !empty($attachment['type'])?$attachment['type']:0;
         $info = !empty($type)?substr($attachment['info'], 0, 100):null;
         $url = !empty($type)?substr($attachment['url'], 0, 200):null;
-        $noteid = $DB->insert_record('board_notes', array('groupid' => $groupid, 'columnid' => $columnid, 'heading' => $heading, 'content' => $content, 'type' => $type, 'info' => $info, 'url' => $url, 'userid' => $USER->id));
+        $noteid = $DB->insert_record('board_notes', array('groupid' => $groupid, 'columnid' => $columnid, 'heading' => $heading, 'content' => $content, 'type' => $type, 'info' => $info, 'url' => $url, 'userid' => $USER->id, 'timecreated' => time()));
         $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'groupid' => $groupid, 'action' => 'add_note', 'userid' => $USER->id, 'content' => json_encode(array('id' => $noteid, 'columnid' => $columnid, 'heading' => $heading, 'content' => $content, 'attachment' => array('type' => $type, 'info' => $info, 'url' => $url))), 'timecreated' => time()));
         $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
         $transaction->allow_commit();

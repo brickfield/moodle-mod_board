@@ -64,6 +64,23 @@ fclose($fp);
 exit();
 
 function sanitize_note($note) {
-    $breaks = array("<br />","<br>","<br/>");  
-    return $note->heading . PHP_EOL . str_ireplace($breaks, PHP_EOL, $note->content) . (!empty($note->type)?(PHP_EOL . $note->info.' '.$note->url):'');
+    $breaks = array("<br />","<br>","<br/>");
+
+    $rowstring = '';
+    if (!empty($note->heading)) {
+        $rowstring .= $note->heading;
+    }
+    if (!empty($note->content)) {
+        if (!empty($rowstring)) {
+            $rowstring .= "\n";
+        }
+        $rowstring .= str_ireplace($breaks, "\n", $note->content);
+    }
+    if (!empty($note->type)) {
+        if (!empty($rowstring)) {
+            $rowstring .= "\n";
+        }
+        $rowstring .= (!empty($note->info)?($note->info.' '):'') . $note->url;
+    }
+    return $rowstring;
 }

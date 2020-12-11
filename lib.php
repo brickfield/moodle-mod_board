@@ -132,9 +132,12 @@ function board_extend_settings_navigation($settings, $boardnode) {
     global $PAGE;
 
     if (has_capability('mod/board:manageboard', $PAGE->cm->context)) {
-        $url = new moodle_url('/mod/board/download.php',
-                array('id'=>$PAGE->cm->id));
-        $node = navigation_node::create(get_string('export_csv', 'board'), $url,
+        $node = navigation_node::create(get_string('export_board', 'board'), new moodle_url('/mod/board/download_board.php', array('id'=>$PAGE->cm->id)),
+                navigation_node::TYPE_SETTING, null, null,
+                new pix_icon('i/export', ''));
+        $boardnode->add_node($node);
+        
+        $node = navigation_node::create(get_string('export_submissions', 'board'), new moodle_url('/mod/board/download_submissions.php', array('id'=>$PAGE->cm->id)),
                 navigation_node::TYPE_SETTING, null, null,
                 new pix_icon('i/export', ''));
         $boardnode->add_node($node);

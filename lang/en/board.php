@@ -39,7 +39,16 @@ $string['media_selection_dropdown'] = 'Dropdown';
 $string['media_selection'] = 'Media selection';
 $string['media_selection_desc'] = 'Configure how the media selection for posts will be displayed as.';
 
-$string['export_csv'] = 'Export CSV';
+$string['export_board'] = 'Export CSV';
+$string['export_submissions'] = 'Export Submissions';
+$string['export_firstname'] = 'Firstname';
+$string['export_lastname'] = 'Lastname';
+$string['export_email'] = 'Email';
+$string['export_heading'] = 'Post Heading';
+$string['export_content'] = 'Post Text';
+$string['export_info'] = 'Post Title';
+$string['export_url'] = 'Post URL';
+$string['export_timecreated'] = 'Date created';
 $string['background_color'] = 'Background color';
 
 $string['event_add_column'] = 'Column added';
@@ -56,3 +65,10 @@ $string['event_delete_note'] = 'Post deleted';
 $string['event_delete_note_desc'] = 'The user with id \'{$a->userid}\' deleted board post with id \'{$a->objectid}\' from column id \'{$a->columnid}\'.';
 
 $string['groupingid_required'] = 'A course grouping must be selected for this group mode.';
+
+$string['aria_newcolumn'] = 'Add new column';
+$string['aria_newpost'] = 'Add new post to column {column}';
+$string['aria_deletecolumn'] = 'Delete column {column}';
+$string['aria_deletepost'] = 'Delete post {post} from column {column}';
+$string['aria_addmedia'] = 'Add {type}';
+$string['aria_deleteattachment'] = 'Delete attachment';

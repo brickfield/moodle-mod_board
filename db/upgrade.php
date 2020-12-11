@@ -163,6 +163,21 @@ function xmldb_board_upgrade($oldversion) {
         // Board savepoint reached.
         upgrade_mod_savepoint(true, 2020112300, 'board');
     }
+    
+    if ($oldversion < 2020120700) {
+
+        // Define field timecreated to be added to board_notes.
+        $table = new xmldb_table('board_notes');
+        $field = new xmldb_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'url');
+
+        // Conditionally launch add field timecreated.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2020120700, 'board');
+    }
    
     return true;
 }

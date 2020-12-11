@@ -15,6 +15,10 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             }
         }]);
     };
+    
+    var isAriaTriggerKey = function(key) {
+        return key===13 || key===32;
+    }
         
     return function(board, options) {
         var strings = {
@@ -38,6 +42,13 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             option_link_info: '',
             option_link_url: '',
             option_empty: '',
+            
+            aria_newcolumn: '',
+            aria_newpost: '',
+            aria_deletecolumn: '',
+            aria_deletepost: '',
+            aria_addmedia: '',
+            aria_deleteattachment: ''
         };
         
         const MEDIA_SELECTION_BUTTONS = 1;
@@ -308,7 +319,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                         elem.show();
                     break;
                     case 2: // image
-                        elem.html('<a href="'+ attachment.url +'" target="_blank"><img src="'+ attachment.url +'" class="preview_element" alt="'+ attachment.info +'"/></a>');
+                        elem.html('<img src="'+ attachment.url +'" class="preview_element" alt="'+ attachment.info +'"/>');
                         elem.addClass('wrapper_image');
                         elem.show();
                     break;
@@ -347,7 +358,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             }
             
             var notecontent = $('<div class="note_content"></div>');
-            var noteHeading = $('<div class="note_heading" tabindex="0">' + (heading?heading:'') + '</div>');
+            var noteHeading = $('<div class="note_heading" tabindex="0" aria-level="4" role="heading">' + (heading?heading:'') + '</div>');
             var noteText = $('<div class="note_text" tabindex="0">' + (content?content:'') + '</div>');
             var attachmentPreview = $('<div class="preview"></div>');
             if (iseditable) {
@@ -396,7 +407,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 });
                 
                 if (mediaSelection==MEDIA_SELECTION_BUTTONS) {
-                    var removeAttachment = $('<div class="remove remove_attachment fa fa-remove"></div>');
+                    var removeAttachment = $('<div class="remove remove_attachment fa fa-remove" aria-label="'+strings.aria_deleteattachment+'"></div>');
                     removeAttachment.hide();
                     removeAttachment.on('click', function() { attachmentType.val(0); attachmentType.trigger('change'); });
                     noteAttachment.append(removeAttachment);
@@ -404,6 +415,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             }
             
             var column_content = $('.board_column[data-ident='+columnid+'] .board_column_content');
+            var column_name = $('.board_column[data-ident='+columnid+'] .column_name');
             
             if (iseditable) {
                 var buttons = $('<div class="note_buttons"></div>');
@@ -416,11 +428,11 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 
                 if (mediaSelection==MEDIA_SELECTION_BUTTONS) {
                     buttons.append('<div class="spacer_button"></div>');
-                    var ytButton = $('<div class="attachment_button youtube_button action_button fa '+attachmentFAIcons[0]+'" role="button" tabindex="0"></div>');
+                    var ytButton = $('<div class="attachment_button youtube_button action_button fa '+attachmentFAIcons[0]+'" role="button" aria-label="'+strings.aria_addmedia.replace('{type}', strings.option_youtube)+'" tabindex="0"></div>');
                     ytButton.on('click', function() { attachmentType.val(1); attachmentType.trigger("change"); });
-                    var imgButton = $('<div class="attachment_button image_button action_button fa '+attachmentFAIcons[1]+'" role="button" tabindex="0"></div>');
+                    var imgButton = $('<div class="attachment_button image_button action_button fa '+attachmentFAIcons[1]+'" role="button" aria-label="'+strings.aria_addmedia.replace('{type}', strings.option_image)+'" tabindex="0"></div>');
                     imgButton.on('click', function() { attachmentType.val(2); attachmentType.trigger("change"); });
-                    var linkButton = $('<div class="attachment_button link_button action_button fa '+attachmentFAIcons[2]+'" role="button" tabindex="0"></div>');
+                    var linkButton = $('<div class="attachment_button link_button action_button fa '+attachmentFAIcons[2]+'" role="button" aria-label="'+strings.aria_addmedia.replace('{type}', strings.option_link)+'" tabindex="0"></div>');
                     linkButton.on('click', function() { attachmentType.val(3); attachmentType.trigger("change"); });
                     buttons.append(ytButton);
                     buttons.append(imgButton);
@@ -429,10 +441,10 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 
                 note.append(buttons);
                 
-                var removeElement = $('<div class="remove fa fa-remove" role="button" tabindex="0"></div>');
+                var removeElement = $('<div class="remove fa fa-remove" role="button" aria-label="'+strings.aria_deletepost.replace('{column}', column_name.text()).replace('{post}', noteHeading.text())+'" tabindex="0"></div>');
                 removeElement.on('click keypress', function(e) {
                     if (e.type=='keypress') {
-                        if (e.keyCode===13) {
+                        if (isAriaTriggerKey(e.keyCode)) {
                             e.preventDefault();
                         } else {
                             return;
@@ -448,7 +460,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 
                 cancelbutton.on('click keypress', function(e) {
                     if (e.type=='keypress') {
-                        if (e.keyCode===13) {
+                        if (isAriaTriggerKey(e.keyCode)) {
                             e.preventDefault();
                         } else {
                             return;
@@ -470,7 +482,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 
                 noteText.on('dblclick keypress', function(e) {
                     if (e.type=='keypress') {
-                        if (e.keyCode===13 && !noteText.is(':editing')) {
+                        if (isAriaTriggerKey(e.keyCode) && !noteText.is(':editing')) {
                             e.preventDefault();
                             noteText.dblclick();
                             return;
@@ -490,7 +502,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 
                 noteHeading.on('dblclick keypress', function(e) {
                     if (e.type=='keypress') {
-                        if (e.keyCode===13 && !noteHeading.is(':editing')) {
+                        if (isAriaTriggerKey(e.keyCode) && !noteHeading.is(':editing')) {
                             e.preventDefault();
                             noteHeading.dblclick();
                             return;
@@ -508,7 +520,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 
                 postbutton.on('click keypress', function(e) {
                     if (e.type=='keypress') {
-                        if (e.keyCode===13) {
+                        if (isAriaTriggerKey(e.keyCode)) {
                             e.preventDefault();
                         } else {
                             return;
@@ -586,7 +598,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             var column = $('<div class="board_column board_column_hasdata" data-ident="'+ident+'"></div>');
             var column_header = $('<div class="board_column_header"></div>');
             var column_sort = $('<div class="column_sort fa"></div>');
-            var column_name = $('<div class="column_name" tabindex="0">'+name+'</div>');
+            var column_name = $('<div class="column_name" tabindex="0" aria-level="3" role="heading">'+name+'</div>');
             var column_content = $('<div class="board_column_content"></div>');
             var column_newcontent = $('<div class="board_column_newcontent"></div>');
             column_header.append(column_sort);
@@ -599,10 +611,10 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             if (iseditable) {
                 column.addClass('editablecolumn');
 
-                var removeElement = $('<div class="remove fa fa-remove" role="button" tabindex="0"></div>');
+                var removeElement = $('<div class="remove fa fa-remove" role="button" aria-label="'+strings.aria_deletecolumn.replace('{column}', column_name.text())+'" tabindex="0"></div>');
                 removeElement.on('click keypress', function(e) {
                     if (e.type=='keypress') {
-                        if (e.keyCode===13) {
+                        if (isAriaTriggerKey(e.keyCode)) {
                             e.preventDefault();
                         } else {
                             return;
@@ -629,7 +641,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             if (iseditable) {
                 column_name.on('dblclick keypress', function(e) {
                     if (e.type=='keypress') {
-                        if (e.keyCode===13 && !column_name.is(':editing')) {
+                        if (isAriaTriggerKey(e.keyCode) && !column_name.is(':editing')) {
                             e.preventDefault();
                             column_name.dblclick();
                         } else {
@@ -662,10 +674,10 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             }
 
             if (!isReadOnlyBoard) {
-                column_newcontent.append('<div class="board_button newnote" role="button" tabindex="0"><div class="button_content"><span class="fa '+options.noteicon+'"></span></div></div>');
+                column_newcontent.append('<div class="board_button newnote" role="button" aria-label="'+strings.aria_newpost.replace('{column}', column_name.text())+'" tabindex="0"><div class="button_content"><span class="fa '+options.noteicon+'"></span></div></div>');
                 column_newcontent.on('click keypress', '.newnote', function(e) {
                     if (e.type=='keypress') {
-                        if (e.keyCode===13) {
+                        if (isAriaTriggerKey(e.keyCode)) {
                             e.preventDefault();
                         } else {
                             return;
@@ -694,14 +706,14 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
         var addNewColumnButton = function() {
             var column = $('<div class="board_column board_column_empty"></div>');
             var newBusy = false;
-            column.append('<div class="board_button newcolumn" role="button" tabindex="0"><div class="button_content"><span class="fa '+options.columnicon+'"></span></div></div>');
+            column.append('<div class="board_button newcolumn" role="button" tabindex="0" aria-label="'+strings.aria_newcolumn+'"><div class="button_content"><span class="fa '+options.columnicon+'"></span></div></div>');
             column.on('click keypress', '.newcolumn', function(e) {
                 if (newBusy) {
                     return;
                 }
                 newBusy = true;
                 if (e.type=='keypress') {
-                    if (e.keyCode===13) {
+                    if (isAriaTriggerKey(e.keyCode)) {
                         e.preventDefault();
                     } else {
                         return;
