@@ -18,10 +18,10 @@ defined('MOODLE_INTERNAL') || die;
 
 if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configtext('new_column_icon', get_string('new_column_icon', 'mod_board'),
-                       get_string('new_column_icon_desc', 'mod_board'), 'fa-plus', PARAM_RAW));
+                       get_string('new_column_icon_desc', 'mod_board'), 'fa-plus', PARAM_RAW_TRIMMED));
 
     $settings->add(new admin_setting_configtext('new_note_icon', get_string('new_note_icon', 'mod_board'),
-                       get_string('new_note_icon_desc', 'mod_board'), 'fa-plus', PARAM_RAW));
+                       get_string('new_note_icon_desc', 'mod_board'), 'fa-plus', PARAM_RAW_TRIMMED));
     
     $options = array(
         1 => get_string('media_selection_buttons', 'mod_board'),
@@ -29,4 +29,7 @@ if ($ADMIN->fulltree) {
     );
     $settings->add(new admin_setting_configselect('media_selection', get_string('media_selection', 'mod_board'),
                        get_string('media_selection_desc', 'mod_board'), 1, $options));
+                       
+    $settings->add(new admin_setting_configtext('post_max_length', get_string('post_max_length', 'mod_board'),
+                       get_string('post_max_length_desc', 'mod_board'), 250, PARAM_INT));
 }

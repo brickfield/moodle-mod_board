@@ -46,7 +46,7 @@ $PAGE->set_url($pageurl);
 $isEditor = has_capability('mod/board:manageboard', $context);
 $groupmode = groups_get_activity_groupmode($cm);
 $readonlyboard = !$isEditor && $groupmode==VISIBLEGROUPS && !can_access_group(groups_get_activity_group($cm, true), $context);
-$PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('params' => array('board' => $board, 'editor' => $isEditor, 'readonly' => $readonlyboard, 'id' => $USER->id, 'columnicon' => $CFG->new_column_icon, 'noteicon' => $CFG->new_note_icon, 'mediaselection' => $CFG->media_selection)));
+$PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('params' => array('board' => $board, 'editor' => $isEditor, 'readonly' => $readonlyboard, 'id' => $USER->id, 'columnicon' => $CFG->new_column_icon, 'noteicon' => $CFG->new_note_icon, 'mediaselection' => $CFG->media_selection, 'post_max_length' => $CFG->post_max_length)));
 
 $PAGE->set_heading($course->fullname);
 $PAGE->set_activity_record($board);

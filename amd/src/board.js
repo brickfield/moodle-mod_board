@@ -17,8 +17,48 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
     };
     
     var isAriaTriggerKey = function(key) {
-        return key===13 || key===32;
-    }
+        return key==13 || key==32;
+    };
+    
+    var handleAction = function(elem, callback) {
+        return elem.on('click keypress', function(e) {
+            if (e.type=='keypress') {
+                if (isAriaTriggerKey(e.keyCode)) {
+                    e.preventDefault();
+                } else {
+                    return;
+                }
+            }
+            
+            callback();
+        });
+    };
+    
+    var handleEditableAction = function(elem, callback, callBeforeOnKeyEditing) {
+        if (elem.is(':editable')) {
+            throw new Error('handleEditableAction - must be called before setting the element as editable');
+        }
+        
+        // can't use on(edit) here because we want to do actions (save cache) before the control goes into edit mode
+        return elem.on('dblclick keypress', function(e) {
+            if (e.type=='keypress') {
+                if (isAriaTriggerKey(e.keyCode) && !elem.is(':editing')) {
+                    e.preventDefault();
+                    if (callBeforeOnKeyEditing) {
+                        callback();
+                    }
+                    elem.editable('open');
+                    if (callBeforeOnKeyEditing) {
+                        return;
+                    }
+                } else {
+                    return;
+                }
+            }
+            
+            callback();
+        });
+    };
         
     return function(board, options) {
         var strings = {
@@ -48,7 +88,12 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             aria_deletecolumn: '',
             aria_deletepost: '',
             aria_addmedia: '',
-            aria_deleteattachment: ''
+            aria_addmedianew: '',
+            aria_deleteattachment: '',
+            aria_postedit: '',
+            aria_canceledit: '',
+            aria_postnew: '',
+            aria_cancelnew: '',
         };
         
         const MEDIA_SELECTION_BUTTONS = 1;
@@ -108,6 +153,75 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
         
         var getNoteAttachmentsForNote = function(note) {
             return $(note).find(".note_attachment");
+        };
+        
+        var textIdentifierForNote = function(note) {
+            var noteText = getNoteTextForNote(note).html();
+            var noteHeading = getNoteHeadingForNote(note).html();
+            var noteAttachment = attachmentDataForNote(note);
+            
+            if (noteHeading.length>0) {
+                return noteHeading;
+            }
+            if (noteText.length>0) {
+                return noteText.replace(/<br\s*\/?>/gi," ").replace(/\n/g, " ").split(/\s+/).slice(0,5).join(" ");
+            }
+            if (noteAttachment.info && noteAttachment.info.length>0) {
+                return noteAttachment.info;
+            }
+            return null;
+        };
+        
+        var updateNoteAria = function(noteId) {
+            var note = getNote(noteId);
+            var columnIdentifier = note.closest('.board_column').find('.column_name').text();
+            var post_button = cancel_button = add_youtube = add_image = add_link = remove_attachment = "";
+            
+            if (!noteId) { // new post
+                post_button = strings.aria_postnew.replace('{column}', columnIdentifier);
+                cancel_button = strings.aria_cancelnew.replace('{column}', columnIdentifier);
+                add_youtube = strings.aria_addmedianew.replace('{type}', strings.option_youtube).replace('{column}', columnIdentifier);
+                add_image = strings.aria_addmedianew.replace('{type}', strings.option_image).replace('{column}', columnIdentifier);
+                add_link = strings.aria_addmedianew.replace('{type}', strings.option_link).replace('{column}', columnIdentifier);
+            } else {
+                var noteIdentifier = textIdentifierForNote(note);
+                
+                post_button = strings.aria_postedit.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
+                cancel_button = strings.aria_canceledit.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
+                add_youtube = strings.aria_addmedia.replace('{type}', strings.option_youtube).replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
+                add_image = strings.aria_addmedia.replace('{type}', strings.option_image).replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
+                add_link = strings.aria_addmedia.replace('{type}', strings.option_link).replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
+                remove_attachment = strings.aria_deleteattachment.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
+                
+                note.find('.delete_note').attr('aria-label', strings.aria_deletepost.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier));
+                note.find('.note_ariatext').html(noteIdentifier);
+            }
+            
+            if (mediaSelection==MEDIA_SELECTION_BUTTONS) {
+                if (noteId) {
+                    var attRemove = note.find('.remove_attachment');
+                    if (attRemove) {
+                        attRemove.attr('aria-label', remove_attachment);
+                    }
+                }
+                
+                note.find('.attachment_button.youtube_button').attr('aria-label', add_youtube);
+                note.find('.attachment_button.image_button').attr('aria-label', add_image);
+                note.find('.attachment_button.link_button').attr('aria-label', add_link);
+            }
+            note.find('.post_button').attr('aria-label', post_button);
+            note.find('.cancel_button').attr('aria-label', cancel_button);
+        };
+        
+        var updateColumnAria = function(columnId) {
+            var column = $('.board_column[data-ident='+columnId+']');
+            var columnIdentifier = column.find('.column_name').text();
+            column.find('.newnote').attr('aria-label', strings.aria_newpost.replace('{column}', columnIdentifier));
+            column.find('.delete_column').attr('aria-label', strings.aria_deletecolumn.replace('{column}', columnIdentifier));
+            
+            column.find(".board_note").each(function(index, note) {
+                updateNoteAria($(note).data('ident'));
+            });
         };
         
         var successNoteEdit = function() {
@@ -272,7 +386,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 attachment.info = noteAttachment.find('.info').val();
                 attachment.url = noteAttachment.find('.url').val();
             }
-            if (!attachment.info.length && !attachment.url.length) {
+            if ((!attachment.info || !attachment.info.length) && (!attachment.url || !attachment.url.length)) {
                 attachment.type = 0;
             }
             
@@ -358,8 +472,9 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             }
             
             var notecontent = $('<div class="note_content"></div>');
-            var noteHeading = $('<div class="note_heading" tabindex="0" aria-level="4" role="heading">' + (heading?heading:'') + '</div>');
+            var noteHeading = $('<div class="note_heading" tabindex="0">' + (heading?heading:'') + '</div>');
             var noteText = $('<div class="note_text" tabindex="0">' + (content?content:'') + '</div>');
+            var noteAriaText = $('<div class="note_ariatext hidden" role="heading" aria-level="4" tabindex="0"></div>');
             var attachmentPreview = $('<div class="preview"></div>');
             if (iseditable) {
                 var noteAttachment = $('<div class="note_attachment form-group row" tabindex="0">' +
@@ -380,13 +495,14 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             
             notecontent.append(noteHeading);
             notecontent.append(noteText);
+            notecontent.append(noteAriaText);
             if (iseditable) {
                 notecontent.append(noteAttachment);
             }
             
             notecontent.append(attachmentPreview);
             note.append(notecontent);
-            
+                        
             if (iseditable) {
                 var attachmentType = noteAttachment.find('.type');
                 var attachmentInfo = noteAttachment.find('.info');
@@ -407,7 +523,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 });
                 
                 if (mediaSelection==MEDIA_SELECTION_BUTTONS) {
-                    var removeAttachment = $('<div class="remove remove_attachment fa fa-remove" aria-label="'+strings.aria_deleteattachment+'"></div>');
+                    var removeAttachment = $('<div class="remove remove_attachment fa fa-remove"></div>');
                     removeAttachment.hide();
                     removeAttachment.on('click', function() { attachmentType.val(0); attachmentType.trigger('change'); });
                     noteAttachment.append(removeAttachment);
@@ -415,7 +531,6 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             }
             
             var column_content = $('.board_column[data-ident='+columnid+'] .board_column_content');
-            var column_name = $('.board_column[data-ident='+columnid+'] .column_name');
             
             if (iseditable) {
                 var buttons = $('<div class="note_buttons"></div>');
@@ -428,12 +543,12 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 
                 if (mediaSelection==MEDIA_SELECTION_BUTTONS) {
                     buttons.append('<div class="spacer_button"></div>');
-                    var ytButton = $('<div class="attachment_button youtube_button action_button fa '+attachmentFAIcons[0]+'" role="button" aria-label="'+strings.aria_addmedia.replace('{type}', strings.option_youtube)+'" tabindex="0"></div>');
-                    ytButton.on('click', function() { attachmentType.val(1); attachmentType.trigger("change"); });
-                    var imgButton = $('<div class="attachment_button image_button action_button fa '+attachmentFAIcons[1]+'" role="button" aria-label="'+strings.aria_addmedia.replace('{type}', strings.option_image)+'" tabindex="0"></div>');
-                    imgButton.on('click', function() { attachmentType.val(2); attachmentType.trigger("change"); });
-                    var linkButton = $('<div class="attachment_button link_button action_button fa '+attachmentFAIcons[2]+'" role="button" aria-label="'+strings.aria_addmedia.replace('{type}', strings.option_link)+'" tabindex="0"></div>');
-                    linkButton.on('click', function() { attachmentType.val(3); attachmentType.trigger("change"); });
+                    var ytButton = $('<div class="attachment_button youtube_button action_button fa '+attachmentFAIcons[0]+'" role="button" tabindex="0"></div>');
+                    handleAction(ytButton, function() { attachmentType.val(1); attachmentType.trigger("change"); });
+                    var imgButton = $('<div class="attachment_button image_button action_button fa '+attachmentFAIcons[1]+'" role="button" tabindex="0"></div>');
+                    handleAction(imgButton, function() { attachmentType.val(2); attachmentType.trigger("change"); });
+                    var linkButton = $('<div class="attachment_button link_button action_button fa '+attachmentFAIcons[2]+'" role="button" tabindex="0"></div>');
+                    handleAction(linkButton, function() { attachmentType.val(3); attachmentType.trigger("change"); });
                     buttons.append(ytButton);
                     buttons.append(imgButton);
                     buttons.append(linkButton);
@@ -441,32 +556,17 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 
                 note.append(buttons);
                 
-                var removeElement = $('<div class="remove fa fa-remove" role="button" aria-label="'+strings.aria_deletepost.replace('{column}', column_name.text()).replace('{post}', noteHeading.text())+'" tabindex="0"></div>');
-                removeElement.on('click keypress', function(e) {
-                    if (e.type=='keypress') {
-                        if (isAriaTriggerKey(e.keyCode)) {
-                            e.preventDefault();
-                        } else {
-                            return;
-                        }
-                    }
-                    
+                var removeElement = $('<div class="remove fa fa-remove delete_note" role="button" tabindex="0"></div>');
+                handleAction(removeElement, function() {
                     deleteNote(ident);
                 });
+                
                 if (!ident) {
                     removeElement.hide();
                 }
                 notecontent.append(removeElement);
                 
-                cancelbutton.on('click keypress', function(e) {
-                    if (e.type=='keypress') {
-                        if (isAriaTriggerKey(e.keyCode)) {
-                            e.preventDefault();
-                        } else {
-                            return;
-                        }
-                    }
-                    
+                handleAction(cancelbutton, function() {
                     stopNoteEdit();
                 });
                 
@@ -479,93 +579,55 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 var beginEdit = function() {
                     startNoteEdit(ident);
                 };
-                
-                noteText.on('dblclick keypress', function(e) {
-                    if (e.type=='keypress') {
-                        if (isAriaTriggerKey(e.keyCode) && !noteText.is(':editing')) {
-                            e.preventDefault();
-                            noteText.dblclick();
-                            return;
-                        } else {
-                            return;
-                        }
-                    }
-                    
-                    beginEdit();
-                });
-                
+
                 noteHeading.on('click', function(e) {
                     if ((editingNote && editingNote==ident) || !ident) {
                         noteHeading.editable('open');
                     }
                 });
                 
-                noteHeading.on('dblclick keypress', function(e) {
-                    if (e.type=='keypress') {
-                        if (isAriaTriggerKey(e.keyCode) && !noteHeading.is(':editing')) {
-                            e.preventDefault();
-                            noteHeading.dblclick();
-                            return;
-                        } else {
-                            return;
-                        }
-                    }
-                    
-                    beginEdit();
-                });
+                attachmentPreview.on('dblclick', beginEdit);
                 
-                attachmentPreview.on('dblclick', function() {
-                    beginEdit();
-                });
-                
-                postbutton.on('click keypress', function(e) {
-                    if (e.type=='keypress') {
-                        if (isAriaTriggerKey(e.keyCode)) {
-                            e.preventDefault();
-                        } else {
-                            return;
-                        }
-                    }
-                    
+                handleAction(postbutton, function() {
                     var sendAttach = attachmentDataForNote(note);
                     
-                    if (!ident) { // new
-                        var addHeading = noteHeading.html();
-                        var addText = noteText.html();
+                    var theHeading = noteHeading.html();
+                    var theText = noteText.html().substring(0, options.post_max_length);
                         
-                        serviceCall('add_note', {columnid: columnid, heading: addHeading, content: addText, attachment: sendAttach}, function(result) {
+                    if (!ident) { // new
+                        serviceCall('add_note', {columnid: columnid, heading: theHeading, content: theText, attachment: sendAttach}, function(result) {
                             lastHistoryId = result.historyid;
                             
                             note.remove();
                             showNewNoteButtons();
-                            addNote(columnid, result.id, addHeading, addText, sendAttach, {id: userId});
+                            addNote(columnid, result.id, theHeading, theText, sendAttach, {id: userId});
                             sortNotes(column_content);
+                            updateNoteAria(result.id);
                         });
                         
                     } else { // update
-                        serviceCall('update_note', {id: ident, heading: noteHeading.html(), content: noteText.html(), attachment: sendAttach}, function(result) {
+                        serviceCall('update_note', {id: ident, heading: theHeading, content: theText, attachment: sendAttach}, function(result) {
                             if (result.status) {
                                 setAttachment(note, sendAttach);
                                 successNoteEdit();
                                 lastHistoryId = result.historyid;
+                                noteText.html(theText);
+                                updateNoteAria(ident);
                             }
                         });
                     }
                 });
                 
+                handleEditableAction(noteText, beginEdit);
                 noteText.editable({
                     toggleFontSize : false,
                     closeOnEnter: false,
-                    /*
                     callback : function( data ) {
-                        if (!ident && !noteText.html()) { // hide new note if empty
-                            note.remove();
-                            showNewNoteButtons();
-                        }
+                        noteText.html(noteText.html().substring(0, options.post_max_length));
                     }
-                    */
                 });
                 
+                handleEditableAction(noteHeading, beginEdit);
                 noteHeading.editable({
                     toggleFontSize : false,
                     closeOnEnter: true
@@ -588,7 +650,9 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 }
             } else {
                 $('.board_column[data-ident='+columnid+'] .board_column_newcontent').append(note);
-                noteText.dblclick() // trigger edit of note
+                updateNoteAria(ident);
+                noteText.editable('open'); // trigger edit of note
+                beginEdit();
             }
         };
         
@@ -611,16 +675,8 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             if (iseditable) {
                 column.addClass('editablecolumn');
 
-                var removeElement = $('<div class="remove fa fa-remove" role="button" aria-label="'+strings.aria_deletecolumn.replace('{column}', column_name.text())+'" tabindex="0"></div>');
-                removeElement.on('click keypress', function(e) {
-                    if (e.type=='keypress') {
-                        if (isAriaTriggerKey(e.keyCode)) {
-                            e.preventDefault();
-                        } else {
-                            return;
-                        }
-                    }
-                    
+                var removeElement = $('<div class="remove fa fa-remove delete_column" role="button" tabindex="0"></div>');
+                handleAction(removeElement, function() {
                     if (confirm(strings.remove_column_text)) {
                         serviceCall('delete_column', {id: ident}, function(result) {
                             if (result.status) {
@@ -639,18 +695,9 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             column.append(column_newcontent);
             
             if (iseditable) {
-                column_name.on('dblclick keypress', function(e) {
-                    if (e.type=='keypress') {
-                        if (isAriaTriggerKey(e.keyCode) && !column_name.is(':editing')) {
-                            e.preventDefault();
-                            column_name.dblclick();
-                        } else {
-                            return;
-                        }
-                    }
-                    
+                handleEditableAction(column_name, function() {
                     nameCache = column_name.html();
-                });
+                }, true);
                 
                 column_name.editable({
                     toggleFontSize : false,
@@ -663,27 +710,24 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                                     nameCache = null;
                                 } else {
                                     lastHistoryId = result.historyid;
+                                    updateColumnAria(ident);
                                 }
                             }, function() {
                                 column_name.html(nameCache);
                                 nameCache = null;
                             });
+                        } else {
+                            column_name.html(nameCache);
+                            nameCache = null;
                         }
                     }
                 });
             }
 
             if (!isReadOnlyBoard) {
-                column_newcontent.append('<div class="board_button newnote" role="button" aria-label="'+strings.aria_newpost.replace('{column}', column_name.text())+'" tabindex="0"><div class="button_content"><span class="fa '+options.noteicon+'"></span></div></div>');
-                column_newcontent.on('click keypress', '.newnote', function(e) {
-                    if (e.type=='keypress') {
-                        if (isAriaTriggerKey(e.keyCode)) {
-                            e.preventDefault();
-                        } else {
-                            return;
-                        }
-                    }
-                    
+                column_newcontent.append('<div class="board_button newnote" role="button" tabindex="0"><div class="button_content"><span class="fa '+options.noteicon+'"></span></div></div>');
+                
+                handleAction(column_newcontent.find('.newnote'), function() {
                     addNote(ident, 0, null, null, null, {id: userId});
                 });
             }
@@ -701,24 +745,19 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 }
             }
             sortNotes(column_content, true);
+            updateColumnAria(ident);
         };
         
         var addNewColumnButton = function() {
             var column = $('<div class="board_column board_column_empty"></div>');
             var newBusy = false;
             column.append('<div class="board_button newcolumn" role="button" tabindex="0" aria-label="'+strings.aria_newcolumn+'"><div class="button_content"><span class="fa '+options.columnicon+'"></span></div></div>');
-            column.on('click keypress', '.newcolumn', function(e) {
+            
+            handleAction(column.find('.newcolumn'), function() {
                 if (newBusy) {
                     return;
                 }
                 newBusy = true;
-                if (e.type=='keypress') {
-                    if (isAriaTriggerKey(e.keyCode)) {
-                        e.preventDefault();
-                    } else {
-                        return;
-                    }
-                }
                 
                 serviceCall('add_column', {boardid: board.id, name: strings.default_column_heading}, function(result) {
                     addColumn(result.id, strings.default_column_heading);
@@ -743,6 +782,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                     var data = JSON.parse(item.content);
                     if (item.action=='add_note') {
                         addNote(data.columnid, data.id, data.heading, data.content, data.attachment, {id: item.userid});
+                        updateNoteAria(data.id);
                     } else if (item.action=='update_note') {
                         var note = getNote(data.id);
                         if (note) {
@@ -760,6 +800,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                                 noteTextCache = null;
                                 noteHeadingCache = null;
                                 attachmentCache = null;
+                                updateNoteAria(data.id);
                             };
                             
                             if (editingNote==data.id) {
@@ -790,6 +831,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                         addColumn(data.id, data.name);
                     } else if (item.action=='update_column') {
                         $(".board_column[data-ident='"+data.id+"'] .column_name").html(data.name);
+                        updateColumnAria(data.id);
                     } else if (item.action=='delete_column') {
                         var column = $(".board_column[data-ident='"+data.id+"']");
                         if (editingNote && column.find('.board_note[data-ident="'+editingNote+'"]').length) {

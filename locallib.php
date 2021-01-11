@@ -258,7 +258,7 @@ function require_capability_for_note($id) {
 }
 
 function board_add_note($columnid, $heading, $content, $attachment) {
-    global $DB, $USER;
+    global $DB, $USER, $CFG;
     
     $context = context_for_column($columnid);
     if ($context) {
@@ -266,6 +266,7 @@ function board_add_note($columnid, $heading, $content, $attachment) {
     }
     
     $heading = empty($heading)?null:substr($heading, 0, 100);
+    $content = empty($content)?"":substr($content, 0, $CFG->post_max_length);
     
     $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $columnid));
     
@@ -303,11 +304,12 @@ function board_add_note_log($boardid, $groupid, $heading, $content, $attachment,
 }
 
 function board_update_note($id, $heading, $content, $attachment) {
-    global $DB, $USER;
+    global $DB, $USER, $CFG;
     
     require_capability_for_note($id);
             
     $heading = empty($heading)?null:substr($heading, 0, 100);
+    $content = empty($content)?"":substr($content, 0, $CFG->post_max_length);
     
     $columnid = $DB->get_field('board_notes', 'columnid', array('id' => $id));
     $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $columnid));
