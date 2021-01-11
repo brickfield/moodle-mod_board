@@ -45,7 +45,7 @@ class mod_board_external extends external_api {
             )
         );
     }
-    
+
     /* GET BOARD */
     public static function get_board_parameters() {
         return new external_function_parameters([
@@ -81,7 +81,7 @@ class mod_board_external extends external_api {
             )
         );
     }
-    
+
     /* ADD COLUMN */
     public static function add_column_parameters() {
         return new external_function_parameters([
@@ -100,7 +100,7 @@ class mod_board_external extends external_api {
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
     }
-    
+
     /* UPDATE COLUMN */
     public static function update_column_parameters() {
         return new external_function_parameters([
@@ -119,7 +119,7 @@ class mod_board_external extends external_api {
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
     }
-    
+
     /* DELETE COLUMN */
     public static function delete_column_parameters() {
         return new external_function_parameters([
@@ -137,7 +137,7 @@ class mod_board_external extends external_api {
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
     }
-    
+
     /* ADD NOTE */
     public static function add_note_parameters() {
         return new external_function_parameters([
@@ -162,7 +162,7 @@ class mod_board_external extends external_api {
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
     }
-    
+
     /* UPDATE NOTE */
     public static function update_note_parameters() {
         return new external_function_parameters([
@@ -187,7 +187,7 @@ class mod_board_external extends external_api {
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
     }
-    
+
     /* DELETE NOTE */
     public static function delete_note_parameters() {
         return new external_function_parameters([

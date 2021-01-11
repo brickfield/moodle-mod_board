@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -20,14 +19,14 @@ defined('MOODLE_INTERNAL') || die;
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
 
 class mod_board_mod_form extends moodleform_mod {
-    function definition() {
+    public function definition() {
         global $CFG, $DB;
 
         $mform = $this->_form;
 
-        //-------------------------------------------------------
+        // -------------------------------------------------------
         $mform->addElement('header', 'general', get_string('general', 'form'));
-        $mform->addElement('text', 'name', get_string('name'), array('size'=>'50'));
+        $mform->addElement('text', 'name', get_string('name'), array('size' => '50'));
         if (!empty($CFG->formatstringstriptags)) {
             $mform->setType('name', PARAM_TEXT);
         } else {
@@ -36,23 +35,23 @@ class mod_board_mod_form extends moodleform_mod {
         $mform->addRule('name', null, 'required', null, 'client');
         $mform->addRule('name', get_string('maximumchars', '', 100), 'maxlength', 100, 'client');
         $this->standard_intro_elements();
-        
-        $mform->addElement('text', 'background_color', get_string('background_color', 'mod_board'), array('size'=>'50'));
+
+        $mform->addElement('text', 'background_color', get_string('background_color', 'mod_board'), array('size' => '50'));
         $mform->setType('background_color', PARAM_TEXT);
         $mform->addRule('background_color', get_string('maximumchars', '', 9), 'maxlength', 9, 'client');
 
-        //-------------------------------------------------------
+        // -------------------------------------------------------
         $this->standard_coursemodule_elements();
 
-        //-------------------------------------------------------
+        // -------------------------------------------------------
         $this->add_action_buttons();
 
-        //-------------------------------------------------------
+        // -------------------------------------------------------
         $mform->addElement('hidden', 'revision');
         $mform->setType('revision', PARAM_INT);
         $mform->setDefault('revision', 1);
     }
-    
+
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 

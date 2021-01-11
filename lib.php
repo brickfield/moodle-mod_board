@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -19,10 +18,14 @@ defined('MOODLE_INTERNAL') || die;
 
 function board_supports($feature) {
     switch($feature) {
-        case FEATURE_SHOW_DESCRIPTION: return true;
-        case FEATURE_GROUPS: return true;
-        case FEATURE_GROUPINGS: return true;
-        default: return null;
+        case FEATURE_SHOW_DESCRIPTION:
+            return true;
+        case FEATURE_GROUPS:
+            return true;
+        case FEATURE_GROUPINGS:
+            return true;
+        default:
+            return null;
     }
 }
 
@@ -50,7 +53,7 @@ function board_reset_userdata($data) {
  * @return array
  */
 function board_get_view_actions() {
-    return array('view','view all');
+    return array('view', 'view all');
 }
 
 /**
@@ -75,15 +78,15 @@ function board_get_post_actions() {
  */
 function board_add_instance($data, $mform = null) {
     global $DB;
-    
+
     $boardid = $DB->insert_record('board', $data);
     if ($boardid) {
-        $column_heading = get_string('default_column_heading', 'mod_board');
-        $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $column_heading));
-        $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $column_heading));
-        $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $column_heading));
+        $columnheading = get_string('default_column_heading', 'mod_board');
+        $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $columnheading));
+        $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $columnheading));
+        $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $columnheading));
     }
-    
+
     return $boardid;
 }
 
@@ -95,10 +98,10 @@ function board_add_instance($data, $mform = null) {
  */
 function board_update_instance($data, $mform) {
     global $DB;
-    
+
     $data->id = $data->instance;
     $DB->update_record('board', $data);
-    
+
     return true;
 }
 
@@ -110,20 +113,20 @@ function board_update_instance($data, $mform) {
 function board_delete_instance($id) {
     global $DB;
 
-    if (!$board = $DB->get_record('board', array('id'=>$id))) {
+    if (!$board = $DB->get_record('board', array('id' => $id))) {
         return false;
     }
 
-    // remove notes
+    // Remove notes.
     $columns = $DB->get_records('board_columns', array('boardid' => $board->id), '', 'id');
-    foreach($columns AS $columnid => $column) {
-        $DB->delete_records('board_notes', array('columnid'=>$columnid));
+    foreach ($columns as $columnid => $column) {
+        $DB->delete_records('board_notes', array('columnid' => $columnid));
     }
-    
-    //remove columns
-    $DB->delete_records('board_columns', array('boardid'=>$board->id));
-    
-    $DB->delete_records('board', array('id'=>$board->id));
+
+    // Remove columns.
+    $DB->delete_records('board_columns', array('boardid' => $board->id));
+
+    $DB->delete_records('board', array('id' => $board->id));
 
     return true;
 }
@@ -132,12 +135,14 @@ function board_extend_settings_navigation($settings, $boardnode) {
     global $PAGE;
 
     if (has_capability('mod/board:manageboard', $PAGE->cm->context)) {
-        $node = navigation_node::create(get_string('export_board', 'board'), new moodle_url('/mod/board/download_board.php', array('id'=>$PAGE->cm->id)),
+        $node = navigation_node::create(get_string('export_board', 'board'),
+            new moodle_url('/mod/board/download_board.php', array('id' => $PAGE->cm->id)),
                 navigation_node::TYPE_SETTING, null, null,
                 new pix_icon('i/export', ''));
         $boardnode->add_node($node);
-        
-        $node = navigation_node::create(get_string('export_submissions', 'board'), new moodle_url('/mod/board/download_submissions.php', array('id'=>$PAGE->cm->id)),
+
+        $node = navigation_node::create(get_string('export_submissions', 'board'),
+            new moodle_url('/mod/board/download_submissions.php', array('id' => $PAGE->cm->id)),
                 navigation_node::TYPE_SETTING, null, null,
                 new pix_icon('i/export', ''));
         $boardnode->add_node($node);

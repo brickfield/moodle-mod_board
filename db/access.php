@@ -38,7 +38,7 @@ $capabilities = array(
         ),
         'clonepermissionsfrom' => 'moodle/course:manageactivities'
     ),
-    
+
     'mod/board:manageboard' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_MODULE,
