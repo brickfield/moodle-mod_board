@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -14,8 +15,24 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die;
+defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'mod_board'; // Full name of the plugin (used for diagnostics)
-$plugin->version   = 2021051200; // The current module version (Date: YYYYMMDDXX)
-$plugin->requires  = 2017110800; // Requires this Moodle version
+require_once($CFG->dirroot . '/mod/board/backup/moodle2/backup_board_stepslib.php');
+
+class backup_board_activity_task extends backup_activity_task {
+
+    protected function define_my_settings() {
+    }
+
+    protected function define_my_steps() {
+        $this->add_step(new backup_board_activity_structure_step('board_structure', 'board.xml'));
+    }
+    
+    static public function encode_content_links($content) {
+        return $content;
+    }
+    
+    public function get_fileareas() {
+        return array('images', 'background');
+    }
+}

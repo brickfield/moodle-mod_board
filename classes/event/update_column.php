@@ -13,21 +13,21 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
+ 
 namespace mod_board\event;
 defined('MOODLE_INTERNAL') || die();
 
 class update_column extends \core\event\base {
     protected function init() {
-        $this->data['crud'] = 'u';
+        $this->data['crud'] = 'u'; // c(reate), r(ead), u(pdate), d(elete)
         $this->data['edulevel'] = self::LEVEL_OTHER;
         $this->data['objecttable'] = 'board';
     }
-
+ 
     public static function get_name() {
         return get_string('event_update_column', 'mod_board');
     }
-
+ 
     public function get_description() {
         $obj = new \stdClass;
         $obj->userid = $this->userid;
@@ -35,7 +35,7 @@ class update_column extends \core\event\base {
         $obj->name = $this->other['name'];
         return get_string('event_update_column_desc', 'mod_board', $obj);
     }
-
+ 
     public function get_legacy_logdata() {
         return array($this->courseid, 'mod_board', 'update_column', null, $this->objectid, $this->other['name']);
     }

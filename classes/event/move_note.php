@@ -17,26 +17,26 @@
 namespace mod_board\event;
 defined('MOODLE_INTERNAL') || die();
 
-class add_column extends \core\event\base {
+class move_note extends \core\event\base {
     protected function init() {
-        $this->data['crud'] = 'c'; // c(reate), r(ead), u(pdate), d(elete)
+        $this->data['crud'] = 'u'; // c(reate), r(ead), u(pdate), d(elete)
         $this->data['edulevel'] = self::LEVEL_OTHER;
         $this->data['objecttable'] = 'board';
     }
  
     public static function get_name() {
-        return get_string('event_add_column', 'mod_board');
+        return get_string('event_move_note', 'mod_board');
     }
  
     public function get_description() {
         $obj = new \stdClass;
         $obj->userid = $this->userid;
         $obj->objectid = $this->objectid;
-        $obj->name = $this->other['name'];
-        return get_string('event_add_column_desc', 'mod_board', $obj);
+        $obj->columnid = $this->other['columnid'];
+        return get_string('event_move_note_desc', 'mod_board', $obj);
     }
  
     public function get_legacy_logdata() {
-        return array($this->courseid, 'mod_board', 'add_column', null, $this->objectid, $this->other['name']);
+        return array($this->courseid, 'mod_board', 'move_note', null, $this->objectid);
     }
 }

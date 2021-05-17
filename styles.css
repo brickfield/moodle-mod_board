@@ -50,6 +50,10 @@
     margin: 0px 5px;
 }
 
+.mod_board .board_column_content {
+    min-height: 10px; /* for sortable on empty columns */
+}
+
 .mod_board .board_button {
     cursor: pointer;
     border: 2px solid #EFEFEF;
@@ -72,7 +76,7 @@
     font-size: 1.5em;
 }
 
-.mod_board .remove {
+.mod_board .remove, .mod_board .rating {
     position: absolute;
     top: 3px;
     right: 5px;
@@ -80,7 +84,15 @@
     cursor: pointer;
 }
 
-.mod_board .remove:hover, .mod_board .remove:focus {
+.mod_board .rating {
+    color: yellowgreen;
+}
+
+.mod_board .editablenote .rating {
+    right: 25px;
+}
+
+.mod_board .remove:hover, .mod_board .remove:focus, .mod_board .rating:hover, .mod_board .rating:focus {
     opacity: 0.8;
 }
 
@@ -101,8 +113,11 @@
 }
 
 .mod_board .note_content .note_text {
-    min-height: 18px;
     font-size: 0.9em;
+    word-break: break-all;
+}
+.mod_board .editablenote .note_text, .mod_board .rateablenote .note_text {
+    min-height: 18px;
 }
 .mod_board .note_content .note_heading {
     min-height: 22px;
@@ -121,11 +136,15 @@
     padding-top:10px;
     margin: 0px;
 }
+.mod_board .note_content .note_attachment .file {
+    line-height: 1.2;
+}
 .mod_board .note_content .preview {
     padding-top:5px;
     border-top: 1px solid lightgray;
     margin-top: 10px;
     width: 100%;
+    overflow-wrap: break-word;
 }
 .mod_board .note_content .preview.notext {
     padding-top: 0px;
@@ -206,4 +225,5 @@
     width: 100%;
     text-align: right;
     font-size: 0.9em;
+    padding-bottom: 3px;
 }

@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -17,11 +18,11 @@
 require('../../config.php');
 require_once('locallib.php');
 
-$id      = optional_param('id', 0, PARAM_INT); // Course Module ID.
-$b       = optional_param('b', 0, PARAM_INT);  // Board instance ID.
+$id      = optional_param('id', 0, PARAM_INT); // Course Module ID
+$b       = optional_param('b', 0, PARAM_INT);  // Board instance ID
 
 if ($b) {
-    if (!$board = $DB->get_record('board', array('id' => $b))) {
+    if (!$board = $DB->get_record('board', array('id'=>$b))) {
         print_error('invalidaccessparameter');
     }
     $cm = get_coursemodule_from_instance('board', $board->id, $board->course, false, MUST_EXIST);
@@ -30,10 +31,10 @@ if ($b) {
     if (!$cm = get_coursemodule_from_id('board', $id)) {
         print_error('invalidcoursemodule');
     }
-    $board = $DB->get_record('board', array('id' => $cm->instance), '*', MUST_EXIST);
+    $board = $DB->get_record('board', array('id'=>$cm->instance), '*', MUST_EXIST);
 }
 
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
 
 require_course_login($course, true, $cm);
 $context = context_module::instance($cm->id);
@@ -42,12 +43,24 @@ require_capability('mod/board:view', $context);
 $pageurl = new moodle_url('/mod/board/view.php', array('id' => $cm->id));
 $PAGE->set_url($pageurl);
 
-$iseditor = has_capability('mod/board:manageboard', $context);
-$groupmode = groups_get_activity_groupmode($cm);
-$readonlyboard = !$iseditor && $groupmode == VISIBLEGROUPS && !can_access_group(groups_get_activity_group($cm, true), $context);
-$PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('params' => array('board' => $board,
-    'editor' => $iseditor, 'readonly' => $readonlyboard, 'id' => $USER->id, 'columnicon' => $CFG->new_column_icon,
-    'noteicon' => $CFG->new_note_icon, 'mediaselection' => $CFG->media_selection, 'post_max_length' => $CFG->post_max_length)));
+$PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $board, 'options' => array(
+    'isEditor' => board_is_editor($board->id),
+    'userId' => $USER->id,
+    'readonly' => board_readonly($board->id),
+    'columnicon' => $CFG->new_column_icon,
+    'noteicon' => $CFG->new_note_icon,
+    'mediaselection' => $CFG->media_selection,
+    'post_max_length' => $CFG->post_max_length,
+    'history_refresh' => $CFG->history_refresh,
+    'file' => array(
+        'extensions' => explode(',', ACCEPTED_FILE_EXTENSIONS),
+        'size_min' => ACCEPTED_FILE_MIN_SIZE, 
+        'size_max' => ACCEPTED_FILE_MAX_SIZE
+    ),
+    'ratingenabled' => board_rating_enabled($board->id),
+    'hideheaders' => board_hide_headers($board->id),
+    'sortby' => $board->sortby,
+)));
 
 $PAGE->set_heading($course->fullname);
 $PAGE->set_activity_record($board);
@@ -65,14 +78,21 @@ if (trim(strip_tags($board->intro))) {
 echo $OUTPUT->box_start('mod_introbox', 'group_menu');
 echo groups_print_activity_menu($cm, $pageurl, true);
 echo $OUTPUT->box_end();
+ 
 
-
-$extrabackgroundcolor = '';
+$extra_background = '';
 if (!empty($board->background_color)) {
     $color = '#' . str_replace('#', '', $board->background_color);
-    $extrabackgroundcolor = "style=\"background-color: {$color}\"";
+    $extra_background = "background-color: {$color};";
 }
-
-echo '<div class="mod_board" ' . $extrabackgroundcolor . '></div>';
+$fs = get_file_storage();
+$files = $fs->get_area_files($context->id, 'mod_board', 'background', 0, '', false);
+if (count($files)) {
+    $file = reset($files);
+    $url = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(),
+            $file->get_itemid(), $file->get_filepath(), $file->get_filename())->get_path();
+    $extra_background = "background:url({$url}) no-repeat center center; -webkit-background-size: cover; -moz-background-size: cover; -o-background-size: cover; background-size: cover;";
+}
+echo '<div class="mod_board" style="' . $extra_background . '"></div>';
 
 echo $OUTPUT->footer();

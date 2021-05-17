@@ -1,4 +1,4 @@
-define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates', 'mod_board/jquery.editable.amd'], function($, Str, Ajax, Notification, Templates) {
+define(['jquery', 'jqueryui', 'core/str', 'core/ajax', 'core/notification', 'core/templates', 'mod_board/jquery.editable.amd'], function($, jqui, Str, Ajax, Notification, Templates) {
     
     var _serviceCall = function(method, args, callback, failcallback) {
         Ajax.call([{
@@ -18,6 +18,14 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
     
     var isAriaTriggerKey = function(key) {
         return key==13 || key==32;
+    };
+    
+    var encodeText = function(rawText) {
+        return $('<div />').text(rawText).html();
+    };
+    
+    var decodeText = function(encodedText) {
+        return $('<div />').html(encodedText).text();
     };
     
     var handleAction = function(elem, callback) {
@@ -69,6 +77,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             remove_column_text: '',
             note_changed_text: '',
             note_deleted_text: '',
+            rate_note_text: '',
             Ok: '',
             Cancel: '',
             warning: '',
@@ -94,10 +103,23 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             aria_canceledit: '',
             aria_postnew: '',
             aria_cancelnew: '',
+            aria_choosefilenew: '',
+            aria_choosefileedit: '',
+            aria_ratepost: '',
+            
+            choose_file: '',
+            invalid_file_extension: '',
+            invalid_file_size_min: '',
+            invalid_file_size_max: '',
         };
         
         const MEDIA_SELECTION_BUTTONS = 1;
         const MEDIA_SELECTION_DROPDOWN = 2;
+        const ATTACHMENT_VIDEO = 1;
+        const ATTACHMENT_IMAGE = 2;
+        const ATTACHMENT_LINK = 3;
+        const SORTBY_DATE = 1;
+        const SORTBY_RATING = 2;
         var reloadTimer = null;
         var lastHistoryId = null;
         var isEditor = options.isEditor || false;
@@ -106,6 +128,11 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
         var noteTextCache = null, noteHeadingCache = null, attachmentCache = null;
         var editingNote = 0;
         var isReadOnlyBoard = options.readonly || false;
+        var accepted_file_extensions = options.file.extensions;
+        var accepted_file_size_min = options.file.size_min;
+        var accepted_file_size_max = options.file.size_max;
+        var ratingenabled = options.ratingenabled;
+        var sortby = options.sortby || SORTBY_DATE;
         
         var serviceCall = function(method, args, callback, failcallback) {
             if (method!=='board_history') {
@@ -113,7 +140,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             }
             _serviceCall(method, args, function() {
                 callback.apply(null, arguments);
-                if (method!=='board_history') {
+                if (method!=='board_history' && method!='get_board') {
                     updateBoard(true);
                 }
             }, failcallback);
@@ -175,7 +202,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
         var updateNoteAria = function(noteId) {
             var note = getNote(noteId);
             var columnIdentifier = note.closest('.board_column').find('.column_name').text();
-            var post_button = cancel_button = add_youtube = add_image = add_link = remove_attachment = "";
+            var post_button = cancel_button = add_youtube = add_image = add_link = remove_attachment = choose_file_button = "";
             
             if (!noteId) { // new post
                 post_button = strings.aria_postnew.replace('{column}', columnIdentifier);
@@ -183,6 +210,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 add_youtube = strings.aria_addmedianew.replace('{type}', strings.option_youtube).replace('{column}', columnIdentifier);
                 add_image = strings.aria_addmedianew.replace('{type}', strings.option_image).replace('{column}', columnIdentifier);
                 add_link = strings.aria_addmedianew.replace('{type}', strings.option_link).replace('{column}', columnIdentifier);
+                choose_file_button = strings.aria_choosefilenew.replace('{column}', strings.columnIdentifier);
             } else {
                 var noteIdentifier = textIdentifierForNote(note);
                 
@@ -192,8 +220,10 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 add_image = strings.aria_addmedia.replace('{type}', strings.option_image).replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
                 add_link = strings.aria_addmedia.replace('{type}', strings.option_link).replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
                 remove_attachment = strings.aria_deleteattachment.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
+                choose_file_button = strings.aria_choosefileedit.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
                 
                 note.find('.delete_note').attr('aria-label', strings.aria_deletepost.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier));
+                note.find('.rating').attr('aria-label', strings.aria_ratepost.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier));
                 note.find('.note_ariatext').html(noteIdentifier);
             }
             
@@ -211,6 +241,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             }
             note.find('.post_button').attr('aria-label', post_button);
             note.find('.cancel_button').attr('aria-label', cancel_button);
+            note.find('.choose_file_button').attr('aria-label', choose_file_button);
         };
         
         var updateColumnAria = function(columnId) {
@@ -313,12 +344,34 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             }
         };
         
+        var rateNote = function(ident) {
+            if (!ratingenabled) return;
+            if (isReadOnlyBoard) return;
+            serviceCall('can_rate_note', {id: ident}, function(canrate) {
+                if (canrate) {
+                    if (confirm(strings.rate_note_text)) {
+                        serviceCall('rate_note', {id: ident}, function(result) {
+                            if (result.status) {
+                                lastHistoryId = result.historyid;
+                                var note = getNote(ident)
+                                note.find('.rating').html(result.rating);
+                                if (sortby==SORTBY_RATING) {
+                                    sortNotes(note.closest('.board_column_content'));
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+        };
+        
         var attachmentTypeChanged = function(note) {
             var noteAttachment = getNoteAttachmentsForNote(note);
             var type = noteAttachment.find('.type').val();
             
             var attachmentInfo = noteAttachment.find('.info');
             var attachmentUrl = noteAttachment.find('.url');
+            var attachmentFile = noteAttachment.find('.file');
             
             if (mediaSelection==MEDIA_SELECTION_BUTTONS) {
                 var attachmentIcon = noteAttachment.find('.type_icon');
@@ -335,7 +388,13 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 attachmentUrl.prop('placeholder', strings['option_'+attachmentTypeToString(type)+'_url']);
                 
                 attachmentInfo.show();
-                attachmentUrl.show();
+                if (type==ATTACHMENT_IMAGE && FileReader) {
+                    attachmentFile.show();
+                    attachmentUrl.hide();
+                } else {
+                    attachmentFile.hide();
+                    attachmentUrl.show();
+                }
                 
                 if (mediaSelection==MEDIA_SELECTION_BUTTONS) {
                     attachmentIcon.removeClass().addClass(['type_icon', 'fa', attachmentFAIcon(type)]);
@@ -348,6 +407,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 }
                 attachmentInfo.hide();
                 attachmentUrl.hide();
+                attachmentFile.hide();
                 if (mediaSelection==MEDIA_SELECTION_BUTTONS) {
                     attachmentIcon.hide();
                 }
@@ -370,8 +430,8 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 var attType = noteAttachment.find('.type');
                 attType.val(attachment.type?attachment.type: "0");
                 if (attType.val()>"0") {
-                    noteAttachment.find('.info').val(attachment.info);
-                    noteAttachment.find('.url').val(attachment.url);
+                    noteAttachment.find('.info').val(decodeText(attachment.info));
+                    noteAttachment.find('.url').val(decodeText(attachment.url));
                 }
                 attachmentTypeChanged(note, attachment);
             }
@@ -379,14 +439,19 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
         };
         
         var attachmentDataForNote = function(note) {
-            var attachment = { type: 0, info: null, url: null };
+            var attachment = { type: 0, info: null, url: null, filename: null, filecontents: null };
             var noteAttachment = getNoteAttachmentsForNote(note);
-            if (noteAttachment) {
+            if (noteAttachment.length) {
                 attachment.type = noteAttachment.find('.type').val();
-                attachment.info = noteAttachment.find('.info').val();
-                attachment.url = noteAttachment.find('.url').val();
+                attachment.info = encodeText(noteAttachment.find('.info').val());
+                attachment.url = encodeText(noteAttachment.find('.url').val());
+                var fileElem = noteAttachment.find('.file>input');
+                if (fileElem.data('filename')) {
+                    attachment.filename = fileElem.data('filename');
+                    attachment.filecontents = fileElem.data('filecontents');
+                }
             }
-            if ((!attachment.info || !attachment.info.length) && (!attachment.url || !attachment.url.length)) {
+            if ((!attachment.info || !attachment.info.length) && (!attachment.url || !attachment.url.length) && (!attachment.filename)) {
                 attachment.type = 0;
             }
             
@@ -407,6 +472,36 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             return attachmentFAIcons[type-1] || null;
         }
         
+        var preloadFile = function(note, callback) {
+            var noteAttachment = getNoteAttachmentsForNote(note);
+            if (noteAttachment.length) {
+                var fileElem = noteAttachment.find('.file>input');
+                if (FileReader && fileElem.prop('files').length) {
+                    var file = fileElem.prop('files')[0];
+                    if (accepted_file_extensions.indexOf(file.name.split('.').pop().toLowerCase())==-1) { // wrong exception
+                        Notification.alert(strings.warning, strings.invalid_file_extension);
+                    } else if (file.size < accepted_file_size_min) {
+                        Notification.alert(strings.warning, strings.invalid_file_size_min);
+                    } else if (file.size > accepted_file_size_max) {
+                        Notification.alert(strings.warning, strings.invalid_file_size_max);
+                    } else {
+                        fileElem.data('filename', file.name);
+                        var fr = new FileReader();
+                        fr.onload = function() {
+                            fileElem.data('filecontents', fr.result);
+                            callback();
+                            fileElem.val('');
+                        };
+                        fr.readAsDataURL(file);
+                    }
+                } else {
+                    callback();
+                }
+            } else {
+                callback();
+            }
+        }
+        
         var previewAttachment = function(note, attachment) {
             var elem = note.find('.preview');
             if (!attachment) {
@@ -425,19 +520,24 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             elem.removeClass('wrapper_youtube');
             elem.removeClass('wrapper_image');
             elem.removeClass('wrapper_url');
-            if (attachment.url) {
+            if (attachment.filename && parseInt(attachment.type)==ATTACHMENT_IMAGE) { //before uploading
+                elem.html('<img src="'+ attachment.filecontents +'" class="preview_element" alt="'+ attachment.info +'"/>');
+                elem.addClass('wrapper_image');
+                elem.show();
+            }
+            else if (attachment.url) {
                 switch(parseInt(attachment.type)) {
-                    case 1: //youtube
+                    case ATTACHMENT_VIDEO: //youtube
                         elem.html('<iframe src="'+ fixEmbedUrlIfNeeded(attachment.url) +'" class="preview_element" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>');
                         elem.addClass('wrapper_youtube');
                         elem.show();
                     break;
-                    case 2: // image
+                    case ATTACHMENT_IMAGE: // image
                         elem.html('<img src="'+ attachment.url +'" class="preview_element" alt="'+ attachment.info +'"/>');
                         elem.addClass('wrapper_image');
                         elem.show();
                     break;
-                    case 3: // url
+                    case ATTACHMENT_LINK: // url
                         elem.html('<a href="'+ attachment.url +'" class="preview_element" target="_blank">' + (attachment.info || attachment.url) + '</a>');
                         elem.addClass('wrapper_url');
                         elem.show();
@@ -452,7 +552,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             }
         };
         
-        var addNote = function(columnid, ident, heading, content, attachment, owner) {
+        var addNote = function(columnid, ident, heading, content, attachment, owner, sortorder, rating) {
             var ismynote = owner.id==userId || !ident;
             var iseditable = isEditor || (ismynote && !isReadOnlyBoard);
             
@@ -463,7 +563,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 }
             }
             
-            var note = $('<div class="board_note" data-ident="'+ident+'"></div>');
+            var note = $('<div class="board_note" data-ident="'+ident+'" data-sortorder="'+sortorder+'"></div>');
             if (ismynote) {
                 note.addClass('mynote');
             }
@@ -472,21 +572,22 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             }
             
             var notecontent = $('<div class="note_content"></div>');
-            var noteHeading = $('<div class="note_heading" tabindex="0">' + (heading?heading:'') + '</div>');
-            var noteText = $('<div class="note_text" tabindex="0">' + (content?content:'') + '</div>');
+            var noteHeading = $('<div class="note_heading" tabindex="0">'+(heading?heading:'')+'</div>');
+            var noteText = $('<div class="note_text" tabindex="0">'+(content?content:'')+'</div>');
             var noteAriaText = $('<div class="note_ariatext hidden" role="heading" aria-level="4" tabindex="0"></div>');
             var attachmentPreview = $('<div class="preview"></div>');
             if (iseditable) {
                 var noteAttachment = $('<div class="note_attachment form-group row" tabindex="0">' +
                                     '<select class="type form-control form-control-sm '+(mediaSelection==MEDIA_SELECTION_BUTTONS?'hidden':'')+'">' +
                                         '<option value="0">'+strings.option_empty+'</option>' +
-                                        '<option value="1">'+strings.option_youtube+'</option>' +
-                                        '<option value="2">'+strings.option_image+'</option>' +
-                                        '<option value="3">'+strings.option_link+'</option>' +
+                                        '<option value="'+ATTACHMENT_VIDEO+'">'+strings.option_youtube+'</option>' +
+                                        '<option value="'+ATTACHMENT_IMAGE+'">'+strings.option_image+'</option>' +
+                                        '<option value="'+ATTACHMENT_LINK+'">'+strings.option_link+'</option>' +
                                     '</select>' +
                                     '<span class="type_icon fa '+(mediaSelection==MEDIA_SELECTION_DROPDOWN?'hidden':'')+'"></span>'+
                                     '<input type="text" class="info form-control form-control-sm col-sm-12 '+(mediaSelection==MEDIA_SELECTION_BUTTONS?'with_type_icon':'')+'" placeholder="">' +
                                     '<input type="text" class="url form-control form-control-sm col-sm-12" placeholder="">' +
+                                    '<div class="file form-control form-control-sm"><label for="file'+ident+'" class="choose_file_button action_button p-0 w-100" tabindex="0">'+strings.choose_file+'</label><input id="file'+ident+'" type="file" class="d-none"></div>' +
                                 '</div>'
                             );
                 
@@ -507,6 +608,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 var attachmentType = noteAttachment.find('.type');
                 var attachmentInfo = noteAttachment.find('.info');
                 var attachmentUrl = noteAttachment.find('.url');
+                var attachmentFileInput = noteAttachment.find('.file>input');
                 var attachmentIcon = noteAttachment.find('.type_icon');
                 
                 attachmentType.on('change', function() {
@@ -516,6 +618,12 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 
                 attachmentUrl.on('change', function() {
                     previewAttachment(note);
+                });
+                
+                attachmentFileInput.on('change', function() {
+                    preloadFile(note, function() {
+                        previewAttachment(note);
+                    });
                 });
                 
                 attachmentInfo.on('change', function() {
@@ -593,26 +701,28 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                     
                     var theHeading = noteHeading.html();
                     var theText = noteText.html().substring(0, options.post_max_length);
-                        
+                    
                     if (!ident) { // new
                         serviceCall('add_note', {columnid: columnid, heading: theHeading, content: theText, attachment: sendAttach}, function(result) {
-                            lastHistoryId = result.historyid;
-                            
-                            note.remove();
-                            showNewNoteButtons();
-                            addNote(columnid, result.id, theHeading, theText, sendAttach, {id: userId});
-                            sortNotes(column_content);
-                            updateNoteAria(result.id);
+                            if (result.status) {
+                                lastHistoryId = result.historyid;
+                                note.remove();
+                                showNewNoteButtons();
+                                addNote(columnid, result.note.id, result.note.heading, result.note.content, {type: result.note.type, info: result.note.info, url: result.note.url}, {id: result.note.userid}, result.note.timecreated, result.note.rating);
+                                sortNotes(column_content);
+                                updateNoteAria(result.note.id);
+                                
+                            }
                         });
                         
                     } else { // update
                         serviceCall('update_note', {id: ident, heading: theHeading, content: theText, attachment: sendAttach}, function(result) {
                             if (result.status) {
-                                setAttachment(note, sendAttach);
-                                successNoteEdit();
                                 lastHistoryId = result.historyid;
-                                noteText.html(theText);
+                                successNoteEdit();
+                                noteText.html(result.note.content);
                                 updateNoteAria(ident);
+                                setAttachment(note, {type: result.note.type, info: result.note.info, url: result.note.url});
                             }
                         });
                     }
@@ -639,6 +749,16 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             }
             
             if (ident) {
+                if (ratingenabled) {
+                    note.addClass('rateablenote');
+                    var rateElement = $('<div class="fa fa-star rating" role="button" tabindex="0">'+rating+'</div>');
+                
+                    handleAction(rateElement, function() {
+                        rateNote(ident);
+                    });
+                    notecontent.append(rateElement);
+                }
+                
                 if (!noteHeading.html()) {
                     noteHeading.hide();
                 }
@@ -667,6 +787,10 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             var column_newcontent = $('<div class="board_column_newcontent"></div>');
             column_header.append(column_sort);
             column_header.append(column_name);
+            
+            if (options.hideheaders) {
+                column_name.addClass('d-none');
+            }
             
             column_sort.on('click', function() {
                 sortNotes(column_content, true);
@@ -728,7 +852,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 column_newcontent.append('<div class="board_button newnote" role="button" tabindex="0"><div class="button_content"><span class="fa '+options.noteicon+'"></span></div></div>');
                 
                 handleAction(column_newcontent.find('.newnote'), function() {
-                    addNote(ident, 0, null, null, null, {id: userId});
+                    addNote(ident, 0, null, null, null, {id: userId}, 0, 0);
                 });
             }
 
@@ -741,11 +865,12 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                         
             if (notes) {
                 for (index in notes) {
-                    addNote(ident, notes[index].id, notes[index].heading, notes[index].content, {type: notes[index].type, info: notes[index].info, url: notes[index].url}, {id: notes[index].userid});
+                    addNote(ident, notes[index].id, notes[index].heading, notes[index].content, {type: notes[index].type, info: notes[index].info, url: notes[index].url}, {id: notes[index].userid}, notes[index].timecreated, notes[index].rating);
                 }
             }
-            sortNotes(column_content, true);
+            sortNotes(column_content);
             updateColumnAria(ident);
+            isEditor && updateSortable();
         };
         
         var addNewColumnButton = function() {
@@ -781,8 +906,9 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                     
                     var data = JSON.parse(item.content);
                     if (item.action=='add_note') {
-                        addNote(data.columnid, data.id, data.heading, data.content, data.attachment, {id: item.userid});
+                        addNote(data.columnid, data.id, data.heading, data.content, data.attachment, {id: item.userid}, data.timecreated, data.rating);
                         updateNoteAria(data.id);
+                        sortNotes($('.board_column[data-ident='+data.columnid+'] .board_column_content'));
                     } else if (item.action=='update_note') {
                         var note = getNote(data.id);
                         if (note) {
@@ -838,6 +964,12 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                             stopNoteEdit();
                         }
                         column.remove();
+                    } else if (item.action=='rate_note') {
+                        var note = getNote(data.id)
+                        note.find('.rating').html(data.rating);
+                        if (sortby==SORTBY_RATING) {
+                            sortNotes(note.closest('.board_column_content'));
+                        }
                     }
                     lastHistoryId = item.id;
                 }
@@ -849,11 +981,11 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
         var updateBoard = function(instant) {
             if (instant) {
                 processBoardHistory();
-            } else {
+            } else if (options.history_refresh > 0) {
                 if (reloadTimer) {
                     stopUpdating();
                 }
-                reloadTimer = setTimeout(processBoardHistory, 2000);
+                reloadTimer = setTimeout(processBoardHistory, options.history_refresh * 1000);
             }
         };
         
@@ -865,6 +997,13 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
         var sortNotes = function(content, toggle) {
             var sort_col = $(content).parent().find('.column_sort');
             var direction = $(content).data('sort');
+            if (!direction) {
+                if (sortby==SORTBY_RATING) {
+                    direction = 'desc';
+                } else {
+                    direction = 'asc';
+                }
+            }
             if (toggle) {
                 direction = direction=='asc'?'desc':'asc';
             }
@@ -877,12 +1016,48 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 sort_col.addClass('fa-angle-down');
             }
             $(content).data('sort', direction);
+
+            if (sortby==SORTBY_DATE) {
+                var desc = function(a, b) {
+                    return $(b).data("sortorder") - $(a).data("sortorder");
+                };
+                var asc = function(a, b) {
+                    return $(a).data("sortorder") - $(b).data("sortorder");
+                };
+            } else if (sortby==SORTBY_RATING) {
+                var desc = function(a, b) {
+                    return $(b).find('.rating').text() - $(a).find('.rating').text() || $(b).data("sortorder") - $(a).data("sortorder");
+                };
+                var asc = function(a, b) {
+                    return $(a).find('.rating').text() - $(b).find('.rating').text() || $(a).data("sortorder") - $(b).data("sortorder");
+                };
+            }
             
             $('> .board_note', $(content)).sort(direction=='asc'?asc:desc).appendTo($(content));
-            function desc(a, b) { return $(b).data("ident") < $(a).data("ident") ? -1 : 1; }
-            function asc(a, b) { return $(b).data("ident") < $(a).data("ident") ? 1 : -1; }
+            
         };
         
+        var updateSortable = function() {
+            $( ".board_column_content" ).sortable({
+                connectWith: ".board_column_content",
+                stop: function(e, ui) {
+                    var note = $(ui.item);
+                    var tocolumn = note.closest('.board_column');
+                    var columnid = tocolumn.data('ident')
+                    
+                    var elem = $(this);
+                    serviceCall('move_note', {id: note.data('ident'), columnid: columnid}, function(result) {
+                        if (result.status) {
+                            lastHistoryId = result.historyid;
+                            updateNoteAria(note.data('ident'));
+                            sortNotes($('.board_column[data-ident='+columnid+'] .board_column_content'));
+                        } else {
+                            elem.sortable('cancel');
+                        }
+                    });
+                }
+            });
+        }
         var init = function() {
             serviceCall('get_board', {id: board.id}, function(columns) {
                 // init
@@ -891,11 +1066,14 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                         addColumn(columns[index].id, columns[index].name, columns[index].notes || {});
                     }
                 }
-                if (isEditor) {
-                    addNewColumnButton();
-                }
+                
+                isEditor && addNewColumnButton();
                 
                 lastHistoryId = board.historyid;
+                
+                isEditor && updateSortable();
+                
+                updateBoard();
             });
         };
    

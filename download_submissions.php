@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -17,14 +18,14 @@
 require('../../config.php');
 require_once('locallib.php');
 
-$id      = optional_param('id', 0, PARAM_INT); // Course Module ID.
+$id      = optional_param('id', 0, PARAM_INT); // Course Module ID
 
 if (!$cm = get_coursemodule_from_id('board', $id)) {
     print_error('invalidcoursemodule');
 }
-$board = $DB->get_record('board', array('id' => $cm->instance), '*', MUST_EXIST);
+$board = $DB->get_record('board', array('id'=>$cm->instance), '*', MUST_EXIST);
 
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
 
 require_course_login($course, true, $cm);
 $context = context_module::instance($cm->id);
@@ -40,19 +41,15 @@ $boarddata = board_get($board->id);
 
 $users = [];
 
-fputcsv($fp, [get_string('export_firstname', 'mod_board'), get_string('export_lastname', 'mod_board'),
-    get_string('export_email', 'mod_board'), get_string('export_heading', 'mod_board'),
-    get_string('export_content', 'mod_board'), get_string('export_info', 'mod_board'),
-    get_string('export_url', 'mod_board'), get_string('export_timecreated', 'mod_board')]);
+fputcsv($fp, [get_string('export_firstname', 'mod_board'), get_string('export_lastname', 'mod_board'), get_string('export_email', 'mod_board'), get_string('export_heading', 'mod_board'), get_string('export_content', 'mod_board'), get_string('export_info', 'mod_board'), get_string('export_url', 'mod_board'), get_string('export_timecreated', 'mod_board')]);
 
-foreach ($boarddata as $columnid => $column) {
-    foreach ($column->notes as $noteid => $note) {
+foreach($boarddata AS $columnid => $column) {
+    foreach($column->notes AS $noteid => $note) {
         if (!isset($users[$note->userid])) {
             $users[$note->userid] = $DB->get_record('user', array('id' => $note->userid));
         }
         $user = $users[$note->userid];
-        fputcsv($fp, [$user->firstname, $user->lastname, $user->email, $note->heading, sanitize($note->content),
-            $note->info, $note->url, $note->timecreated ? userdate($note->timecreated) : null]);
+        fputcsv($fp, [$user->firstname, $user->lastname, $user->email, $note->heading, sanitize($note->content), $note->info, $note->url, $note->timecreated?userdate($note->timecreated):null]);
     }
 }
 
@@ -61,7 +58,7 @@ exit();
 
 
 function sanitize($content) {
-    $breaks = array("<br />", "<br>", "<br/>");
+    $breaks = array("<br />","<br>","<br/>");
 
     return str_ireplace($breaks, "\n", $content);
 }
