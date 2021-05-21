@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -17,9 +16,9 @@
 
 require('../../config.php');
 
-$id = required_param('id', PARAM_INT); // course id
+$id = required_param('id', PARAM_INT); // Course id.
 
-$course = $DB->get_record('course', array('id'=>$id), '*', MUST_EXIST);
+$course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
 
 require_course_login($course, true);
 $PAGE->set_pagelayout('incourse');
@@ -74,7 +73,7 @@ foreach ($boards as $board) {
         $printsection = '<span class="smallinfo">'.userdate($board->timemodified)."</span>";
     }
 
-    $class = $board->visible ? '' : 'class="dimmed"'; // hidden modules are dimmed
+    $class = $board->visible ? '' : 'class="dimmed"'; // Hidden modules are dimmed.
 
     $table->data[] = array (
         $printsection,

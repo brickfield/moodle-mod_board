@@ -27,7 +27,7 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
-    
+
     'mod_board_board_history' => [
         'classname'     => 'mod_board_external',
         'methodname'    => 'board_history',
@@ -38,7 +38,7 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
-    
+
     'mod_board_add_column' => [
         'classname'     => 'mod_board_external',
         'methodname'    => 'add_column',
@@ -49,7 +49,7 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
-    
+
     'mod_board_update_column' => [
         'classname'     => 'mod_board_external',
         'methodname'    => 'update_column',
@@ -60,7 +60,7 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
-    
+
     'mod_board_delete_column' => [
         'classname'     => 'mod_board_external',
         'methodname'    => 'delete_column',
@@ -71,7 +71,7 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
-    
+
     'mod_board_add_note' => [
         'classname'     => 'mod_board_external',
         'methodname'    => 'add_note',
@@ -82,7 +82,7 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
-    
+
     'mod_board_update_note' => [
         'classname'     => 'mod_board_external',
         'methodname'    => 'update_note',
@@ -93,7 +93,7 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
-    
+
     'mod_board_delete_note' => [
         'classname'     => 'mod_board_external',
         'methodname'    => 'delete_note',
@@ -104,7 +104,7 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
-    
+
     'mod_board_move_note' => [
         'classname'     => 'mod_board_external',
         'methodname'    => 'move_note',
@@ -115,7 +115,7 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
-    
+
     'mod_board_can_rate_note' => [
         'classname'     => 'mod_board_external',
         'methodname'    => 'can_rate_note',
@@ -126,7 +126,7 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
-    
+
     'mod_board_rate_note' => [
         'classname'     => 'mod_board_external',
         'methodname'    => 'rate_note',

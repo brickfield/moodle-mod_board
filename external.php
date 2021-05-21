@@ -45,7 +45,7 @@ class mod_board_external extends external_api {
             )
         );
     }
-    
+
     /* GET BOARD */
     public static function get_board_parameters() {
         return new external_function_parameters([
@@ -55,8 +55,8 @@ class mod_board_external extends external_api {
 
     public static function get_board($id) {
         $data = board_get($id);
-        foreach($data AS $index=>$column) {
-            foreach($column->notes AS $nidx => $note) {
+        foreach ($data as $index => $column) {
+            foreach ($column->notes as $nidx => $note) {
                 $note->heading = self::sanitize($note->heading);
                 $note->content = self::sanitize($note->content);
                 $note->info = self::sanitize($note->info);
@@ -91,7 +91,7 @@ class mod_board_external extends external_api {
             )
         );
     }
-    
+
     /* ADD COLUMN */
     public static function add_column_parameters() {
         return new external_function_parameters([
@@ -110,7 +110,7 @@ class mod_board_external extends external_api {
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
     }
-    
+
     /* UPDATE COLUMN */
     public static function update_column_parameters() {
         return new external_function_parameters([
@@ -129,7 +129,7 @@ class mod_board_external extends external_api {
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
     }
-    
+
     /* DELETE COLUMN */
     public static function delete_column_parameters() {
         return new external_function_parameters([
@@ -147,7 +147,7 @@ class mod_board_external extends external_api {
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
     }
-    
+
     /* ADD NOTE */
     public static function add_note_parameters() {
         return new external_function_parameters([
@@ -193,7 +193,7 @@ class mod_board_external extends external_api {
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
     }
-    
+
     /* UPDATE NOTE */
     public static function update_note_parameters() {
         return new external_function_parameters([
@@ -238,7 +238,7 @@ class mod_board_external extends external_api {
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
     }
-    
+
     /* DELETE NOTE */
     public static function delete_note_parameters() {
         return new external_function_parameters([
@@ -256,7 +256,7 @@ class mod_board_external extends external_api {
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
     }
-    
+
     /* MOVE NOTE */
     public static function move_note_parameters() {
         return new external_function_parameters([
@@ -275,7 +275,7 @@ class mod_board_external extends external_api {
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
     }
-    
+
     /* CAN RATE NOTE */
     public static function can_rate_note_parameters() {
         return new external_function_parameters([
@@ -290,7 +290,7 @@ class mod_board_external extends external_api {
     public static function can_rate_note_returns() {
         return new external_value(PARAM_BOOL, 'Can rate status');
     }
-    
+
     /* RATE NOTE */
     public static function rate_note_parameters() {
         return new external_function_parameters([
@@ -309,7 +309,7 @@ class mod_board_external extends external_api {
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
     }
-    
+
     private static function sanitize($text) {
         $text = preg_replace('/<br(\s+\/)?>/', "\n", $text);
         $text = str_replace('<', "&lt;", $text);

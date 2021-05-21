@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -18,14 +17,14 @@
 require('../../config.php');
 require_once('locallib.php');
 
-$id      = optional_param('id', 0, PARAM_INT); // Course Module ID
+$id      = optional_param('id', 0, PARAM_INT); // Course Module ID.
 
 if (!$cm = get_coursemodule_from_id('board', $id)) {
     print_error('invalidcoursemodule');
 }
-$board = $DB->get_record('board', array('id'=>$cm->instance), '*', MUST_EXIST);
+$board = $DB->get_record('board', array('id' => $cm->instance), '*', MUST_EXIST);
 
-$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
+$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 
 require_course_login($course, true, $cm);
 $context = context_module::instance($cm->id);
@@ -41,10 +40,10 @@ $boarddata = board_get($board->id);
 
 $maxnotes = 0;
 $line = [];
-foreach($boarddata AS $index => $column) {
+foreach ($boarddata as $index => $column) {
     $countnotes = count($column->notes);
     $maxnotes = $countnotes > $maxnotes ? $countnotes : $maxnotes;
-    
+
     array_push($line, $column->name);
 }
 fputcsv($fp, $line);
@@ -52,9 +51,9 @@ fputcsv($fp, $line);
 $noterow = 0;
 while ($noterow < $maxnotes) {
     $line = [];
-    foreach($boarddata AS $index => $column) {
+    foreach ($boarddata as $index => $column) {
         $notes = array_values($column->notes);
-        array_push($line, isset($notes[$noterow])?sanitize_note($notes[$noterow]):'');
+        array_push($line, isset($notes[$noterow]) ? sanitize_note($notes[$noterow]) : '');
     }
     $noterow++;
     fputcsv($fp, $line);
@@ -64,7 +63,7 @@ fclose($fp);
 exit();
 
 function sanitize_note($note) {
-    $breaks = array("<br />","<br>","<br/>");
+    $breaks = array("<br />", "<br>", "<br/>");
 
     $rowstring = '';
     if (!empty($note->heading)) {
@@ -80,7 +79,7 @@ function sanitize_note($note) {
         if (!empty($rowstring)) {
             $rowstring .= "\n";
         }
-        $rowstring .= (!empty($note->info)?($note->info.' '):'') . $note->url;
+        $rowstring .= (!empty($note->info) ? ($note->info.' ') : '') . $note->url;
     }
     return $rowstring;
 }

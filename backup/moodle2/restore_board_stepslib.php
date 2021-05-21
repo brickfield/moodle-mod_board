@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -77,7 +76,7 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
         $newitemid = $DB->insert_record('board_notes', $data);
         $this->set_mapping('board_note', $oldid, $newitemid, true);
     }
-    
+
     protected function process_board_note_rating($data) {
         global $DB;
 
@@ -89,27 +88,27 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
             $data->userid = $this->get_mappingid('user', $data->userid);
         }
         $data->timecreated = $this->apply_date_offset($data->timecreated);
-        
+
         $newitemid = $DB->insert_record('board_note_ratings', $data);
         $this->set_mapping('board_note_rating', $oldid, $newitemid, true);
     }
-    
+
     protected function after_execute() {
         global $DB;
-        
+
         $this->add_related_files('mod_board', 'images', null);
         $this->add_related_files('mod_board', 'background', null);
-        
-        // UPDATE note url to new context
+
+        // UPDATE note url to new context.
         $boardid = $this->get_new_parentid('board');
         $board = $DB->get_record('board', array('id' => $boardid));
         $cm = get_coursemodule_from_instance('board', $board->id, $board->course, false, MUST_EXIST);
         $context = context_module::instance($cm->id);
-        
+
         $columns = $DB->get_records('board_columns', array('boardid' => $boardid));
-        foreach($columns AS $columnid => $column) {
+        foreach ($columns as $columnid => $column) {
             $notes = $DB->get_records('board_notes', array('columnid' => $columnid));
-            foreach($notes AS $noteid => $note) {
+            foreach ($notes as $noteid => $note) {
                 $pattern = '/pluginfile.php\/(\d+)\//i';
                 $replacement = 'pluginfile.php/'.$context->id.'/';
                 $url = preg_replace($pattern, $replacement, $note->url);

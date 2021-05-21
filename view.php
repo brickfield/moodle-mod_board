@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -18,11 +17,11 @@
 require('../../config.php');
 require_once('locallib.php');
 
-$id      = optional_param('id', 0, PARAM_INT); // Course Module ID
-$b       = optional_param('b', 0, PARAM_INT);  // Board instance ID
+$id      = optional_param('id', 0, PARAM_INT); // Course Module ID.
+$b       = optional_param('b', 0, PARAM_INT);  // Board instance ID.
 
 if ($b) {
-    if (!$board = $DB->get_record('board', array('id'=>$b))) {
+    if (!$board = $DB->get_record('board', array('id' => $b))) {
         print_error('invalidaccessparameter');
     }
     $cm = get_coursemodule_from_instance('board', $board->id, $board->course, false, MUST_EXIST);
@@ -31,10 +30,10 @@ if ($b) {
     if (!$cm = get_coursemodule_from_id('board', $id)) {
         print_error('invalidcoursemodule');
     }
-    $board = $DB->get_record('board', array('id'=>$cm->instance), '*', MUST_EXIST);
+    $board = $DB->get_record('board', array('id' => $cm->instance), '*', MUST_EXIST);
 }
 
-$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
+$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 
 require_course_login($course, true, $cm);
 $context = context_module::instance($cm->id);
@@ -54,7 +53,7 @@ $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $b
     'history_refresh' => $CFG->history_refresh,
     'file' => array(
         'extensions' => explode(',', ACCEPTED_FILE_EXTENSIONS),
-        'size_min' => ACCEPTED_FILE_MIN_SIZE, 
+        'size_min' => ACCEPTED_FILE_MIN_SIZE,
         'size_max' => ACCEPTED_FILE_MAX_SIZE
     ),
     'ratingenabled' => board_rating_enabled($board->id),
@@ -78,12 +77,12 @@ if (trim(strip_tags($board->intro))) {
 echo $OUTPUT->box_start('mod_introbox', 'group_menu');
 echo groups_print_activity_menu($cm, $pageurl, true);
 echo $OUTPUT->box_end();
- 
 
-$extra_background = '';
+
+$extrabackground = '';
 if (!empty($board->background_color)) {
     $color = '#' . str_replace('#', '', $board->background_color);
-    $extra_background = "background-color: {$color};";
+    $extrabackground = "background-color: {$color};";
 }
 $fs = get_file_storage();
 $files = $fs->get_area_files($context->id, 'mod_board', 'background', 0, '', false);
@@ -91,8 +90,9 @@ if (count($files)) {
     $file = reset($files);
     $url = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(),
             $file->get_itemid(), $file->get_filepath(), $file->get_filename())->get_path();
-    $extra_background = "background:url({$url}) no-repeat center center; -webkit-background-size: cover; -moz-background-size: cover; -o-background-size: cover; background-size: cover;";
+    $extrabackground = "background:url({$url}) no-repeat center center; -webkit-background-size: cover;
+    -moz-background-size: cover; -o-background-size: cover; background-size: cover;";
 }
-echo '<div class="mod_board" style="' . $extra_background . '"></div>';
+echo '<div class="mod_board" style="' . $extrabackground . '"></div>';
 
 echo $OUTPUT->footer();

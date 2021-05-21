@@ -13,21 +13,21 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
- 
+
 namespace mod_board\event;
 defined('MOODLE_INTERNAL') || die();
 
 class move_note extends \core\event\base {
     protected function init() {
-        $this->data['crud'] = 'u'; // c(reate), r(ead), u(pdate), d(elete)
+        $this->data['crud'] = 'u'; // C(reate), r(ead), u(pdate), d(elete).
         $this->data['edulevel'] = self::LEVEL_OTHER;
         $this->data['objecttable'] = 'board';
     }
- 
+
     public static function get_name() {
         return get_string('event_move_note', 'mod_board');
     }
- 
+
     public function get_description() {
         $obj = new \stdClass;
         $obj->userid = $this->userid;
@@ -35,7 +35,7 @@ class move_note extends \core\event\base {
         $obj->columnid = $this->other['columnid'];
         return get_string('event_move_note_desc', 'mod_board', $obj);
     }
- 
+
     public function get_legacy_logdata() {
         return array($this->courseid, 'mod_board', 'move_note', null, $this->objectid);
     }

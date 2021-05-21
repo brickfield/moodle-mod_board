@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -34,28 +33,28 @@ class backup_board_activity_structure_step extends backup_activity_structure_ste
         $ratings = new backup_nested_element('ratings');
         $rating = new backup_nested_element('rating', array('id'), array(
             'noteid', 'userid', 'timecreated'));
-        
+
         $ratings->add_child($rating);
         $note->add_child($ratings);
-        
+
         $notes->add_child($note);
         $column->add_child($notes);
-        
+
         $columns->add_child($column);
         $board->add_child($columns);
 
         $board->set_source_table('board', array('id' => backup::VAR_ACTIVITYID));
         $column->set_source_table('board_columns', array('boardid' => backup::VAR_PARENTID), 'id ASC');
-        
+
         if ($userinfo) {
             $note->set_source_table('board_notes', array('columnid' => backup::VAR_PARENTID), 'id ASC');
             $rating->set_source_table('board_note_ratings', array('noteid' => backup::VAR_PARENTID), 'id ASC');
         }
-        
+
         $note->annotate_ids('user', 'userid');
         $note->annotate_ids('group', 'groupid');
         $rating->annotate_ids('user', 'userid');
-        
+
         $note->annotate_files('mod_board', 'images', null);
         $board->annotate_files('mod_board', 'background', null);
 

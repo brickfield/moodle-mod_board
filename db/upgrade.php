@@ -1,4 +1,18 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -25,18 +39,18 @@ function xmldb_board_upgrade($oldversion) {
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
-        
+
         $table = new xmldb_table('board');
         $field = new xmldb_field('historyid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
 
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        
+
         // Board savepoint reached.
         upgrade_mod_savepoint(true, 2020091504, 'board');
     }
-    
+
     if ($oldversion < 2020092201) {
 
         // Define field introformat to be dropped from board.
@@ -47,19 +61,19 @@ function xmldb_board_upgrade($oldversion) {
         if ($dbman->field_exists($table, $field)) {
             $dbman->drop_field($table, $field);
         }
-        
+
         // Changing the default of field columnid on table board_history to 0.
         $table = new xmldb_table('board_history');
         $field = new xmldb_field('columnid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'action');
 
         // Launch change of default for field columnid.
         $dbman->change_field_default($table, $field);
-        
+
         $field = new xmldb_field('noteid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'columnid');
 
         // Launch change of default for field noteid.
         $dbman->change_field_default($table, $field);
-        
+
         $field = new xmldb_field('content', XMLDB_TYPE_TEXT, null, null, null, null, null, 'userid');
 
         // Launch change of nullability for field content.
@@ -68,7 +82,7 @@ function xmldb_board_upgrade($oldversion) {
         // Board savepoint reached.
         upgrade_mod_savepoint(true, 2020092201, 'board');
     }
-    
+
     if ($oldversion < 2020101801) {
 
         // Define field background_color to be added to board.
@@ -83,7 +97,7 @@ function xmldb_board_upgrade($oldversion) {
         // Board savepoint reached.
         upgrade_mod_savepoint(true, 2020101801, 'board');
     }
-    
+
     if ($oldversion < 2020111000) {
 
         // Define field heading to be added to board_notes.
@@ -94,7 +108,7 @@ function xmldb_board_upgrade($oldversion) {
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        
+
         // Define field type to be added to board_notes.
         $field = new xmldb_field('type', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'heading');
 
@@ -102,7 +116,7 @@ function xmldb_board_upgrade($oldversion) {
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        
+
         // Define field info to be added to board_notes.
         $field = new xmldb_field('info', XMLDB_TYPE_CHAR, '100', null, null, null, null, 'type');
 
@@ -110,7 +124,7 @@ function xmldb_board_upgrade($oldversion) {
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        
+
         // Define field url to be added to board_notes.
         $field = new xmldb_field('url', XMLDB_TYPE_CHAR, '200', null, null, null, null, 'info');
 
@@ -118,7 +132,7 @@ function xmldb_board_upgrade($oldversion) {
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        
+
         // Define field columnid to be dropped from board_history.
         $table = new xmldb_table('board_history');
         $field = new xmldb_field('columnid');
@@ -127,7 +141,7 @@ function xmldb_board_upgrade($oldversion) {
         if ($dbman->field_exists($table, $field)) {
             $dbman->drop_field($table, $field);
         }
-        
+
         // Define field noteid to be dropped from board_history.
         $field = new xmldb_field('noteid');
 
@@ -139,7 +153,7 @@ function xmldb_board_upgrade($oldversion) {
         // Board savepoint reached.
         upgrade_mod_savepoint(true, 2020111000, 'board');
     }
-    
+
     if ($oldversion < 2020112300) {
 
         // Define field groupid to be added to board_notes.
@@ -150,7 +164,7 @@ function xmldb_board_upgrade($oldversion) {
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        
+
         // Define field groupid to be added to board_history.
         $table = new xmldb_table('board_history');
         $field = new xmldb_field('groupid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'boardid');
@@ -163,7 +177,7 @@ function xmldb_board_upgrade($oldversion) {
         // Board savepoint reached.
         upgrade_mod_savepoint(true, 2020112300, 'board');
     }
-    
+
     if ($oldversion < 2020120700) {
 
         // Define field timecreated to be added to board_notes.
@@ -178,7 +192,7 @@ function xmldb_board_upgrade($oldversion) {
         // Board savepoint reached.
         upgrade_mod_savepoint(true, 2020120700, 'board');
     }
-    
+
     if ($oldversion < 2021030100) {
 
         // Define field sortorder to be added to board_notes.
@@ -189,12 +203,12 @@ function xmldb_board_upgrade($oldversion) {
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        
+
         $columns = $DB->get_records('board_columns');
-        foreach($columns AS $columnid => $column) {
+        foreach ($columns as $columnid => $column) {
             $notes = $DB->get_records('board_notes', array('columnid' => $column->id), 'id', 'id');
             $noteorder = 1;
-            foreach($notes AS $noteid => $note) {
+            foreach ($notes as $noteid => $note) {
                 $DB->update_record('board_notes', array('id' => $note->id, 'sortorder' => $noteorder++));
             }
         }
@@ -202,8 +216,8 @@ function xmldb_board_upgrade($oldversion) {
         // Board savepoint reached.
         upgrade_mod_savepoint(true, 2021030100, 'board');
     }
-    
-     if ($oldversion < 2021031612) {
+
+    if ($oldversion < 2021031612) {
 
         // Define field addrating to be added to board.
         $table = new xmldb_table('board');
@@ -213,7 +227,7 @@ function xmldb_board_upgrade($oldversion) {
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        
+
         // Define field hideheaders to be added to board.
         $field = new xmldb_field('hideheaders', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'addrating');
 
@@ -221,7 +235,7 @@ function xmldb_board_upgrade($oldversion) {
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        
+
         // Define field sortby to be added to board.
         $field = new xmldb_field('sortby', XMLDB_TYPE_INTEGER, '1', null, null, null, '1', 'hideheaders');
 
@@ -229,7 +243,7 @@ function xmldb_board_upgrade($oldversion) {
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        
+
         // Define field postby to be added to board.
         $field = new xmldb_field('postby', XMLDB_TYPE_INTEGER, '10', null, null, null, '0', 'sortby');
 
@@ -258,7 +272,7 @@ function xmldb_board_upgrade($oldversion) {
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
-        
+
         // Define field sortorder to be dropped from board_notes.
         $table = new xmldb_table('board_notes');
         $field = new xmldb_field('sortorder');
@@ -267,10 +281,10 @@ function xmldb_board_upgrade($oldversion) {
         if ($dbman->field_exists($table, $field)) {
             $dbman->drop_field($table, $field);
         }
-        
+
         // Board savepoint reached.
         upgrade_mod_savepoint(true, 2021031612, 'board');
     }
-   
+
     return true;
 }

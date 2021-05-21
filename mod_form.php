@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -20,16 +19,15 @@ defined('MOODLE_INTERNAL') || die;
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
 
 class mod_board_mod_form extends moodleform_mod {
-    function definition() {
+    public function definition() {
         global $CFG, $DB;
 
         $mform = $this->_form;
-        
+
         require_once('locallib.php');
 
-        //-------------------------------------------------------
         $mform->addElement('header', 'general', get_string('general', 'form'));
-        $mform->addElement('text', 'name', get_string('name'), array('size'=>'50'));
+        $mform->addElement('text', 'name', get_string('name'), array('size' => '50'));
         if (!empty($CFG->formatstringstriptags)) {
             $mform->setType('name', PARAM_TEXT);
         } else {
@@ -38,66 +36,64 @@ class mod_board_mod_form extends moodleform_mod {
         $mform->addRule('name', null, 'required', null, 'client');
         $mform->addRule('name', get_string('maximumchars', '', 100), 'maxlength', 100, 'client');
         $this->standard_intro_elements();
-        
+
         $mform->addElement('header', 'board', get_string('boardsettings', 'mod_board'));
-        
-        $mform->addElement('text', 'background_color', get_string('background_color', 'mod_board'), array('size'=>'50'));
+
+        $mform->addElement('text', 'background_color', get_string('background_color', 'mod_board'), array('size' => '50'));
         $mform->setType('background_color', PARAM_TEXT);
         $mform->addRule('background_color', get_string('maximumchars', '', 9), 'maxlength', 9, 'client');
-        
+
         $filemanageroptions = array();
         $filemanageroptions['accepted_types'] = array('.png', '.jpg', '.jpeg', '.bmp');
         $filemanageroptions['maxbytes'] = 0;
         $filemanageroptions['maxfiles'] = 1;
         $filemanageroptions['subdirs'] = 0;
-        $mform->addElement('filemanager', 'background_image', get_string('background_image', 'mod_board'), null, $filemanageroptions);
-        
+        $mform->addElement('filemanager', 'background_image',
+                get_string('background_image', 'mod_board'), null, $filemanageroptions);
+
         $mform->addElement('select', 'addrating', get_string('addrating', 'mod_board'),
            array(
-                RATINGDISABLED => get_string('addrating_none', 'mod_board'), 
-                RATINGBYSTUDENTS => get_string('addrating_students', 'mod_board'), 
-                RATINGBYTEACHERS => get_string('addrating_teachers', 'mod_board'), 
+                RATINGDISABLED => get_string('addrating_none', 'mod_board'),
+                RATINGBYSTUDENTS => get_string('addrating_students', 'mod_board'),
+                RATINGBYTEACHERS => get_string('addrating_teachers', 'mod_board'),
                 RATINGBYALL => get_string('addrating_all', 'mod_board')
             )
         );
         $mform->setType('addrating', PARAM_INT);
-        
+
         $mform->addElement('checkbox', 'hideheaders', get_string('hideheaders', 'mod_board'));
         $mform->setType('hideheaders', PARAM_INT);
-        
+
         $mform->addElement('select', 'sortby', get_string('sortby', 'mod_board'),
            array(
-                SORTBYDATE => get_string('sortbydate', 'mod_board'), 
+                SORTBYDATE => get_string('sortbydate', 'mod_board'),
                 SORTBYRATING => get_string('sortbyrating', 'mod_board')
             )
         );
         $mform->setType('sortby', PARAM_INT);
-        
+
         $mform->addElement('checkbox', 'postbyenabled', get_string('postbyenabled', 'mod_board'));
         $mform->addElement('date_time_selector', 'postby', get_string('postbydate', 'mod_board'));
         $mform->hideIf('postby', 'postbyenabled', 'notchecked');
-        
-        //-------------------------------------------------------
+
         $this->standard_coursemodule_elements();
 
-        //-------------------------------------------------------
         $this->add_action_buttons();
 
-        //-------------------------------------------------------
         $mform->addElement('hidden', 'revision');
         $mform->setType('revision', PARAM_INT);
         $mform->setDefault('revision', 1);
     }
-    
+
     public function data_preprocessing(&$defaultvalues) {
         $draftitemid = file_get_submitted_draft_itemid('background_image');
         file_prepare_draft_area($draftitemid, $this->context->id, 'mod_board', 'background', 0,
             array('subdirs' => 0, 'maxfiles' => 1));
         $defaultvalues['background_image'] = $draftitemid;
-        
+
         $defaultvalues['postbyenabled'] = !empty($defaultvalues['postby']);
     }
-    
+
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
