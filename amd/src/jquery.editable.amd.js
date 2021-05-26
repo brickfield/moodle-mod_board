@@ -1,4 +1,4 @@
-define(function(require, exports, module) {
+define(function() {
 /*
 * jQuery plugin that makes elements editable
 *
@@ -50,7 +50,7 @@ define(function(require, exports, module) {
         if( e.keyCode == 13 && e.data.closeOnEnter ) {
             $currentlyEdited.editable('close');
         }
-	else if( e.keyCode == 27 ) {
+    else if( e.keyCode == 27 ) {
             $textArea.val($currentlyEdited.attr('orig-text'));
             $currentlyEdited.editable('close');
         }
@@ -96,8 +96,9 @@ define(function(require, exports, module) {
      */
     elementEditor = function($el, opts) {
 
-        if( $el.is(':editing') )
+        if( $el.is(':editing') ) {
             return;
+        }
 
         $currentlyEdited = $el;
         $el.attr(IS_EDITING_ATTR, '1');
@@ -135,8 +136,9 @@ define(function(require, exports, module) {
                 .appendTo($el)
                 .attr('id', id);
 
-            if( typeof opts.tinyMCE != 'object' )
+            if( typeof opts.tinyMCE != 'object' ) {
                 opts.tinyMCE = {};
+            }
 
             opts.tinyMCE.mode = 'exact';
             opts.tinyMCE.elements = id;
@@ -145,7 +147,7 @@ define(function(require, exports, module) {
             opts.tinyMCE.theme_advanced_resize_vertical = true;
 
             opts.tinyMCE.setup = function (ed) {
-                ed.onInit.add(function(editor, evt) {
+                ed.onInit.add(function(editor) {
                     var editorWindow = editor.getWin();
                     var hasPressedKey = false;
                     var editorBlur = function() {
@@ -206,15 +208,15 @@ define(function(require, exports, module) {
             $textArea
                 .html(defaultText)
                 .blur(function() {
-                    
+
                     $currentlyEdited = false;
 
                     // Get new text and font size
                     var newText = $.trim( $textArea.val() ),
                         newFontSize = $textArea.css('font-size');
-                    
+
                     newText = $('<div />').text(newText).html();
-                    
+
                     if( opts.lineBreaks ) {
                         newText = newText.replace(new RegExp('\n','g'), '<br />');
                     }
@@ -261,7 +263,7 @@ define(function(require, exports, module) {
      * Event listener
      */
     editEvent = function(event) {
-    	
+
         if( $currentlyEdited !== false && !$currentlyEdited.children("textarea").is(clickedElement)) {
             // Not closing the currently open editor before opening a new
             // editor makes things go crazy
@@ -375,7 +377,7 @@ define(function(require, exports, module) {
         }
         return oldjQueryIs.apply(this, arguments);
     };
-    
+
     // The latest element clicked
     var clickedElement;
     $(document).mousedown(function(e) {
