@@ -40,7 +40,7 @@ class mod_board_external extends external_api {
                     'boardid' => new external_value(PARAM_INT, 'boardid'),
                     'action' => new external_value(PARAM_TEXT, 'action'),
                     'userid' => new external_value(PARAM_INT, 'userid'),
-                    'content' => new external_value(PARAM_RAW, 'content')
+                    'content' => new external_value(PARAM_TEXT, 'content')
                 )
             )
         );
@@ -54,16 +54,7 @@ class mod_board_external extends external_api {
     }
 
     public static function get_board($id) {
-        $data = board_get($id);
-        foreach ($data as $index => $column) {
-            foreach ($column->notes as $nidx => $note) {
-                $note->heading = self::sanitize($note->heading);
-                $note->content = self::sanitize($note->content);
-                $note->info = self::sanitize($note->info);
-                $note->url = self::sanitize($note->url);
-            }
-        }
-        return $data;
+        return board_get($id);
     }
 
     public static function get_board_returns() {
@@ -77,8 +68,8 @@ class mod_board_external extends external_api {
                             array(
                                 'id' => new external_value(PARAM_INT, 'post id'),
                                 'userid' => new external_value(PARAM_INT, 'user id'),
-                                'heading' => new external_value(PARAM_RAW, 'post heading'),
-                                'content' => new external_value(PARAM_RAW, 'post content'),
+                                'heading' => new external_value(PARAM_TEXT, 'post heading'),
+                                'content' => new external_value(PARAM_TEXT, 'post content'),
                                 'type' => new external_value(PARAM_INT, 'type'),
                                 'info' => new external_value(PARAM_TEXT, 'info'),
                                 'url' => new external_value(PARAM_TEXT, 'url'),
@@ -101,7 +92,7 @@ class mod_board_external extends external_api {
     }
 
     public static function add_column($boardid, $name) {
-        return board_add_column($boardid, self::sanitize($name));
+        return board_add_column($boardid, $name);
     }
 
     public static function add_column_returns() {
@@ -120,7 +111,7 @@ class mod_board_external extends external_api {
     }
 
     public static function update_column($id, $name) {
-        return board_update_column($id, self::sanitize($name));
+        return board_update_column($id, $name);
     }
 
     public static function update_column_returns() {
@@ -153,7 +144,7 @@ class mod_board_external extends external_api {
         return new external_function_parameters([
             'columnid' => new external_value(PARAM_INT, 'The column id', VALUE_REQUIRED),
             'heading' => new external_value(PARAM_TEXT, 'The note heading', VALUE_REQUIRED),
-            'content' => new external_value(PARAM_RAW, 'The note content', VALUE_REQUIRED),
+            'content' => new external_value(PARAM_TEXT, 'The note content', VALUE_REQUIRED),
             'attachment' => new external_single_structure(array(
                 'type' => new external_value(PARAM_INT, 'type'),
                 'info' => new external_value(PARAM_TEXT, 'info'),
@@ -165,12 +156,12 @@ class mod_board_external extends external_api {
     }
 
     public static function add_note($columnid, $heading, $content, $attachment) {
-        return board_add_note($columnid, self::sanitize($heading), self::sanitize($content), array(
+        return board_add_note($columnid, $heading, $content, array(
             'type' => $attachment['type'],
-            'info' => self::sanitize($attachment['info']),
-            'url' => self::sanitize($attachment['url']),
-            'filename' => self::sanitize($attachment['filename']),
-            'filecontents' => $attachment['filecontents']
+            'info' => $attachment['info'],
+            'url' => $attachment['url'],
+            'filename' => $attachment['filename'],
+            'filecontents' => $attachment['filecontents'],
         ));
     }
 
@@ -199,7 +190,7 @@ class mod_board_external extends external_api {
         return new external_function_parameters([
             'id' => new external_value(PARAM_INT, 'The note id', VALUE_REQUIRED),
             'heading' => new external_value(PARAM_TEXT, 'The note heading', VALUE_REQUIRED),
-            'content' => new external_value(PARAM_RAW, 'The note content', VALUE_REQUIRED),
+            'content' => new external_value(PARAM_TEXT, 'The note content', VALUE_REQUIRED),
             'attachment' => new external_single_structure(array(
                 'type' => new external_value(PARAM_INT, 'type'),
                 'info' => new external_value(PARAM_TEXT, 'info'),
@@ -211,12 +202,12 @@ class mod_board_external extends external_api {
     }
 
     public static function update_note($id, $heading, $content, $attachment) {
-        return board_update_note($id, self::sanitize($heading), self::sanitize($content), array(
+        return board_update_note($id, $heading, $content, array(
             'type' => $attachment['type'],
-            'info' => self::sanitize($attachment['info']),
-            'url' => self::sanitize($attachment['url']),
-            'filename' => self::sanitize($attachment['filename']),
-            'filecontents' => $attachment['filecontents']
+            'info' => $attachment['info'],
+            'url' => $attachment['url'],
+            'filename' => $attachment['filename'],
+            'filecontents' => $attachment['filecontents'],
         ));
     }
 
@@ -308,13 +299,5 @@ class mod_board_external extends external_api {
             'rating' => new external_value(PARAM_INT, 'The new rating id'),
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
-    }
-
-    private static function sanitize($text) {
-        $text = preg_replace('/<br(\s+\/)?>/', "\n", $text);
-        $text = str_replace('<', "&lt;", $text);
-        $text = str_replace('>', "&gt;", $text);
-        $text = str_replace("\n", '<br />', $text);
-        return $text;
     }
 }
