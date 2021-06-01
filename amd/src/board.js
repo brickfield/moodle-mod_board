@@ -932,7 +932,9 @@ define(['jquery', 'jqueryui', 'core/str', 'core/ajax', 'core/notification', 'cor
             }
             sortNotes(column_content);
             updateColumnAria(ident);
-            isEditor && updateSortable();
+            if (isEditor) {
+                updateSortable();
+            }
         };
 
         var addNewColumnButton = function() {
@@ -1134,11 +1136,15 @@ define(['jquery', 'jqueryui', 'core/str', 'core/ajax', 'core/notification', 'cor
                     }
                 }
 
-                isEditor && addNewColumnButton();
+                if (isEditor) {
+                    addNewColumnButton();
+                }
 
                 lastHistoryId = board.historyid;
 
-                isEditor && updateSortable();
+                if (isEditor) {
+                    updateSortable();
+                }
 
                 updateBoard();
             });
