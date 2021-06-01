@@ -43,7 +43,13 @@ function get_column($id) {
 
 function get_note($id) {
     global $DB;
+    
     return $DB->get_record('board_notes', array('id'=>$id));
+}
+
+function get_note_rating($noteid) {
+    global $DB;
+    return $DB->count_records('board_note_ratings', array('noteid' => $noteid));
 }
     
 function context_for_board($id) {
@@ -141,7 +147,7 @@ function board_get($boardid) {
         }
         $column->notes = $DB->get_records('board_notes', $params, 'id', 'id, userid, heading, content, type, info, url, timecreated');
         foreach($column->notes AS $colid => $note) {
-            $note->rating = $DB->count_records('board_note_ratings', array('noteid' => $note->id));
+            $note->rating = get_note_rating($note->id);
         }
     }
     
@@ -389,19 +395,22 @@ function board_add_note($columnid, $heading, $content, $attachment) {
         $info = !empty($type)?substr($attachment['info'], 0, 100):null;
         $url = !empty($type)?substr($attachment['url'], 0, 200):null;
         
-        $noteid = $DB->insert_record('board_notes', array('groupid' => $groupid, 'columnid' => $columnid, 'heading' => $heading, 'content' => $content, 'type' => $type, 'info' => $info, 'url' => $url, 'userid' => $USER->id, 'timecreated' => time()));
+        $notecreated = time();
+        $noteid = $DB->insert_record('board_notes', array('groupid' => $groupid, 'columnid' => $columnid, 'heading' => $heading, 'content' => $content, 'type' => $type, 'info' => $info, 'url' => $url, 'userid' => $USER->id, 'timecreated' => $notecreated));
         
         $attachment = board_note_update_attachment($noteid, $attachment);
         $url = $attachment['url'];
         $DB->update_record('board_notes', array('id' => $noteid, 'url' => $url));
                 
-        $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'groupid' => $groupid, 'action' => 'add_note', 'userid' => $USER->id, 'content' => json_encode(array('id' => $noteid, 'columnid' => $columnid, 'heading' => $heading, 'content' => $content, 'attachment' => array('type' => $type, 'info' => $info, 'url' => $url))), 'timecreated' => time(), 'rating' => 0));
+        $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'groupid' => $groupid, 'action' => 'add_note', 'userid' => $USER->id, 'content' => json_encode(array('id' => $noteid, 'columnid' => $columnid, 'heading' => $heading, 'content' => $content, 'attachment' => array('type' => $type, 'info' => $info, 'url' => $url), 'rating' => 0, 'timecreated' => $notecreated)), 'timecreated' => time()));
         $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
         $transaction->allow_commit();
         
         board_add_note_log($boardid, $groupid, $heading, $content, $attachment, $columnid, $noteid);
         
         $note = get_note($noteid);
+        $note->rating = 0;
+        
     } else {
         $note = null;
         $historyid = 0;
@@ -530,7 +539,7 @@ function board_move_note($id, $columnid) {
         $transaction = $DB->start_delegated_transaction();
         
         $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'delete_note', 'content' => json_encode(array('id' => $note->id, 'columnid' => $note->columnid)), 'userid' => $USER->id, 'timecreated' => time()));
-        $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'groupid' => $note->groupid, 'action' => 'add_note', 'userid' => $note->userid, 'content' => json_encode(array('id' => $note->id, 'columnid' => $columnid, 'heading' => $note->heading, 'content' => $note->content, 'attachment' => array('type' => $note->type, 'info' => $note->info, 'url' => $note->url))), 'timecreated' => time(), 'rating' => $note->rating));
+        $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'groupid' => $note->groupid, 'action' => 'add_note', 'userid' => $note->userid, 'content' => json_encode(array('id' => $note->id, 'columnid' => $columnid, 'heading' => $note->heading, 'content' => $note->content, 'attachment' => array('type' => $note->type, 'info' => $note->info, 'url' => $note->url), 'timecreated' => $note->timecreated, 'rating' => get_note_rating($note->id))), 'timecreated' => time()));
         
         $note->columnid = $columnid;
         $move = $DB->update_record('board_notes', $note);
@@ -607,8 +616,7 @@ function board_rate_note($noteid) {
         $transaction = $DB->start_delegated_transaction();
         
         $DB->insert_record('board_note_ratings', array('userid' => $USER->id, 'noteid' => $noteid, 'timecreated' => time()));
-        $rating = $DB->count_records('board_note_ratings', array('noteid' => $noteid));
-
+        $rating = get_note_rating($noteid);
         $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'rate_note', 'content' => json_encode(array('id' => $note->id, 'rating' => $rating)), 'userid' => $USER->id, 'timecreated' => time()));
         
         $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));

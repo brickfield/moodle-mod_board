@@ -347,18 +347,26 @@ define(['jquery', 'jqueryui', 'core/str', 'core/ajax', 'core/notification', 'cor
         var rateNote = function(ident) {
             if (!ratingenabled) return;
             if (isReadOnlyBoard) return;
+            
+            var note = getNote(ident);
+            var rating = note.find('.rating');
+            if (rating.data('disabled')) {
+                return;
+            }
+            rating.data('disabled', true);
+            
             serviceCall('can_rate_note', {id: ident}, function(canrate) {
                 if (canrate) {
                     if (confirm(strings.rate_note_text)) {
                         serviceCall('rate_note', {id: ident}, function(result) {
                             if (result.status) {
                                 lastHistoryId = result.historyid;
-                                var note = getNote(ident)
-                                note.find('.rating').html(result.rating);
+                                rating.html(result.rating);
                                 if (sortby==SORTBY_RATING) {
                                     sortNotes(note.closest('.board_column_content'));
                                 }
                             }
+                            rating.data('disabled', false);
                         });
                     }
                 }
@@ -699,8 +707,20 @@ define(['jquery', 'jqueryui', 'core/str', 'core/ajax', 'core/notification', 'cor
                 handleAction(postbutton, function() {
                     var sendAttach = attachmentDataForNote(note);
                     
+                    noteHeading.editable('close');
                     var theHeading = noteHeading.html();
+                    noteText.editable('close');
                     var theText = noteText.html().substring(0, options.post_max_length);
+                    
+                    if (!theHeading && !theText && !sendAttach.url && !sendAttach.filename) {
+                        return;
+                    }
+                    
+                    if (postbutton.data('disabled')) {
+                        return;
+                    }
+                    
+                    postbutton.data('disabled', true);
                     
                     if (!ident) { // new
                         serviceCall('add_note', {columnid: columnid, heading: theHeading, content: theText, attachment: sendAttach}, function(result) {
@@ -712,6 +732,8 @@ define(['jquery', 'jqueryui', 'core/str', 'core/ajax', 'core/notification', 'cor
                                 sortNotes(column_content);
                                 updateNoteAria(result.note.id);
                                 
+                            } else {
+                                postbutton.data('disabled', false);
                             }
                         });
                         
@@ -724,6 +746,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/ajax', 'core/notification', 'cor
                                 updateNoteAria(ident);
                                 setAttachment(note, {type: result.note.type, info: result.note.info, url: result.note.url});
                             }
+                            postbutton.data('disabled', false);
                         });
                     }
                 });

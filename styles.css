@@ -4,6 +4,7 @@
     align-items: flex-start;
     margin-bottom:30px;
     padding-bottom: 10px;
+    overflow-x: auto;
 }
 
 .mod_board .board_column {
@@ -182,6 +183,7 @@
 .mod_board .note_buttons {
     display:flex;
     flex-direction: row-reverse;
+    flex-wrap: wrap;
 }
 
 .mod_board .action_button {
