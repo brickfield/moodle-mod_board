@@ -136,9 +136,9 @@
     margin-bottom: 10px;
 }
 .mod_board .note_content .note_heading > textarea {
-    border: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
+    border: 0;
+    padding: 0;
+    margin: 0;
 }
 .mod_board .note_content .note_attachment {
     padding-top: 10px;
@@ -197,13 +197,11 @@
 }
 
 .mod_board .action_button {
-    border: 1px solid gray;
     text-align: center;
     border: 1px solid lightblue;
     background: lightblue;
     cursor: pointer;
     display: inline-block;
-    text-align: middle;
     padding: 2px 3px;
     margin: 0 2px;
 }

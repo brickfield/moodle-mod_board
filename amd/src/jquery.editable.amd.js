@@ -192,7 +192,7 @@ define(function() {
                 });
             };
 
-            tinyMCE.init(opts.tinyMCE);
+            window.tinyMCE.init(opts.tinyMCE);
         }
 
         /*
@@ -218,7 +218,7 @@ define(function() {
                     newText = $('<div />').text(newText).html();
 
                     if( opts.lineBreaks ) {
-                        newText = newText.replace(new RegExp('\n','g'), '<br />');
+                        newText = newText.replace(new RegExp('\\n','g'), '<br />');
                     }
 
                     // Update element
@@ -306,17 +306,17 @@ define(function() {
                         this.removeAttr(EVENT_ATTR);
                         break;
                     default:
-                        console.warn('Unknown command "'+opts+'" for jquery.editable');
+//                        console.warn('Unknown command "'+opts+'" for jquery.editable');
                 }
 
             } else {
-                console.error('Calling .editable() on an element that is not editable, call .editable() first');
+//                console.error('Calling .editable() on an element that is not editable, call .editable() first');
             }
         }
         else {
 
             if( this.is(':editable') ) {
-                console.warn('Making an already editable element editable, call .editable("destroy") first');
+//                console.warn('Making an already editable element editable, call .editable("destroy") first');
                 this.editable('destroy');
             }
 
@@ -332,7 +332,7 @@ define(function() {
             }, opts);
 
             if( opts.tinyMCE !== false && !TINYMCE_INSTALLED ) {
-                console.warn('Trying to use tinyMCE as editor but id does not seem to be installed');
+//                console.warn('Trying to use tinyMCE as editor but id does not seem to be installed');
                 opts.tinyMCE = false;
             }
 
@@ -384,4 +384,4 @@ define(function() {
         clickedElement = $(e.target);
     });
 
-})(jQuery, window);});
+})(window.jQuery, window);});

@@ -962,6 +962,21 @@ define(['jquery', 'jqueryui', 'core/str', 'core/ajax', 'core/notification', 'cor
             $(".mod_board").append(column);
         };
 
+        var updateNote = function(note, heading, data) {
+            heading.html(data.heading);
+            if (data.heading) {
+                heading.show();
+            } else {
+                heading.hide();
+            }
+            getNoteTextForNote(note).html(data.content);
+            setAttachment(note, data.attachment);
+            noteTextCache = null;
+            noteHeadingCache = null;
+            attachmentCache = null;
+            updateNoteAria(data.id);
+        };
+
         var processBoardHistory = function() {
             serviceCall('board_history', {id: board.id, since: lastHistoryId}, function(boardhistory) {
                 for (var index in boardhistory) {
@@ -981,36 +996,19 @@ define(['jquery', 'jqueryui', 'core/str', 'core/ajax', 'core/notification', 'cor
                         if (note) {
                             var heading = getNoteHeadingForNote(note);
 
-                            var updateNote = function() {
-                                heading.html(data.heading);
-                                if (data.heading) {
-                                    heading.show();
-                                } else {
-                                    heading.hide();
-                                }
-                                getNoteTextForNote(note).html(data.content);
-                                setAttachment(note, data.attachment);
-                                noteTextCache = null;
-                                noteHeadingCache = null;
-                                attachmentCache = null;
-                                updateNoteAria(data.id);
-                            };
-
                             if (editingNote==data.id) {
                                 Notification.confirm(
                                     strings.note_changed_text.split("\n")[0], // Confirm.
                                     strings.note_changed_text.split("\n")[1], // Are you sure?
                                     strings.Ok,
                                     strings.Cancel,
-                                    function() {
-                                        if (editingNote==data.id) {
-                                            updateNote();
-                                        }
+                                    function(note, heading, data) {
+                                        updateNote(note, heading, data);
                                         stopNoteEdit();
                                     }
                                 );
                             } else {
-                                updateNote();
+                                updateNote(note, heading, data);
                             }
                         }
                     } else if (item.action=='delete_note') {
