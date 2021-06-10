@@ -17,7 +17,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once("$CFG->libdir/externallib.php");
-require_once('locallib.php');
+
+use mod_board\board;
 
 class mod_board_external extends external_api {
     /* GET HISTORY */
@@ -29,7 +30,7 @@ class mod_board_external extends external_api {
     }
 
     public static function board_history($id, $since) {
-        return board_history($id, $since);
+        return board::board_history($id, $since);
     }
 
     public static function board_history_returns() {
@@ -54,7 +55,7 @@ class mod_board_external extends external_api {
     }
 
     public static function get_board($id) {
-        return board_get($id);
+        return board::board_get($id);
     }
 
     public static function get_board_returns() {
@@ -92,7 +93,7 @@ class mod_board_external extends external_api {
     }
 
     public static function add_column($boardid, $name) {
-        return board_add_column($boardid, $name);
+        return board::board_add_column($boardid, $name);
     }
 
     public static function add_column_returns() {
@@ -111,7 +112,7 @@ class mod_board_external extends external_api {
     }
 
     public static function update_column($id, $name) {
-        return board_update_column($id, $name);
+        return board::board_update_column($id, $name);
     }
 
     public static function update_column_returns() {
@@ -129,7 +130,7 @@ class mod_board_external extends external_api {
     }
 
     public static function delete_column($id) {
-        return board_delete_column($id);
+        return board::board_delete_column($id);
     }
 
     public static function delete_column_returns() {
@@ -156,7 +157,7 @@ class mod_board_external extends external_api {
     }
 
     public static function add_note($columnid, $heading, $content, $attachment) {
-        return board_add_note($columnid, $heading, $content, array(
+        return board::board_add_note($columnid, $heading, $content, array(
             'type' => $attachment['type'],
             'info' => $attachment['info'],
             'url' => $attachment['url'],
@@ -202,7 +203,7 @@ class mod_board_external extends external_api {
     }
 
     public static function update_note($id, $heading, $content, $attachment) {
-        return board_update_note($id, $heading, $content, array(
+        return board::board_update_note($id, $heading, $content, array(
             'type' => $attachment['type'],
             'info' => $attachment['info'],
             'url' => $attachment['url'],
@@ -238,7 +239,7 @@ class mod_board_external extends external_api {
     }
 
     public static function delete_note($id) {
-        return board_delete_note($id);
+        return board::board_delete_note($id);
     }
 
     public static function delete_note_returns() {
@@ -257,7 +258,7 @@ class mod_board_external extends external_api {
     }
 
     public static function move_note($id, $columnid) {
-        return board_move_note($id, $columnid);
+        return board::board_move_note($id, $columnid);
     }
 
     public static function move_note_returns() {
@@ -275,7 +276,7 @@ class mod_board_external extends external_api {
     }
 
     public static function can_rate_note($id) {
-        return board_can_rate_note($id);
+        return board::board_can_rate_note($id);
     }
 
     public static function can_rate_note_returns() {
@@ -290,7 +291,7 @@ class mod_board_external extends external_api {
     }
 
     public static function rate_note($id) {
-        return board_rate_note($id);
+        return board::board_rate_note($id);
     }
 
     public static function rate_note_returns() {

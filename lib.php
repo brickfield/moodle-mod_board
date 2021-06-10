@@ -16,6 +16,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+use mod_board\board;
+
 function board_supports($feature) {
     switch($feature) {
         case FEATURE_SHOW_DESCRIPTION:
@@ -195,19 +197,18 @@ function mod_board_pluginfile($course, $cm, $context, $filearea, $args, $forcedo
     global $CFG, $DB;
 
     require_once($CFG->libdir . '/filelib.php');
-    require_once("locallib.php");
 
     if ($filearea === 'images') {
-        $note = get_note($args[0]);
+        $note = board::get_note($args[0]);
         if (!$note) {
             return false;
         }
-        $column = get_column($note->columnid);
+        $column = board::get_column($note->columnid);
         if (!$column) {
             return false;
         }
 
-        require_capability_for_board_view($column->boardid);
+        board::require_capability_for_board_view($column->boardid);
 
         $relativepath = implode('/', $args);
         $fullpath = '/' . $context->id . '/mod_board/images/' . $relativepath;

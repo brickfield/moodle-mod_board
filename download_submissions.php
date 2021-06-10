@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 require('../../config.php');
-require_once('locallib.php');
+
+use mod_board\board;
 
 $id      = optional_param('id', 0, PARAM_INT); // Course Module ID.
 
@@ -36,7 +37,7 @@ header("Pragma: no-cache");
 header("Expires: 0");
 
 $fp = fopen('php://output', 'w');
-$boarddata = board_get($board->id);
+$boarddata = board::board_get($board->id);
 
 $users = [];
 

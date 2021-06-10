@@ -24,7 +24,7 @@ class mod_board_mod_form extends moodleform_mod {
 
         $mform = $this->_form;
 
-        require_once('locallib.php');
+        require_once('classes/board.php');
 
         $mform->addElement('header', 'general', get_string('general', 'form'));
         $mform->addElement('text', 'name', get_string('name'), array('size' => '50'));

@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 require('../../config.php');
-require_once('locallib.php');
+
+use mod_board\board;
 
 $id      = optional_param('id', 0, PARAM_INT); // Course Module ID.
 $b       = optional_param('b', 0, PARAM_INT);  // Board instance ID.
@@ -43,9 +44,9 @@ $pageurl = new moodle_url('/mod/board/view.php', array('id' => $cm->id));
 $PAGE->set_url($pageurl);
 
 $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $board, 'options' => array(
-    'isEditor' => board_is_editor($board->id),
+    'isEditor' => board::board_is_editor($board->id),
     'userId' => $USER->id,
-    'readonly' => board_readonly($board->id),
+    'readonly' => board::board_readonly($board->id),
     'columnicon' => $CFG->new_column_icon,
     'noteicon' => $CFG->new_note_icon,
     'mediaselection' => $CFG->media_selection,
@@ -56,8 +57,8 @@ $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $b
         'size_min' => ACCEPTED_FILE_MIN_SIZE,
         'size_max' => ACCEPTED_FILE_MAX_SIZE
     ),
-    'ratingenabled' => board_rating_enabled($board->id),
-    'hideheaders' => board_hide_headers($board->id),
+    'ratingenabled' => board::board_rating_enabled($board->id),
+    'hideheaders' => board::board_hide_headers($board->id),
     'sortby' => $board->sortby,
 )));
 
