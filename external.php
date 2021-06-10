@@ -30,7 +30,17 @@ class mod_board_external extends external_api {
     }
 
     public static function board_history($id, $since) {
-        return board::board_history($id, $since);
+        // Validate recieved parameters.
+        $params = self::validate_parameters(self::board_history_parameters(), [
+            'id' => $id,
+            'since' => $since,
+        ]);
+
+        // Request and permission validation.
+        $context = board::context_for_board($params['id']);
+        self::validate_context($context);
+
+        return board::board_history($params['id'], $params['since']);
     }
 
     public static function board_history_returns() {
@@ -55,7 +65,16 @@ class mod_board_external extends external_api {
     }
 
     public static function get_board($id) {
-        return board::board_get($id);
+        // Validate recieved parameters.
+        $params = self::validate_parameters(self::get_board_parameters(), [
+            'id' => $id,
+        ]);
+
+        // Request and permission validation.
+        $context = board::context_for_board($params['id']);
+        self::validate_context($context);
+
+        return board::board_get($params['id']);
     }
 
     public static function get_board_returns() {
@@ -93,7 +112,17 @@ class mod_board_external extends external_api {
     }
 
     public static function add_column($boardid, $name) {
-        return board::board_add_column($boardid, $name);
+        // Validate recieved parameters.
+        $params = self::validate_parameters(self::add_column_parameters(), [
+            'boardid' => $boardid,
+            'name' => $name,
+        ]);
+
+        // Request and permission validation.
+        $context = board::context_for_board($params['boardid']);
+        self::validate_context($context);
+
+        return board::board_add_column($params['boardid'], $params['name']);
     }
 
     public static function add_column_returns() {
@@ -112,7 +141,18 @@ class mod_board_external extends external_api {
     }
 
     public static function update_column($id, $name) {
-        return board::board_update_column($id, $name);
+        // Validate recieved parameters.
+        $params = self::validate_parameters(self::update_column_parameters(), [
+            'id' => $id,
+            'name' => $name,
+        ]);
+
+        // Request and permission validation.
+        $column = board::get_column($params['id']);
+        $context = board::context_for_board($column->boardid);
+        self::validate_context($context);
+
+        return board::board_update_column($params['id'], $params['name']);
     }
 
     public static function update_column_returns() {
@@ -130,7 +170,17 @@ class mod_board_external extends external_api {
     }
 
     public static function delete_column($id) {
-        return board::board_delete_column($id);
+        // Validate recieved parameters.
+        $params = self::validate_parameters(self::delete_column_parameters(), [
+            'id' => $id,
+        ]);
+
+        // Request and permission validation.
+        $column = board::get_column($params['id']);
+        $context = board::context_for_board($column->boardid);
+        self::validate_context($context);
+
+        return board::board_delete_column($params['id']);
     }
 
     public static function delete_column_returns() {
@@ -157,13 +207,28 @@ class mod_board_external extends external_api {
     }
 
     public static function add_note($columnid, $heading, $content, $attachment) {
-        return board::board_add_note($columnid, $heading, $content, array(
+        // Validate recieved parameters.
+        $params = self::validate_parameters(self::add_note_parameters(), [
+            'columnid' => $columnid,
+            'heading' => $heading,
+            'content' => $content,
+            'attachment' => $attachment
+        ]);
+
+        $params['attachment'][array(
             'type' => $attachment['type'],
             'info' => $attachment['info'],
             'url' => $attachment['url'],
             'filename' => $attachment['filename'],
             'filecontents' => $attachment['filecontents'],
-        ));
+        )];
+
+        // Request and permission validation.
+        $column = board::get_column($params['columnid']);
+        $context = board::context_for_board($column->boardid);
+        self::validate_context($context);
+
+        return board::board_add_note($params['columnid'], $params['heading'], $params['content'], $params['attachment']);
     }
 
     public static function add_note_returns() {
@@ -203,13 +268,29 @@ class mod_board_external extends external_api {
     }
 
     public static function update_note($id, $heading, $content, $attachment) {
-        return board::board_update_note($id, $heading, $content, array(
+        // Validate recieved parameters.
+        $params = self::validate_parameters(self::update_note_parameters(), [
+            'id' => $id,
+            'heading' => $heading,
+            'content' => $content,
+            'attachment' => $attachment
+        ]);
+
+        $params['attachment'][array(
             'type' => $attachment['type'],
             'info' => $attachment['info'],
             'url' => $attachment['url'],
             'filename' => $attachment['filename'],
             'filecontents' => $attachment['filecontents'],
-        ));
+        )];
+
+        // Request and permission validation.
+        $note = board::get_note($params['id']);
+        $column = board::get_column($note->columnid);
+        $context = board::context_for_board($column->boardid);
+        self::validate_context($context);
+
+        return board::board_update_note($params['id'], $params['heading'], $params['content'], $params['attachment']);
     }
 
     public static function update_note_returns() {
@@ -239,7 +320,18 @@ class mod_board_external extends external_api {
     }
 
     public static function delete_note($id) {
-        return board::board_delete_note($id);
+        // Validate recieved parameters.
+        $params = self::validate_parameters(self::delete_note_parameters(), [
+            'id' => $id,
+        ]);
+
+        // Request and permission validation.
+        $note = board::get_note($params['id']);
+        $column = board::get_column($note->columnid);
+        $context = board::context_for_board($column->boardid);
+        self::validate_context($context);
+
+        return board::board_delete_note($params['id']);
     }
 
     public static function delete_note_returns() {
@@ -258,7 +350,18 @@ class mod_board_external extends external_api {
     }
 
     public static function move_note($id, $columnid) {
-        return board::board_move_note($id, $columnid);
+        // Validate recieved parameters.
+        $params = self::validate_parameters(self::move_note_parameters(), [
+            'id' => $id,
+            'columnid' => $columnid,
+        ]);
+
+        // Request and permission validation.
+        $column = board::get_column($params['columnid']);
+        $context = board::context_for_board($column->boardid);
+        self::validate_context($context);
+
+        return board::board_move_note($params['id'], $params['columnid']);
     }
 
     public static function move_note_returns() {
@@ -276,7 +379,18 @@ class mod_board_external extends external_api {
     }
 
     public static function can_rate_note($id) {
-        return board::board_can_rate_note($id);
+        // Validate recieved parameters.
+        $params = self::validate_parameters(self::can_rate_note_parameters(), [
+            'id' => $id,
+        ]);
+
+        // Request and permission validation.
+        $note = board::get_note($params['id']);
+        $column = board::get_column($note->columnid);
+        $context = board::context_for_board($column->boardid);
+        self::validate_context($context);
+
+        return board::board_can_rate_note($params['id']);
     }
 
     public static function can_rate_note_returns() {
@@ -291,7 +405,18 @@ class mod_board_external extends external_api {
     }
 
     public static function rate_note($id) {
-        return board::board_rate_note($id);
+        // Validate recieved parameters.
+        $params = self::validate_parameters(self::rate_note_parameters(), [
+            'id' => $id,
+        ]);
+
+        // Request and permission validation.
+        $note = board::get_note($params['id']);
+        $column = board::get_column($note->columnid);
+        $context = board::context_for_board($column->boardid);
+        self::validate_context($context);
+
+        return board_rate_note($params['id']);
     }
 
     public static function rate_note_returns() {
