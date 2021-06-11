@@ -21,7 +21,7 @@ use mod_board\board;
 $id      = optional_param('id', 0, PARAM_INT); // Course Module ID.
 
 if (!$cm = get_coursemodule_from_id('board', $id)) {
-    print_error('invalidcoursemodule');
+    throw new \moodle_exception('invalidcoursemodule');
 }
 $board = $DB->get_record('board', array('id' => $cm->instance), '*', MUST_EXIST);
 

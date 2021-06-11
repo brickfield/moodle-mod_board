@@ -29,30 +29,66 @@ define('SORTBYDATE', 1);
 define('SORTBYRATING', 2);
 
 class board {
+    /**
+     * Retrieves the course module for the board
+     *
+     * @param object $board
+     * @return object
+     */
     public static function coursemodule_for_board($board) {
         return get_coursemodule_from_instance('board', $board->id, $board->course, false, MUST_EXIST);
     }
 
+    /**
+     * Retrieves a record of the selected board.
+     *
+     * @param int $id
+     * @return object
+     */
     public static function get_board($id) {
         global $DB;
         return $DB->get_record('board', array('id' => $id));
     }
 
+    /**
+     * Retrieves a record of the selected column.
+     *
+     * @param int $id
+     * @return object
+     */
     public static function get_column($id) {
         global $DB;
         return $DB->get_record('board_columns', array('id' => $id));
     }
 
+    /**
+     * Retrieves a record of the selected note.
+     *
+     * @param int $id
+     * @return object
+     */
     public static function get_note($id) {
         global $DB;
         return $DB->get_record('board_notes', array('id' => $id));
     }
 
+    /**
+     * Retrieves a record of the rating for the selected note.
+     *
+     * @param int $noteid
+     * @return int
+     */
     public static function get_note_rating($noteid) {
         global $DB;
         return $DB->count_records('board_note_ratings', array('noteid' => $noteid));
     }
 
+    /**
+     * Retrieves the context of the selected board.
+     *
+     * @param int $id
+     * @return object
+     */
     public static function context_for_board($id) {
         if (!$board = static::get_board($id)) {
             return null;
@@ -62,6 +98,12 @@ class board {
         return \context_module::instance($cm->id);
     }
 
+    /**
+     * Retrieves the context of the selected column.
+     *
+     * @param int $id
+     * @return object
+     */
     public static function context_for_column($id) {
         if (!$column = static::get_column($id)) {
             return null;
@@ -70,6 +112,12 @@ class board {
         return static::context_for_board($column->boardid);
     }
 
+    /**
+     * Adds a capability check to view the board.
+     *
+     * @param int $id
+     * @return void
+     */
     public static function require_capability_for_board_view($id) {
         $context = static::context_for_board($id);
         if ($context) {
@@ -77,6 +125,12 @@ class board {
         }
     }
 
+    /**
+     * Adds a capability check for the board.
+     *
+     * @param int $id
+     * @return void
+     */
     public static function require_capability_for_board($id) {
         $context = static::context_for_board($id);
         if ($context) {
@@ -84,6 +138,12 @@ class board {
         }
     }
 
+    /**
+     * Adds a capability check for the columns.
+     *
+     * @param int $id
+     * @return void
+     */
     public static function require_capability_for_column($id) {
         $context = static::context_for_column($id);
         if ($context) {
@@ -91,6 +151,13 @@ class board {
         }
     }
 
+    /**
+     * Requires the users to be in groups.
+     *
+     * @param int $groupid
+     * @param int $boardid
+     * @return mixed
+     */
     public static function require_access_for_group($groupid, $boardid) {
         $cm = static::coursemodule_for_board(static::get_board($boardid));
         $context = \context_module::instance($cm->id);
@@ -109,6 +176,11 @@ class board {
         }
     }
 
+    /**
+     * Clears the records in the history table for the last minute.
+     *
+     * @return bool
+     */
     public static function clear_history() {
         global $DB;
 
@@ -116,6 +188,12 @@ class board {
                                         array('timecreated' => time() - 60)); // 1 minute history
     }
 
+    /**
+     * Hides the headers of the board.
+     *
+     * @param int $boardid
+     * @return bool
+     */
     public static function board_hide_headers($boardid) {
         $board = static::get_board($boardid);
         if (!$board->hideheaders) {
@@ -127,6 +205,12 @@ class board {
         return !$iseditor;
     }
 
+    /**
+     * Retrieves the board.
+     *
+     * @param int $boardid
+     * @return object
+     */
     public static function board_get($boardid) {
         global $DB;
 
@@ -160,6 +244,13 @@ class board {
         return $columns;
     }
 
+    /**
+     * Retrieves the boards history.
+     *
+     * @param int $boardid
+     * @param int $since
+     * @return mixed
+     */
     public static function board_history($boardid, $since) {
         global $DB;
 
@@ -183,6 +274,13 @@ class board {
         return $DB->get_records_select('board_history', $condition, $params);
     }
 
+    /**
+     * Adds a column to the board
+     *
+     * @param int $boardid
+     * @param string $name
+     * @return array
+     */
     public static function board_add_column($boardid, $name) {
         global $DB, $USER;
 
@@ -205,6 +303,14 @@ class board {
         return array('id' => $columnid, 'historyid' => $historyid);
     }
 
+    /**
+     * Triggers the add column event log.
+     *
+     * @param int $boardid
+     * @param string $name
+     * @param int $columnid
+     * @return void
+     */
     public static function board_add_column_log($boardid, $name, $columnid) {
         $event = \mod_board\event\add_column::create(array(
             'objectid' => $columnid,
@@ -214,6 +320,13 @@ class board {
         $event->trigger();
     }
 
+    /**
+     * Updates the column.
+     *
+     * @param int $id
+     * @param string $name
+     * @return array
+     */
     public static function board_update_column($id, $name) {
         global $DB, $USER;
 
@@ -241,6 +354,14 @@ class board {
         return array('status' => $update, 'historyid' => $historyid);
     }
 
+    /**
+     * Triggers the update column log.
+     *
+     * @param int $boardid
+     * @param string $name
+     * @param int $columnid
+     * @return void
+     */
     public static function board_update_column_log($boardid, $name, $columnid) {
         $event = \mod_board\event\update_column::create(array(
             'objectid' => $columnid,
@@ -250,6 +371,12 @@ class board {
         $event->trigger();
     }
 
+    /**
+     * Deletes a column.
+     *
+     * @param int $id
+     * @return array
+     */
     public static function board_delete_column($id) {
         global $DB, $USER;
 
@@ -280,6 +407,13 @@ class board {
         return array('status' => $delete, 'historyid' => $historyid);
     }
 
+    /**
+     * Triggers the delete column log.
+     *
+     * @param int $boardid
+     * @param int $columnid
+     * @return void
+     */
     public static function board_delete_column_log($boardid, $columnid) {
         $event = \mod_board\event\delete_column::create(array(
             'objectid' => $columnid,
@@ -288,6 +422,12 @@ class board {
         $event->trigger();
     }
 
+    /**
+     * Adds a capability check for the notes.
+     *
+     * @param int $id
+     * @return void
+     */
     public static function require_capability_for_note($id) {
         global $DB, $USER;
 
@@ -305,6 +445,12 @@ class board {
         }
     }
 
+    /**
+     * Retrieves the file storage settings
+     *
+     * @param int $noteid
+     * @return object
+     */
     public static function get_file_storage_settings($noteid) {
         $note = static::get_note($noteid);
         if (!$note) {
@@ -325,6 +471,12 @@ class board {
         ];
     }
 
+    /**
+     * Retrieves the file added to a note.
+     *
+     * @param int $noteid
+     * @return object
+     */
     public static function get_note_file($noteid) {
         $note = static::get_note($noteid);
         if (!$note || empty($note->url)) {
@@ -332,9 +484,16 @@ class board {
         }
         $file = static::get_file_storage_settings($noteid);
         $fs = get_file_storage();
-        return $fs->get_file($file->contextid, $file->component, $file->filearea, $file->itemid, $file->filepath, basename($note->url));
+        return $fs->get_file($file->contextid, $file->component, $file->filearea, $file->itemid,
+                             $file->filepath, basename($note->url));
     }
 
+    /**
+     * Deletes the stored file.
+     *
+     * @param int $noteid
+     * @return void
+     */
     public static function delete_note_file($noteid) {
         $storedfile = static::get_note_file($noteid);
         if ($storedfile) {
@@ -342,6 +501,13 @@ class board {
         }
     }
 
+    /**
+     * Stores the added file.
+     *
+     * @param int $noteid
+     * @param array $attachment
+     * @return \moodle_url
+     */
     public static function store_note_file($noteid, $attachment) {
         $file = static::get_file_storage_settings($noteid);
         $file->filename = $attachment['filename'];
@@ -356,10 +522,17 @@ class board {
 
         $storedfile = $fs->create_file_from_string($file, $attachment['filecontents']);
 
-        return \moodle_url::make_pluginfile_url($storedfile->get_contextid(), $storedfile->get_component(), $storedfile->get_filearea(),
-                $storedfile->get_itemid(), $storedfile->get_filepath(), $file->filename)->get_path();
+        return \moodle_url::make_pluginfile_url($storedfile->get_contextid(), $storedfile->get_component(),
+                $storedfile->get_filearea(), $storedfile->get_itemid(), $storedfile->get_filepath(),
+                $file->filename)->get_path();
     }
 
+    /**
+     * Check if the file fits the requirements to be uploaded.
+     *
+     * @param array $attachment
+     * @return bool
+     */
     public static function valid_for_upload($attachment) {
         $fileextension = strtolower(array_pop(explode('.', basename($attachment['filename']))));
         if (!in_array($fileextension, explode(',', ACCEPTED_FILE_EXTENSIONS))) {
@@ -377,6 +550,13 @@ class board {
         return true;
     }
 
+    /**
+     * Updates the attachment.
+     *
+     * @param int $noteid
+     * @param array $attachment
+     * @return array
+     */
     public static function board_note_update_attachment($noteid, $attachment) {
         global $DB;
 
@@ -391,6 +571,15 @@ class board {
         return $attachment;
     }
 
+    /**
+     * Adds a note to the board
+     *
+     * @param int $columnid
+     * @param string $heading
+     * @param string $content
+     * @param array $attachment
+     * @return array
+     */
     public static function board_add_note($columnid, $heading, $content, $attachment) {
         global $DB, $USER, $CFG;
 
@@ -426,9 +615,12 @@ class board {
             $url = $attachment['url'];
             $DB->update_record('board_notes', array('id' => $noteid, 'url' => $url));
 
-            $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'groupid' => $groupid, 'action' => 'add_note', 'userid' => $USER->id,
-                                            'content' => json_encode(array('id' => $noteid, 'columnid' => $columnid, 'heading' => $heading, 'content' => $content,
-                                            'attachment' => array('type' => $type, 'info' => $info, 'url' => $url), 'rating' => 0, 'timecreated' => $notecreated)),
+            $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'groupid' => $groupid,
+                                            'action' => 'add_note', 'userid' => $USER->id,
+                                            'content' => json_encode(array('id' => $noteid, 'columnid' => $columnid,
+                                            'heading' => $heading, 'content' => $content,
+                                            'attachment' => array('type' => $type, 'info' => $info, 'url' => $url), 'rating' => 0,
+                                            'timecreated' => $notecreated)),
                                             'timecreated' => time()));
 
             $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
@@ -448,6 +640,18 @@ class board {
         return array('status' => !empty($note), 'note' => $note, 'historyid' => $historyid);
     }
 
+    /**
+     * Triggers the add note log.
+     *
+     * @param int $boardid
+     * @param int $groupid
+     * @param string $heading
+     * @param string $content
+     * @param array $attachment
+     * @param int $columnid
+     * @param int $noteid
+     * @return void
+     */
     public static function board_add_note_log($boardid, $groupid, $heading, $content, $attachment, $columnid, $noteid) {
         $event = \mod_board\event\add_note::create(array(
             'objectid' => $noteid,
@@ -458,6 +662,15 @@ class board {
         $event->trigger();
     }
 
+    /**
+     * Updates a note.
+     *
+     * @param int $id
+     * @param string $heading
+     * @param string $content
+     * @param array $attachment
+     * @return array
+     */
     public static function board_update_note($id, $heading, $content, $attachment) {
         global $DB, $USER, $CFG;
 
@@ -510,6 +723,17 @@ class board {
         return array('status' => $update, 'note' => $note, 'historyid' => $historyid);
     }
 
+    /**
+     * Triggers the update note log.
+     *
+     * @param int $boardid
+     * @param string $heading
+     * @param string $content
+     * @param array $attachment
+     * @param int $columnid
+     * @param int $noteid
+     * @return void
+     */
     public static function board_update_note_log($boardid, $heading, $content, $attachment, $columnid, $noteid) {
         $event = \mod_board\event\update_note::create(array(
             'objectid' => $noteid,
@@ -519,6 +743,12 @@ class board {
         $event->trigger();
     }
 
+    /**
+     * Deletes a note from the board.
+     *
+     * @param int $id
+     * @return array
+     */
     public static function board_delete_note($id) {
         global $DB, $USER;
 
@@ -557,6 +787,14 @@ class board {
         return array('status' => $delete, 'historyid' => $historyid);
     }
 
+    /**
+     * Triggers the delete note log.
+     *
+     * @param int $boardid
+     * @param int $columnid
+     * @param int $noteid
+     * @return void
+     */
     public static function board_delete_note_log($boardid, $columnid, $noteid) {
         $event = \mod_board\event\delete_note::create(array(
             'objectid' => $noteid,
@@ -566,6 +804,13 @@ class board {
         $event->trigger();
     }
 
+    /**
+     * Moves a note to a different column
+     *
+     * @param int $id
+     * @param int $columnid
+     * @return array
+     */
     public static function board_move_note($id, $columnid) {
         global $DB, $USER;
 
@@ -586,7 +831,8 @@ class board {
                                             'content' => json_encode(array('id' => $note->id, 'columnid' => $columnid,
                                             'heading' => $note->heading, 'content' => $note->content,
                                             'attachment' => array('type' => $note->type, 'info' => $note->info,
-                                            'url' => $note->url), 'timecreated' => $note->timecreated, 'rating' => static::get_note_rating($note->id))),
+                                            'url' => $note->url), 'timecreated' => $note->timecreated,
+                                            'rating' => static::get_note_rating($note->id))),
                                             'timecreated' => time()));
 
             $note->columnid = $columnid;
@@ -604,6 +850,14 @@ class board {
         return array('status' => $move, 'historyid' => $historyid);
     }
 
+    /**
+     * Triggers the move note log.
+     *
+     * @param int $boardid
+     * @param int $columnid
+     * @param int $noteid
+     * @return void
+     */
     public static function board_move_note_log($boardid, $columnid, $noteid) {
         $event = \mod_board\event\move_note::create(array(
             'objectid' => $noteid,
@@ -613,6 +867,12 @@ class board {
         $event->trigger();
     }
 
+    /**
+     * Checks to see if the user can rate the note.
+     *
+     * @param int $noteid
+     * @return bool
+     */
     public static function board_can_rate_note($noteid) {
         global $DB, $USER;
 
@@ -657,6 +917,12 @@ class board {
         return !$DB->record_exists('board_note_ratings', array('userid' => $USER->id, 'noteid' => $noteid));
     }
 
+    /**
+     * Checks to see if rating has been enabled for the board.
+     *
+     * @param int $boardid
+     * @return bool
+     */
     public static function board_rating_enabled($boardid) {
         $board = static::get_board($boardid);
         if (!$board) {
@@ -666,6 +932,12 @@ class board {
         return !empty($board->addrating);
     }
 
+    /**
+     * Rates the note
+     *
+     * @param int $noteid
+     * @return array
+     */
     public static function board_rate_note($noteid) {
         global $DB, $USER;
 
@@ -710,6 +982,14 @@ class board {
         return array('status' => $rate, 'rating' => $rating, 'historyid' => $historyid);
     }
 
+    /**
+     * Triggers the rate note log.
+     *
+     * @param int $boardid
+     * @param int $noteid
+     * @param int $rating
+     * @return void
+     */
     public static function board_rate_note_log($boardid, $noteid, $rating) {
         $event = \mod_board\event\rate_note::create(array(
             'objectid' => $noteid,
@@ -719,10 +999,23 @@ class board {
         $event->trigger();
     }
 
+    /**
+     * Checks if the user can access all groups.
+     *
+     * @param mixed $context
+     * @return boolean
+     */
     public static function can_access_all_groups($context) {
         return has_capability('moodle/site:accessallgroups', $context);
     }
 
+    /**
+     * Checks if the user can access a specific group.
+     *
+     * @param int $groupid
+     * @param mixed $context
+     * @return boolean
+     */
     public static function can_access_group($groupid, $context) {
         global $USER;
 
@@ -733,11 +1026,23 @@ class board {
         return groups_is_member($groupid);
     }
 
+    /**
+     * Checks if the user can edit the board.
+     *
+     * @param int $boardid
+     * @return bool
+     */
     public static function board_is_editor($boardid) {
         $context = static::context_for_board($boardid);
         return has_capability('mod/board:manageboard', $context);
     }
 
+    /**
+     * Checks if the user can only view the board
+     *
+     * @param int $boardid
+     * @return mixed
+     */
     public static function board_readonly($boardid) {
         if (!$board = static::get_board($boardid)) {
             return false;
@@ -748,7 +1053,8 @@ class board {
         $groupmode = groups_get_activity_groupmode($cm);
         $postbyoverdue = !empty($board->postby) && time() > $board->postby;
 
-        $readonlyboard = !$iseditor && (($groupmode == VISIBLEGROUPS && !static::can_access_group(groups_get_activity_group($cm, true),
+        $readonlyboard = !$iseditor && (($groupmode == VISIBLEGROUPS &&
+                         !static::can_access_group(groups_get_activity_group($cm, true),
         $context)) || $postbyoverdue);
 
         return $readonlyboard;

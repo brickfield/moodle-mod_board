@@ -23,13 +23,13 @@ $b       = optional_param('b', 0, PARAM_INT);  // Board instance ID.
 
 if ($b) {
     if (!$board = $DB->get_record('board', array('id' => $b))) {
-        print_error('invalidaccessparameter');
+        throw new \moodle_exception('invalidaccessparameter');
     }
     $cm = get_coursemodule_from_instance('board', $board->id, $board->course, false, MUST_EXIST);
 
 } else {
     if (!$cm = get_coursemodule_from_id('board', $id)) {
-        print_error('invalidcoursemodule');
+        throw new \moodle_exception('invalidcoursemodule');
     }
     $board = $DB->get_record('board', array('id' => $cm->instance), '*', MUST_EXIST);
 }
