@@ -1,4 +1,3 @@
-define(function() {
 /*
 * jQuery plugin that makes elements editable
 *
@@ -384,4 +383,4 @@ define(function() {
         clickedElement = $(e.target);
     });
 
-})(window.jQuery, window);});
+})(window.jQuery, window);

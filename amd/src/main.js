@@ -13,13 +13,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-define(['mod_board/board'],
-    function(Board) {
-        return {
-            initialize: function(board, options) {
-                new Board(board, options);
-            }
-        };
-    }
-);
+import Board from "mod_board/board";
 
+export default {
+    initialize: function (board, options) {
+        new Board(board, options);
+    }
+};
