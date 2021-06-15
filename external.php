@@ -215,14 +215,6 @@ class mod_board_external extends external_api {
             'attachment' => $attachment
         ]);
 
-        $params['attachment'][array(
-            'type' => $attachment['type'],
-            'info' => $attachment['info'],
-            'url' => $attachment['url'],
-            'filename' => $attachment['filename'],
-            'filecontents' => $attachment['filecontents'],
-        )];
-
         // Request and permission validation.
         $column = board::get_column($params['columnid']);
         $context = board::context_for_board($column->boardid);
@@ -275,14 +267,6 @@ class mod_board_external extends external_api {
             'content' => $content,
             'attachment' => $attachment
         ]);
-
-        $params['attachment'][array(
-            'type' => $attachment['type'],
-            'info' => $attachment['info'],
-            'url' => $attachment['url'],
-            'filename' => $attachment['filename'],
-            'filecontents' => $attachment['filecontents'],
-        )];
 
         // Request and permission validation.
         $note = board::get_note($params['id']);
