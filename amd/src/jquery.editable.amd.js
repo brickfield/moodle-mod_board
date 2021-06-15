@@ -7,7 +7,7 @@
 * @version 1.3.6.dev
 * @donations http://victorjonsson.se/donations/
 */
-(function($, window) {
+export default (function($, window) {
 
     'use strict';
 
