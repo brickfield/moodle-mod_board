@@ -1,9 +1,31 @@
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * A javascript module to handle the board.
+ *
+ * @module     mod_board/board
+ * @package    mod_board
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 import $ from "jquery";
 import "jqueryui";
 import {get_strings as getStrings} from "core/str";
 import Ajax from "core/ajax";
 import Notification from "core/notification";
-import "core/templates";
 import "mod_board/jquery.editable.amd";
 
 const _serviceCall = function(method, args, callback, failcallback) {
@@ -12,7 +34,7 @@ const _serviceCall = function(method, args, callback, failcallback) {
         args: args,
         done: function(data) {
             callback(data);
-        }.bind(this),
+        },
         fail: function(error) {
             Notification.exception(error);
             if (failcallback) {
@@ -23,7 +45,7 @@ const _serviceCall = function(method, args, callback, failcallback) {
 };
 
 const isAriaTriggerKey = function(key) {
-    return key==13 || key==32;
+    return key == 13 || key == 32;
 };
 
 const encodeText = function(rawText) {
@@ -36,7 +58,7 @@ const decodeText = function(encodedText) {
 
 const handleAction = function(elem, callback) {
     return elem.on('click keypress', function(e) {
-        if (e.type=='keypress') {
+        if (e.type == 'keypress') {
             if (isAriaTriggerKey(e.keyCode)) {
                 e.preventDefault();
             } else {
@@ -53,9 +75,9 @@ const handleEditableAction = function(elem, callback, callBeforeOnKeyEditing) {
         throw new Error('handleEditableAction - must be called before setting the element as editable');
     }
 
-    // can't use on(edit) here because we want to do actions (save cache) before the control goes into edit mode
+    // Can't use on(edit) here because we want to do actions (save cache) before the control goes into edit mode
     return elem.on('dblclick keypress', function(e) {
-        if (e.type=='keypress') {
+        if (e.type == 'keypress') {
             if (isAriaTriggerKey(e.keyCode) && !elem.is(':editing')) {
                 e.preventDefault();
                 if (callBeforeOnKeyEditing) {
@@ -75,6 +97,7 @@ const handleEditableAction = function(elem, callback, callBeforeOnKeyEditing) {
 };
 
 export default function(board, options) {
+    // An array of strings to load as a batch later.
     var strings = {
         default_column_heading: '',
         post_button_text: '',
@@ -119,45 +142,47 @@ export default function(board, options) {
         invalid_file_size_max: '',
     };
 
-    const MEDIA_SELECTION_BUTTONS = 1;
-    const MEDIA_SELECTION_DROPDOWN = 2;
-    const ATTACHMENT_VIDEO = 1;
-    const ATTACHMENT_IMAGE = 2;
-    const ATTACHMENT_LINK = 3;
-    const SORTBY_DATE = 1;
-    const SORTBY_RATING = 2;
-    var reloadTimer = null;
-    var lastHistoryId = null;
-    var isEditor = options.isEditor || false;
-    var userId = options.userId || -1;
-    var mediaSelection = options.mediaselection || MEDIA_SELECTION_BUTTONS;
-    var noteTextCache = null, noteHeadingCache = null, attachmentCache = null;
-    var editingNote = 0;
-    var isReadOnlyBoard = options.readonly || false;
-    var accepted_file_extensions = options.file.extensions;
-    var accepted_file_size_min = options.file.size_min;
-    var accepted_file_size_max = options.file.size_max;
-    var ratingenabled = options.ratingenabled;
-    var sortby = options.sortby || SORTBY_DATE;
+    const MEDIA_SELECTION_BUTTONS = 1,
+          MEDIA_SELECTION_DROPDOWN = 2,
+          ATTACHMENT_VIDEO = 1,
+          ATTACHMENT_IMAGE = 2,
+          ATTACHMENT_LINK = 3,
+          SORTBY_DATE = 1,
+          SORTBY_RATING = 2;
+    var reloadTimer = null,
+        lastHistoryId = null,
+        isEditor = options.isEditor || false,
+        userId = options.userId || -1,
+        mediaSelection = options.mediaselection || MEDIA_SELECTION_BUTTONS,
+        noteTextCache = null,
+        noteHeadingCache = null,
+        attachmentCache = null,
+        editingNote = 0,
+        isReadOnlyBoard = options.readonly || false,
+        acceptedFileExtensions = options.file.extensions,
+        acceptedFileSizeMin = options.file.size_min,
+        acceptedFileSizeMax = options.file.size_max,
+        ratingenabled = options.ratingenabled,
+        sortby = options.sortby || SORTBY_DATE;
 
     var serviceCall = function(method, args, callback, failcallback) {
-        if (method!=='board_history') {
+        if (method !== 'board_history') {
             stopUpdating();
         }
         _serviceCall(method, args, function() {
             callback.apply(null, arguments);
-            if (method!=='board_history' && method!='get_board') {
+            if (method !== 'board_history' && method != 'get_board') {
                 updateBoard(true);
             }
         }, failcallback);
     };
 
     var getNote = function(ident) {
-        return $(".board_note[data-ident='"+ident+"']");
+        return $(".board_note[data-ident='" + ident + "']");
     };
 
     var getNoteText = function(ident) {
-        return $(".board_note[data-ident='"+ident+"'] .note_text");
+        return $(".board_note[data-ident='" + ident + "'] .note_text");
     };
 
     var getNoteTextForNote = function(note) {
@@ -165,7 +190,7 @@ export default function(board, options) {
     };
 
     var getNoteHeading = function(ident) {
-        return $(".board_note[data-ident='"+ident+"'] .note_heading");
+        return $(".board_note[data-ident='" + ident + "'] .note_heading");
     };
 
     var getNoteHeadingForNote = function(note) {
@@ -189,55 +214,55 @@ export default function(board, options) {
     };
 
     var textIdentifierForNote = function(note) {
-        var noteText = getNoteTextForNote(note).html();
-        var noteHeading = getNoteHeadingForNote(note).html();
-        var noteAttachment = attachmentDataForNote(note);
+        var noteText = getNoteTextForNote(note).html(),
+            noteHeading = getNoteHeadingForNote(note).html(),
+            noteAttachment = attachmentDataForNote(note);
 
-        if (noteHeading.length>0) {
+        if (noteHeading.length > 0) {
             return noteHeading;
         }
-        if (noteText.length>0) {
-            return noteText.replace(/<br\s*\/?>/gi," ").replace(/\n/g, " ").split(/\s+/).slice(0,5).join(" ");
+        if (noteText.length > 0) {
+            return noteText.replace(/<br\s*\/?>/gi, " ").replace(/\n/g, " ").split(/\s+/).slice(0, 5).join(" ");
         }
-        if (noteAttachment.info && noteAttachment.info.length>0) {
+        if (noteAttachment.info && noteAttachment.info.length > 0) {
             return noteAttachment.info;
         }
         return null;
     };
 
     var updateNoteAria = function(noteId) {
-        var note = getNote(noteId);
-        var columnIdentifier = note.closest('.board_column').find('.column_name').text();
-        var post_button = "";
-        var cancel_button = "";
-        var add_youtube = "";
-        var add_image = "";
-        var add_link = "";
-        var remove_attachment = "";
-        var choose_file_button = "";
+        var note = getNote(noteId),
+            columnIdentifier = note.closest('.board_column').find('.column_name').text(),
+            postButton = "",
+            cancelButton = "",
+            addYoutube = "",
+            addImage = "",
+            addLink = "",
+            removeAttachment = "",
+            chooseFileButton = "";
 
-        if (!noteId) { // new post
-            post_button = strings.aria_postnew.replace('{column}', columnIdentifier);
-            cancel_button = strings.aria_cancelnew.replace('{column}', columnIdentifier);
-            add_youtube = strings.aria_addmedianew.replace('{type}', strings.option_youtube).replace('{column}',
+        if (!noteId) { // New post
+            postButton = strings.aria_postnew.replace('{column}', columnIdentifier);
+            cancelButton = strings.aria_cancelnew.replace('{column}', columnIdentifier);
+            addYoutube = strings.aria_addmedianew.replace('{type}', strings.option_youtube).replace('{column}',
                           columnIdentifier);
-            add_image = strings.aria_addmedianew.replace('{type}', strings.option_image).replace('{column}', columnIdentifier);
-            add_link = strings.aria_addmedianew.replace('{type}', strings.option_link).replace('{column}', columnIdentifier);
-            choose_file_button = strings.aria_choosefilenew.replace('{column}', strings.columnIdentifier);
+            addImage = strings.aria_addmedianew.replace('{type}', strings.option_image).replace('{column}', columnIdentifier);
+            addLink = strings.aria_addmedianew.replace('{type}', strings.option_link).replace('{column}', columnIdentifier);
+            chooseFileButton = strings.aria_choosefilenew.replace('{column}', strings.columnIdentifier);
         } else {
             var noteIdentifier = textIdentifierForNote(note);
 
-            post_button = strings.aria_postedit.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
-            cancel_button = strings.aria_canceledit.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
-            add_youtube = strings.aria_addmedia.replace('{type}', strings.option_youtube).replace('{column}',
+            postButton = strings.aria_postedit.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
+            cancelButton = strings.aria_canceledit.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
+            addYoutube = strings.aria_addmedia.replace('{type}', strings.option_youtube).replace('{column}',
                           columnIdentifier).replace('{post}', noteIdentifier);
-            add_image = strings.aria_addmedia.replace('{type}', strings.option_image).replace('{column}',
+            addImage = strings.aria_addmedia.replace('{type}', strings.option_image).replace('{column}',
                           columnIdentifier).replace('{post}', noteIdentifier);
-            add_link = strings.aria_addmedia.replace('{type}', strings.option_link).replace('{column}',
+            addLink = strings.aria_addmedia.replace('{type}', strings.option_link).replace('{column}',
                           columnIdentifier).replace('{post}', noteIdentifier);
-            remove_attachment = strings.aria_deleteattachment.replace('{column}',
+            removeAttachment = strings.aria_deleteattachment.replace('{column}',
             columnIdentifier).replace('{post}', noteIdentifier);
-            choose_file_button = strings.aria_choosefileedit.replace('{column}',
+            chooseFileButton = strings.aria_choosefileedit.replace('{column}',
             columnIdentifier).replace('{post}', noteIdentifier);
 
             note.find('.delete_note').attr('aria-label', strings.aria_deletepost.replace('{column}',
@@ -247,26 +272,26 @@ export default function(board, options) {
             note.find('.note_ariatext').html(noteIdentifier);
         }
 
-        if (mediaSelection==MEDIA_SELECTION_BUTTONS) {
+        if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
             if (noteId) {
                 var attRemove = note.find('.remove_attachment');
                 if (attRemove) {
-                    attRemove.attr('aria-label', remove_attachment);
+                    attRemove.attr('aria-label', removeAttachment);
                 }
             }
 
-            note.find('.attachment_button.youtube_button').attr('aria-label', add_youtube);
-            note.find('.attachment_button.image_button').attr('aria-label', add_image);
-            note.find('.attachment_button.link_button').attr('aria-label', add_link);
+            note.find('.attachment_button.youtube_button').attr('aria-label', addYoutube);
+            note.find('.attachment_button.image_button').attr('aria-label', addImage);
+            note.find('.attachment_button.link_button').attr('aria-label', addLink);
         }
-        note.find('.post_button').attr('aria-label', post_button);
-        note.find('.cancel_button').attr('aria-label', cancel_button);
-        note.find('.choose_file_button').attr('aria-label', choose_file_button);
+        note.find('.post_button').attr('aria-label', postButton);
+        note.find('.cancel_button').attr('aria-label', cancelButton);
+        note.find('.choose_file_button').attr('aria-label', chooseFileButton);
     };
 
     var updateColumnAria = function(columnId) {
-        var column = $('.board_column[data-ident='+columnId+']');
-        var columnIdentifier = column.find('.column_name').text();
+        var column = $('.board_column[data-ident=' + columnId + ']'),
+            columnIdentifier = column.find('.column_name').text();
         column.find('.newnote').attr('aria-label', strings.aria_newpost.replace('{column}', columnIdentifier));
         column.find('.delete_column').attr('aria-label', strings.aria_deletecolumn.replace('{column}', columnIdentifier));
 
@@ -323,7 +348,7 @@ export default function(board, options) {
 
     var startNoteEdit = function(ident) {
         if (editingNote) {
-            if (editingNote==ident) {
+            if (editingNote == ident) {
                 return;
             }
             stopNoteEdit();
@@ -354,14 +379,20 @@ export default function(board, options) {
     };
 
     var deleteNote = function(ident) {
-        if (confirm(strings.remove_note_text)) {
-            serviceCall('delete_note', {id: ident}, function(result) {
-                if (result.status) {
-                    lastHistoryId = result.historyid;
-                    getNote(ident).remove();
-                }
-            });
-        }
+        Notification.confirm(
+            strings.remove_note_text.split("\n")[1], // Are you sure?
+            strings.remove_note_text.split("\n")[0], // This will effect others.
+            strings.Ok,
+            strings.Cancel,
+            function() {
+                serviceCall('delete_note', {id: ident}, function(result) {
+                    if (result.status) {
+                        lastHistoryId = result.historyid;
+                        getNote(ident).remove();
+                    }
+                });
+            }
+        );
     };
 
     var rateNote = function(ident) {
@@ -372,8 +403,8 @@ export default function(board, options) {
             return;
         }
 
-        var note = getNote(ident);
-        var rating = note.find('.rating');
+        var note = getNote(ident),
+            rating = note.find('.rating');
         if (rating.data('disabled')) {
             return;
         }
@@ -381,46 +412,52 @@ export default function(board, options) {
 
         serviceCall('can_rate_note', {id: ident}, function(canrate) {
             if (canrate) {
-                if (confirm(strings.rate_note_text)) {
-                    serviceCall('rate_note', {id: ident}, function(result) {
-                        if (result.status) {
-                            lastHistoryId = result.historyid;
-                            rating.html(result.rating);
-                            if (sortby == SORTBY_RATING) {
-                                sortNotes(note.closest('.board_column_content'));
+                Notification.confirm(
+                    strings.rate_note_text, // Are you sure?
+                    null,
+                    strings.Ok,
+                    strings.Cancel,
+                    function() {
+                        serviceCall('rate_note', {id: ident}, function(result) {
+                            if (result.status) {
+                                lastHistoryId = result.historyid;
+                                rating.html(result.rating);
+                                if (sortby == SORTBY_RATING) {
+                                    sortNotes(note.closest('.board_column_content'));
+                                }
                             }
-                        }
-                        rating.data('disabled', false);
-                    });
-                }
+                            rating.data('disabled', false);
+                        });
+                    }
+                );
+
             }
         });
     };
 
     var attachmentTypeChanged = function(note) {
-        var noteAttachment = getNoteAttachmentsForNote(note);
-        var type = noteAttachment.find('.type').val();
+        var noteAttachment = getNoteAttachmentsForNote(note),
+            type = noteAttachment.find('.type').val(),
+            attachmentInfo = noteAttachment.find('.info'),
+            attachmentUrl = noteAttachment.find('.url'),
+            attachmentFile = noteAttachment.find('.file');
 
-        var attachmentInfo = noteAttachment.find('.info');
-        var attachmentUrl = noteAttachment.find('.url');
-        var attachmentFile = noteAttachment.find('.file');
-
-        if (mediaSelection==MEDIA_SELECTION_BUTTONS) {
-            var attachmentIcon = noteAttachment.find('.type_icon');
-            var removeAttachment = noteAttachment.find('.remove_attachment');
+        if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
+            var attachmentIcon = noteAttachment.find('.type_icon'),
+                removeAttachment = noteAttachment.find('.remove_attachment');
         } else {
             getNoteButtonsForNote(note).find('.attachment_button').hide();
         }
 
-        if (type>"0") {
-            if (mediaSelection==MEDIA_SELECTION_BUTTONS) {
+        if (type > "0") {
+            if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
                 removeAttachment.show();
             }
-            attachmentInfo.prop('placeholder', strings['option_'+attachmentTypeToString(type)+'_info']);
-            attachmentUrl.prop('placeholder', strings['option_'+attachmentTypeToString(type)+'_url']);
+            attachmentInfo.prop('placeholder', strings['option_' + attachmentTypeToString(type) + '_info']);
+            attachmentUrl.prop('placeholder', strings['option_' + attachmentTypeToString(type) + '_url']);
 
             attachmentInfo.show();
-            if (type==ATTACHMENT_IMAGE && FileReader) {
+            if (type == ATTACHMENT_IMAGE && FileReader) {
                 attachmentFile.show();
                 attachmentUrl.hide();
             } else {
@@ -428,24 +465,24 @@ export default function(board, options) {
                 attachmentUrl.show();
             }
 
-            if (mediaSelection==MEDIA_SELECTION_BUTTONS) {
+            if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
                 attachmentIcon.removeClass().addClass(['type_icon', 'fa', attachmentFAIcon(type)]);
                 attachmentIcon.show();
                 getNoteButtonsForNote(note).find('.attachment_button').hide();
             }
         } else {
-            if (mediaSelection==MEDIA_SELECTION_BUTTONS) {
+            if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
                 removeAttachment.hide();
             }
             attachmentInfo.hide();
             attachmentUrl.hide();
             attachmentFile.hide();
-            if (mediaSelection==MEDIA_SELECTION_BUTTONS) {
+            if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
                 attachmentIcon.hide();
             }
             attachmentInfo.val('');
             attachmentUrl.val('');
-            if (mediaSelection==MEDIA_SELECTION_BUTTONS) {
+            if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
                 getNoteButtonsForNote(note).find('.attachment_button').show();
             }
         }
@@ -457,11 +494,11 @@ export default function(board, options) {
             if (!attachment) {
                 attachment = {type: "0"};
             } else {
-                attachment.type += "";//just in case
+                attachment.type += "";// Just in case
             }
             var attType = noteAttachment.find('.type');
-            attType.val(attachment.type?attachment.type: "0");
-            if (attType.val()>"0") {
+            attType.val(attachment.type ? attachment.type : "0");
+            if (attType.val() > "0") {
                 noteAttachment.find('.info').val(decodeText(attachment.info));
                 noteAttachment.find('.url').val(decodeText(attachment.url));
             }
@@ -471,8 +508,8 @@ export default function(board, options) {
     };
 
     var attachmentDataForNote = function(note) {
-        var attachment = { type: 0, info: null, url: null, filename: null, filecontents: null };
-        var noteAttachment = getNoteAttachmentsForNote(note);
+        var attachment = {type: 0, info: null, url: null, filename: null, filecontents: null},
+            noteAttachment = getNoteAttachmentsForNote(note);
         if (noteAttachment.length) {
             attachment.type = noteAttachment.find('.type').val();
             attachment.info = encodeText(noteAttachment.find('.info').val());
@@ -492,7 +529,7 @@ export default function(board, options) {
     };
 
     var attachmentTypeToString = function(type) {
-        switch(type) {
+        switch (type) {
             case "1": return 'youtube';
             case "2": return 'image';
             case "3": return 'link';
@@ -502,7 +539,7 @@ export default function(board, options) {
 
     var attachmentFAIcons = ['fa-youtube', 'fa-picture-o', 'fa-link'];
     var attachmentFAIcon = function(type) {
-        return attachmentFAIcons[type-1] || null;
+        return attachmentFAIcons[type - 1] || null;
     };
 
     var preloadFile = function(note, callback) {
@@ -511,11 +548,11 @@ export default function(board, options) {
             var fileElem = noteAttachment.find('.file>input');
             if (FileReader && fileElem.prop('files').length) {
                 var file = fileElem.prop('files')[0];
-                if (accepted_file_extensions.indexOf(file.name.split('.').pop().toLowerCase())==-1) { // wrong exception
+                if (acceptedFileExtensions.indexOf(file.name.split('.').pop().toLowerCase()) == -1) { // Wrong exception
                     Notification.alert(strings.warning, strings.invalid_file_extension);
-                } else if (file.size < accepted_file_size_min) {
+                } else if (file.size < acceptedFileSizeMin) {
                     Notification.alert(strings.warning, strings.invalid_file_size_min);
-                } else if (file.size > accepted_file_size_max) {
+                } else if (file.size > acceptedFileSizeMax) {
                     Notification.alert(strings.warning, strings.invalid_file_size_max);
                 } else {
                     fileElem.data('filename', file.name);
@@ -553,27 +590,26 @@ export default function(board, options) {
         elem.removeClass('wrapper_youtube');
         elem.removeClass('wrapper_image');
         elem.removeClass('wrapper_url');
-        if (attachment.filename && parseInt(attachment.type)==ATTACHMENT_IMAGE) { //before uploading
-            elem.html('<img src="'+ attachment.filecontents +'" class="preview_element" alt="'+ attachment.info +'"/>');
+        if (attachment.filename && parseInt(attachment.type) == ATTACHMENT_IMAGE) { // Before uploading
+            elem.html('<img src="' + attachment.filecontents + '" class="preview_element" alt="' + attachment.info + '"/>');
             elem.addClass('wrapper_image');
             elem.show();
-        }
-        else if (attachment.url) {
-            switch(parseInt(attachment.type)) {
-                case ATTACHMENT_VIDEO: //youtube
-                    elem.html('<iframe src="'+ fixEmbedUrlIfNeeded(attachment.url) +
+        } else if (attachment.url) {
+            switch (parseInt(attachment.type)) {
+                case ATTACHMENT_VIDEO: // Youtube
+                    elem.html('<iframe src="' + fixEmbedUrlIfNeeded(attachment.url) +
                     '" class="preview_element" frameborder="0" allow="accelerometer; autoplay; clipboard-write;' +
                     'encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>');
                     elem.addClass('wrapper_youtube');
                     elem.show();
                 break;
-                case ATTACHMENT_IMAGE: // image
-                    elem.html('<img src="'+ attachment.url +'" class="preview_element" alt="'+ attachment.info +'"/>');
+                case ATTACHMENT_IMAGE: // Image
+                    elem.html('<img src="' + attachment.url + '" class="preview_element" alt="' + attachment.info + '"/>');
                     elem.addClass('wrapper_image');
                     elem.show();
                 break;
-                case ATTACHMENT_LINK: // url
-                    elem.html('<a href="'+ attachment.url +'" class="preview_element" target="_blank">' +
+                case ATTACHMENT_LINK: // Url
+                    elem.html('<a href="' + attachment.url + '" class="preview_element" target="_blank">' +
                              (attachment.info || attachment.url) + '</a>');
                     elem.addClass('wrapper_url');
                     elem.show();
@@ -589,7 +625,7 @@ export default function(board, options) {
     };
 
     var addNote = function(columnid, ident, heading, content, attachment, owner, sortorder, rating) {
-        var ismynote = owner.id==userId || !ident;
+        var ismynote = owner.id == userId || !ident;
         var iseditable = isEditor || (ismynote && !isReadOnlyBoard);
 
         if (!ident) {
@@ -599,7 +635,7 @@ export default function(board, options) {
             }
         }
 
-        var note = $('<div class="board_note" data-ident="'+ident+'" data-sortorder="'+sortorder+'"></div>');
+        var note = $('<div class="board_note" data-ident="' + ident + '" data-sortorder="' + sortorder + '"></div>');
         if (ismynote) {
             note.addClass('mynote');
         }
@@ -607,27 +643,28 @@ export default function(board, options) {
             note.addClass('editablenote');
         }
 
-        var notecontent = $('<div class="note_content"></div>');
-        var noteHeading = $('<div class="note_heading" tabindex="0">'+(heading?heading:'')+'</div>');
-        var noteText = $('<div class="note_text" tabindex="0">'+(content?content:'')+'</div>');
-        var noteAriaText = $('<div class="note_ariatext hidden" role="heading" aria-level="4" tabindex="0"></div>');
-        var attachmentPreview = $('<div class="preview"></div>');
+        var notecontent = $('<div class="note_content"></div>'),
+            noteHeading = $('<div class="note_heading" tabindex="0">' + (heading ? heading : '') + '</div>'),
+            noteText = $('<div class="note_text" tabindex="0">' + (content ? content : '') + '</div>'),
+            noteAriaText = $('<div class="note_ariatext hidden" role="heading" aria-level="4" tabindex="0"></div>'),
+            attachmentPreview = $('<div class="preview"></div>');
         if (iseditable) {
             var noteAttachment = $('<div class="note_attachment form-group row" tabindex="0">' +
-                                '<select class="type form-control form-control-sm '+
-                                (mediaSelection==MEDIA_SELECTION_BUTTONS?'hidden':'')+'">' +
-                                    '<option value="0">'+strings.option_empty+'</option>' +
-                                    '<option value="'+ATTACHMENT_VIDEO+'">'+strings.option_youtube+'</option>' +
-                                    '<option value="'+ATTACHMENT_IMAGE+'">'+strings.option_image+'</option>' +
-                                    '<option value="'+ATTACHMENT_LINK+'">'+strings.option_link+'</option>' +
+                                '<select class="type form-control form-control-sm ' +
+                                (mediaSelection == MEDIA_SELECTION_BUTTONS ? 'hidden' : '') + '">' +
+                                    '<option value="0">' + strings.option_empty + '</option>' +
+                                    '<option value="' + ATTACHMENT_VIDEO + '">' + strings.option_youtube + '</option>' +
+                                    '<option value="' + ATTACHMENT_IMAGE + '">' + strings.option_image + '</option>' +
+                                    '<option value="' + ATTACHMENT_LINK + '">' + strings.option_link + '</option>' +
                                 '</select>' +
-                                '<span class="type_icon fa '+(mediaSelection==MEDIA_SELECTION_DROPDOWN?'hidden':'')+'"></span>'+
-                                '<input type="text" class="info form-control form-control-sm col-sm-12 '+
-                                (mediaSelection==MEDIA_SELECTION_BUTTONS?'with_type_icon':'')+'" placeholder="">' +
+                                '<span class="type_icon fa ' + (mediaSelection == MEDIA_SELECTION_DROPDOWN ? 'hidden' : '') + '">' +
+                                '</span>' +
+                                '<input type="text" class="info form-control form-control-sm col-sm-12 ' +
+                                (mediaSelection == MEDIA_SELECTION_BUTTONS ? 'with_type_icon' : '') + '" placeholder="">' +
                                 '<input type="text" class="url form-control form-control-sm col-sm-12" placeholder="">' +
-                                '<div class="file form-control form-control-sm"><label for="file'+ident+
-                                '" class="choose_file_button action_button p-0 w-100" tabindex="0">'+
-                                strings.choose_file+'</label><input id="file'+ident+'" type="file" class="d-none"></div>' +
+                                '<div class="file form-control form-control-sm"><label for="file' + ident +
+                                '" class="choose_file_button action_button p-0 w-100" tabindex="0">' +
+                                strings.choose_file + '</label><input id="file' + ident + '" type="file" class="d-none"></div>' +
                             '</div>'
                         );
 
@@ -645,10 +682,10 @@ export default function(board, options) {
         note.append(notecontent);
 
         if (iseditable) {
-            var attachmentType = noteAttachment.find('.type');
-            var attachmentInfo = noteAttachment.find('.info');
-            var attachmentUrl = noteAttachment.find('.url');
-            var attachmentFileInput = noteAttachment.find('.file>input');
+            var attachmentType = noteAttachment.find('.type'),
+                attachmentInfo = noteAttachment.find('.info'),
+                attachmentUrl = noteAttachment.find('.url'),
+                attachmentFileInput = noteAttachment.find('.file>input');
 
             attachmentType.on('change', function() {
                 attachmentTypeChanged(note);
@@ -669,38 +706,46 @@ export default function(board, options) {
                 previewAttachment(note);
             });
 
-            if (mediaSelection==MEDIA_SELECTION_BUTTONS) {
+            if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
                 var removeAttachment = $('<div class="remove remove_attachment fa fa-remove"></div>');
                 removeAttachment.hide();
-                removeAttachment.on('click', function() { attachmentType.val(0); attachmentType.trigger('change'); });
+                removeAttachment.on('click', function() {
+ attachmentType.val(0); attachmentType.trigger('change');
+});
                 noteAttachment.append(removeAttachment);
             }
         }
 
-        var column_content = $('.board_column[data-ident='+columnid+'] .board_column_content');
+        var column_content = $('.board_column[data-ident=' + columnid + '] .board_column_content');
 
         if (iseditable) {
             var buttons = $('<div class="note_buttons"></div>');
             buttons.hide();
-            var postbutton = $('<div class="post_button action_button" role="button" tabindex="0">'+
-                              strings.post_button_text+'</div>');
-            var cancelbutton = $('<div class="cancel_button action_button" role="button" tabindex="0">'+
-                                strings.cancel_button_text+'</div>');
+            var postbutton = $('<div class="post_button action_button" role="button" tabindex="0">' +
+                              strings.post_button_text + '</div>');
+            var cancelbutton = $('<div class="cancel_button action_button" role="button" tabindex="0">' +
+                                strings.cancel_button_text + '</div>');
 
             buttons.append(postbutton);
             buttons.append(cancelbutton);
 
-            if (mediaSelection==MEDIA_SELECTION_BUTTONS) {
+            if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
                 buttons.append('<div class="spacer_button"></div>');
-                var ytButton = $('<div class="attachment_button youtube_button action_button fa '+
-                                attachmentFAIcons[0]+'" role="button" tabindex="0"></div>');
-                handleAction(ytButton, function() { attachmentType.val(1); attachmentType.trigger("change"); });
-                var imgButton = $('<div class="attachment_button image_button action_button fa '+
-                                 attachmentFAIcons[1]+'" role="button" tabindex="0"></div>');
-                handleAction(imgButton, function() { attachmentType.val(2); attachmentType.trigger("change"); });
-                var linkButton = $('<div class="attachment_button link_button action_button fa '+
-                                  attachmentFAIcons[2]+'" role="button" tabindex="0"></div>');
-                handleAction(linkButton, function() { attachmentType.val(3); attachmentType.trigger("change"); });
+                var ytButton = $('<div class="attachment_button youtube_button action_button fa ' +
+                                attachmentFAIcons[0] + '" role="button" tabindex="0"></div>');
+                handleAction(ytButton, function() {
+ attachmentType.val(1); attachmentType.trigger("change");
+});
+                var imgButton = $('<div class="attachment_button image_button action_button fa ' +
+                                 attachmentFAIcons[1] + '" role="button" tabindex="0"></div>');
+                handleAction(imgButton, function() {
+ attachmentType.val(2); attachmentType.trigger("change");
+});
+                var linkButton = $('<div class="attachment_button link_button action_button fa ' +
+                                  attachmentFAIcons[2] + '" role="button" tabindex="0"></div>');
+                handleAction(linkButton, function() {
+ attachmentType.val(3); attachmentType.trigger("change");
+});
                 buttons.append(ytButton);
                 buttons.append(imgButton);
                 buttons.append(linkButton);
@@ -723,7 +768,7 @@ export default function(board, options) {
             });
 
             noteText.on('click', function() {
-                if ((editingNote && editingNote==ident) || !ident) {
+                if ((editingNote && editingNote == ident) || !ident) {
                     noteText.editable('open');
                 }
             });
@@ -733,7 +778,7 @@ export default function(board, options) {
             };
 
             noteHeading.on('click', function() {
-                if ((editingNote && editingNote==ident) || !ident) {
+                if ((editingNote && editingNote == ident) || !ident) {
                     noteHeading.editable('open');
                 }
             });
@@ -760,7 +805,7 @@ export default function(board, options) {
                 postbutton.data('disabled', true);
 
 
-                if (!ident) { // new
+                if (!ident) { // New
                     serviceCall('add_note', {columnid: columnid, heading: theHeading, content: theText,
                         attachment: sendAttach}, function(result) {
                         if (result.status) {
@@ -777,7 +822,7 @@ export default function(board, options) {
                         }
                     });
 
-                } else { // update
+                } else { // Update
                     serviceCall('update_note', {id: ident, heading: theHeading, content: theText,
                         attachment: sendAttach}, function(result) {
                         if (result.status) {
@@ -794,16 +839,16 @@ export default function(board, options) {
 
             handleEditableAction(noteText, beginEdit);
             noteText.editable({
-                toggleFontSize : false,
+                toggleFontSize: false,
                 closeOnEnter: false,
-                callback : function() {
+                callback: function() {
                     noteText.html(noteText.html().substring(0, options.post_max_length));
                 }
             });
 
             handleEditableAction(noteHeading, beginEdit);
             noteHeading.editable({
-                toggleFontSize : false,
+                toggleFontSize: false,
                 closeOnEnter: true
             });
 
@@ -815,7 +860,7 @@ export default function(board, options) {
         if (ident) {
             if (ratingenabled) {
                 note.addClass('rateablenote');
-                var rateElement = $('<div class="fa fa-star rating" role="button" tabindex="0">'+rating+'</div>');
+                var rateElement = $('<div class="fa fa-star rating" role="button" tabindex="0">' + rating + '</div>');
 
                 handleAction(rateElement, function() {
                     rateNote(ident);
@@ -833,31 +878,31 @@ export default function(board, options) {
                 column_content.prepend(note);
             }
         } else {
-            $('.board_column[data-ident='+columnid+'] .board_column_newcontent').append(note);
+            $('.board_column[data-ident=' + columnid + '] .board_column_newcontent').append(note);
             updateNoteAria(ident);
-            noteText.editable('open'); // trigger edit of note
+            noteText.editable('open'); // Trigger edit of note
             beginEdit();
         }
     };
 
     var addColumn = function(ident, name, notes) {
-        var iseditable = isEditor;
-        var nameCache = null;
-        var column = $('<div class="board_column board_column_hasdata" data-ident="'+ident+'"></div>');
-        var column_header = $('<div class="board_column_header"></div>');
-        var column_sort = $('<div class="column_sort fa"></div>');
-        var column_name = $('<div class="column_name" tabindex="0" aria-level="3" role="heading">'+name+'</div>');
-        var column_content = $('<div class="board_column_content"></div>');
-        var column_newcontent = $('<div class="board_column_newcontent"></div>');
-        column_header.append(column_sort);
-        column_header.append(column_name);
+        var iseditable = isEditor,
+            nameCache = null,
+            column = $('<div class="board_column board_column_hasdata" data-ident="' + ident + '"></div>'),
+            columnHeader = $('<div class="board_column_header"></div>'),
+            columnSort = $('<div class="column_sort fa"></div>'),
+            columnName = $('<div class="column_name" tabindex="0" aria-level="3" role="heading">' + name + '</div>'),
+            columnContent = $('<div class="board_column_content"></div>'),
+            columnNewContent = $('<div class="board_column_newcontent"></div>');
+        columnHeader.append(columnSort);
+        columnHeader.append(columnName);
 
         if (options.hideheaders) {
-            column_name.addClass('d-none');
+            columnName.addClass('d-none');
         }
 
-        column_sort.on('click', function() {
-            sortNotes(column_content, true);
+        columnSort.on('click', function() {
+            sortNotes(columnContent, true);
         });
 
         if (iseditable) {
@@ -865,47 +910,53 @@ export default function(board, options) {
 
             var removeElement = $('<div class="remove fa fa-remove delete_column" role="button" tabindex="0"></div>');
             handleAction(removeElement, function() {
-                if (confirm(strings.remove_column_text)) {
-                    serviceCall('delete_column', {id: ident}, function(result) {
-                        if (result.status) {
-                            column.remove();
-                            lastHistoryId = result.historyid;
-                        }
-                    });
-                }
+                Notification.confirm(
+                    strings.remove_column_text.split(". ")[1], // Are you sure?
+                    strings.remove_column_text.split(". ")[0], // This will effect others.
+                    strings.Ok,
+                    strings.Cancel,
+                    function() {
+                        serviceCall('delete_column', {id: ident}, function(result) {
+                            if (result.status) {
+                                column.remove();
+                                lastHistoryId = result.historyid;
+                            }
+                        });
+                    }
+                );
             });
 
-            column_header.append(removeElement);
+            columnHeader.append(removeElement);
         }
 
-        column.append(column_header);
-        column.append(column_content);
-        column.append(column_newcontent);
+        column.append(columnHeader);
+        column.append(columnContent);
+        column.append(columnNewContent);
 
         if (iseditable) {
-            handleEditableAction(column_name, function() {
-                nameCache = column_name.html();
+            handleEditableAction(columnName, function() {
+                nameCache = columnName.html();
             }, true);
 
-            column_name.editable({
-                toggleFontSize : false,
+            columnName.editable({
+                toggleFontSize: false,
                 closeOnEnter: true,
-                callback : function( data ) {
-                    if ( data.content ) {
-                        serviceCall('update_column', {id: ident, name: column_name.html()}, function(result) {
+                callback: function(data) {
+                    if (data.content) {
+                        serviceCall('update_column', {id: ident, name: columnName.html()}, function(result) {
                             if (!result.status) {
-                                column_name.html(nameCache);
+                                columnName.html(nameCache);
                                 nameCache = null;
                             } else {
                                 lastHistoryId = result.historyid;
                                 updateColumnAria(ident);
                             }
                         }, function() {
-                            column_name.html(nameCache);
+                            columnName.html(nameCache);
                             nameCache = null;
                         });
                     } else {
-                        column_name.html(nameCache);
+                        columnName.html(nameCache);
                         nameCache = null;
                     }
                 }
@@ -913,10 +964,10 @@ export default function(board, options) {
         }
 
         if (!isReadOnlyBoard) {
-            column_newcontent.append('<div class="board_button newnote" role="button" tabindex="0">' +
-            '<div class="button_content"><span class="fa '+options.noteicon+'"></span></div></div>');
+            columnNewContent.append('<div class="board_button newnote" role="button" tabindex="0">' +
+            '<div class="button_content"><span class="fa ' + options.noteicon + '"></span></div></div>');
 
-            handleAction(column_newcontent.find('.newnote'), function() {
+            handleAction(columnNewContent.find('.newnote'), function() {
                 addNote(ident, 0, null, null, null, {id: userId}, 0, 0);
             });
         }
@@ -935,7 +986,7 @@ export default function(board, options) {
                     {id: notes[index].userid}, notes[index].timecreated, notes[index].rating);
             }
         }
-        sortNotes(column_content);
+        sortNotes(columnContent);
         updateColumnAria(ident);
         if (isEditor) {
             updateSortable();
@@ -943,10 +994,10 @@ export default function(board, options) {
     };
 
     var addNewColumnButton = function() {
-        var column = $('<div class="board_column board_column_empty"></div>');
-        var newBusy = false;
-        column.append('<div class="board_button newcolumn" role="button" tabindex="0" aria-label="'+
-        strings.aria_newcolumn+'"><div class="button_content"><span class="fa '+options.columnicon+
+        var column = $('<div class="board_column board_column_empty"></div>'),
+            newBusy = false;
+        column.append('<div class="board_button newcolumn" role="button" tabindex="0" aria-label="' +
+        strings.aria_newcolumn + '"><div class="button_content"><span class="fa ' + options.columnicon +
         '"></span></div></div>');
 
         handleAction(column.find('.newcolumn'), function() {
@@ -986,22 +1037,22 @@ export default function(board, options) {
         serviceCall('board_history', {id: board.id, since: lastHistoryId}, function(boardhistory) {
             for (var index in boardhistory) {
                 var item = boardhistory[index];
-                if (item.boardid!=board.id) {
-                    continue; // hmm
+                if (item.boardid != board.id) {
+                    continue; // Hmm
                 }
 
                 var data = JSON.parse(item.content);
-                if (item.action=='add_note') {
+                if (item.action == 'add_note') {
                     addNote(data.columnid, data.id, data.heading, data.content, data.attachment,
                         {id: item.userid}, data.timecreated, data.rating);
                     updateNoteAria(data.id);
-                    sortNotes($('.board_column[data-ident='+data.columnid+'] .board_column_content'));
-                } else if (item.action=='update_note') {
+                    sortNotes($('.board_column[data-ident=' + data.columnid + '] .board_column_content'));
+                } else if (item.action == 'update_note') {
                     var note = getNote(data.id);
                     if (note) {
                         var heading = getNoteHeadingForNote(note);
 
-                        if (editingNote==data.id) {
+                        if (editingNote == data.id) {
                             Notification.confirm(
                                 strings.note_changed_text.split("\n")[0], // Confirm.
                                 strings.note_changed_text.split("\n")[1], // Are you sure?
@@ -1016,28 +1067,28 @@ export default function(board, options) {
                             updateNote(note, heading, data);
                         }
                     }
-                } else if (item.action=='delete_note') {
-                    if (editingNote==data.id) {
+                } else if (item.action == 'delete_note') {
+                    if (editingNote == data.id) {
                         Notification.alert(strings.warning, strings.note_deleted_text);
                         stopNoteEdit();
                     }
                     getNote(data.id).remove();
 
-                } else if (item.action=='add_column') {
+                } else if (item.action == 'add_column') {
                     addColumn(data.id, data.name);
-                } else if (item.action=='update_column') {
-                    $(".board_column[data-ident='"+data.id+"'] .column_name").html(data.name);
+                } else if (item.action == 'update_column') {
+                    $(".board_column[data-ident='" + data.id + "'] .column_name").html(data.name);
                     updateColumnAria(data.id);
-                } else if (item.action=='delete_column') {
-                    var column = $(".board_column[data-ident='"+data.id+"']");
-                    if (editingNote && column.find('.board_note[data-ident="'+editingNote+'"]').length) {
+                } else if (item.action == 'delete_column') {
+                    var column = $(".board_column[data-ident='" + data.id + "']");
+                    if (editingNote && column.find('.board_note[data-ident="' + editingNote + '"]').length) {
                         stopNoteEdit();
                     }
                     column.remove();
-                } else if (item.action=='rate_note') {
+                } else if (item.action == 'rate_note') {
                     var note = getNote(data.id);
                     note.find('.rating').html(data.rating);
-                    if (sortby==SORTBY_RATING) {
+                    if (sortby == SORTBY_RATING) {
                         sortNotes(note.closest('.board_column_content'));
                     }
                 }
@@ -1065,36 +1116,36 @@ export default function(board, options) {
     };
 
     var sortNotes = function(content, toggle) {
-        var sort_col = $(content).parent().find('.column_sort');
+        var sortCol = $(content).parent().find('.column_sort');
         var direction = $(content).data('sort');
         if (!direction) {
-            if (sortby==SORTBY_RATING) {
+            if (sortby == SORTBY_RATING) {
                 direction = 'desc';
             } else {
                 direction = 'asc';
             }
         }
         if (toggle) {
-            direction = direction=='asc'?'desc':'asc';
+            direction = direction == 'asc' ? 'desc' : 'asc';
         }
 
-        if (direction=='asc') {
-            sort_col.removeClass('fa-angle-down');
-            sort_col.addClass('fa-angle-up');
+        if (direction == 'asc') {
+            sortCol.removeClass('fa-angle-down');
+            sortCol.addClass('fa-angle-up');
         } else {
-            sort_col.removeClass('fa-angle-up');
-            sort_col.addClass('fa-angle-down');
+            sortCol.removeClass('fa-angle-up');
+            sortCol.addClass('fa-angle-down');
         }
         $(content).data('sort', direction);
 
-        if (sortby==SORTBY_DATE) {
+        if (sortby == SORTBY_DATE) {
             var desc = function(a, b) {
                 return $(b).data("sortorder") - $(a).data("sortorder");
             };
             var asc = function(a, b) {
                 return $(a).data("sortorder") - $(b).data("sortorder");
             };
-        } else if (sortby==SORTBY_RATING) {
+        } else if (sortby == SORTBY_RATING) {
             var desc = function(a, b) {
                 return $(b).find('.rating').text() - $(a).find('.rating').text() ||
                 $(b).data("sortorder") - $(a).data("sortorder");
@@ -1105,7 +1156,7 @@ export default function(board, options) {
             };
         }
 
-        $('> .board_note', $(content)).sort(direction=='asc'?asc:desc).appendTo($(content));
+        $('> .board_note', $(content)).sort(direction == 'asc' ? asc : desc).appendTo($(content));
 
     };
 
@@ -1113,16 +1164,16 @@ export default function(board, options) {
         $(".board_column_content").sortable({
             connectWith: ".board_column_content",
             stop: function(e, ui) {
-                var note = $(ui.item);
-                var tocolumn = note.closest('.board_column');
-                var columnid = tocolumn.data('ident');
+                var note = $(ui.item),
+                    tocolumn = note.closest('.board_column'),
+                    columnid = tocolumn.data('ident'),
+                    elem = $(this);
 
-                var elem = $(this);
                 serviceCall('move_note', {id: note.data('ident'), columnid: columnid}, function(result) {
                     if (result.status) {
                         lastHistoryId = result.historyid;
                         updateNoteAria(note.data('ident'));
-                        sortNotes($('.board_column[data-ident='+columnid+'] .board_column_content'));
+                        sortNotes($('.board_column[data-ident=' + columnid + '] .board_column_content'));
                     } else {
                         elem.sortable('cancel');
                     }
@@ -1132,7 +1183,7 @@ export default function(board, options) {
     };
     var init = function() {
         serviceCall('get_board', {id: board.id}, function(columns) {
-            // init
+            // Init
             if (columns) {
                 for (var index in columns) {
                     addColumn(columns[index].id, columns[index].name, columns[index].notes || {});
@@ -1153,7 +1204,7 @@ export default function(board, options) {
         });
     };
 
-    // get strings
+    // Get strings
     var stringsInfo = [];
     for (var string in strings) {
         stringsInfo.push({key: string, component: 'mod_board'});

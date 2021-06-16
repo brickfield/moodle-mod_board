@@ -13,6 +13,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * A javascript module to handle the board.
+ *
+ * @module     mod_board/main
+ * @package    mod_board
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 import Board from "mod_board/board";
 
 export default {
