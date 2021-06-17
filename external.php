@@ -400,7 +400,7 @@ class mod_board_external extends external_api {
         $context = board::context_for_board($column->boardid);
         self::validate_context($context);
 
-        return board_rate_note($params['id']);
+        return board::board_rate_note($params['id']);
     }
 
     public static function rate_note_returns() {
