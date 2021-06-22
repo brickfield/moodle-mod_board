@@ -28,6 +28,16 @@ import Ajax from "core/ajax";
 import Notification from "core/notification";
 import "mod_board/jquery.editable.amd";
 
+/**
+ * Execute a ajax call to a mod_board ajax service.
+ *
+ * @method _serviceCall
+ * @param method
+ * @param args
+ * @param callback
+ * @param failcallback
+ * @private
+ */
 const _serviceCall = function(method, args, callback, failcallback) {
     Ajax.call([{
         methodname: 'mod_board_' + method,
@@ -143,6 +153,7 @@ const handleEditableAction = function(elem, callback, callBeforeOnKeyEditing) {
  */
 export default function(board, options) {
     // An array of strings to load as a batch later.
+    // Not necessary, but used to load all the strings in one ajax call.
     var strings = {
         default_column_heading: '',
         post_button_text: '',
@@ -398,6 +409,7 @@ export default function(board, options) {
             note.find('.note_ariatext').html(noteIdentifier);
         }
 
+        // Attach media buttons, if set.
         if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
             if (noteId) {
                 var attRemove = note.find('.remove_attachment');
@@ -931,8 +943,8 @@ export default function(board, options) {
                 var removeAttachment = $('<div class="remove remove_attachment fa fa-remove"></div>');
                 removeAttachment.hide();
                 removeAttachment.on('click', function() {
- attachmentType.val(0); attachmentType.trigger('change');
-});
+                    attachmentType.val(0); attachmentType.trigger('change');
+                });
                 noteAttachment.append(removeAttachment);
             }
         }
@@ -955,18 +967,18 @@ export default function(board, options) {
                 var ytButton = $('<div class="attachment_button youtube_button action_button fa ' +
                                 attachmentFAIcons[0] + '" role="button" tabindex="0"></div>');
                 handleAction(ytButton, function() {
- attachmentType.val(1); attachmentType.trigger("change");
-});
+                    attachmentType.val(1); attachmentType.trigger("change");
+                });
                 var imgButton = $('<div class="attachment_button image_button action_button fa ' +
                                  attachmentFAIcons[1] + '" role="button" tabindex="0"></div>');
                 handleAction(imgButton, function() {
- attachmentType.val(2); attachmentType.trigger("change");
-});
+                    attachmentType.val(2); attachmentType.trigger("change");
+                });
                 var linkButton = $('<div class="attachment_button link_button action_button fa ' +
                                   attachmentFAIcons[2] + '" role="button" tabindex="0"></div>');
                 handleAction(linkButton, function() {
- attachmentType.val(3); attachmentType.trigger("change");
-});
+                    attachmentType.val(3); attachmentType.trigger("change");
+                });
                 buttons.append(ytButton);
                 buttons.append(imgButton);
                 buttons.append(linkButton);
@@ -1381,8 +1393,8 @@ export default function(board, options) {
      * @param toggle
      */
     var sortNotes = function(content, toggle) {
-        var sortCol = $(content).parent().find('.column_sort');
-        var direction = $(content).data('sort');
+        var sortCol = $(content).parent().find('.column_sort'),
+            direction = $(content).data('sort');
         if (!direction) {
             if (sortby == SORTBY_RATING) {
                 direction = 'desc';
@@ -1403,25 +1415,27 @@ export default function(board, options) {
         }
         $(content).data('sort', direction);
 
+        var desc,
+            asc;
         if (sortby == SORTBY_DATE) {
-            var desc = function(a, b) {
+            desc = function(a, b) {
                 return $(b).data("sortorder") - $(a).data("sortorder");
             };
-            var asc = function(a, b) {
+            asc = function(a, b) {
                 return $(a).data("sortorder") - $(b).data("sortorder");
             };
-        } else if (sortby == SORTBY_RATING) {
-            var desc = function(a, b) {
+        } else {
+            desc = function(a, b) {
                 return $(b).find('.rating').text() - $(a).find('.rating').text() ||
                 $(b).data("sortorder") - $(a).data("sortorder");
             };
-            var asc = function(a, b) {
+            asc = function(a, b) {
                 return $(a).find('.rating').text() - $(b).find('.rating').text() ||
                 $(a).data("sortorder") - $(b).data("sortorder");
             };
         }
 
-        $('> .board_note', $(content)).sort(direction == 'asc' ? asc : desc).appendTo($(content));
+        $('> .board_note', $(content)).sort(direction === 'asc' ? asc : desc).appendTo($(content));
 
     };
 
