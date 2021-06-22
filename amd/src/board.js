@@ -44,18 +44,48 @@ const _serviceCall = function(method, args, callback, failcallback) {
     }]);
 };
 
+/**
+ * Indicates if this is a keycode we want to listend to for
+ * aria purposes.
+ *
+ * @method isAriaTriggerKey
+ * @param key
+ * @returns {boolean}
+ */
 const isAriaTriggerKey = function(key) {
     return key == 13 || key == 32;
 };
 
+/**
+ * Encodes text into html entities.
+ *
+ * @method encodeText
+ * @param rawText
+ * @returns {*|jQuery}
+ */
 const encodeText = function(rawText) {
     return $('<div />').text(rawText).html();
 };
 
+/**
+ * Decodes text from html entities.
+ *
+ * @method decodeText
+ * @param encodedText
+ * @returns {*|jQuery}
+ */
 const decodeText = function(encodedText) {
     return $('<div />').html(encodedText).text();
 };
 
+/**
+ * Handler for keypress and click actions.
+ *
+ * $method handleAction
+ * @param elem
+ * @param callback
+ * @returns {*}
+ */
 const handleAction = function(elem, callback) {
     return elem.on('click keypress', function(e) {
         if (e.type == 'keypress') {
@@ -70,6 +100,15 @@ const handleAction = function(elem, callback) {
     });
 };
 
+/**
+ * Setting up element edibility.
+ *
+ * @method handleEditableAction
+ * @param elem
+ * @param callback
+ * @param callBeforeOnKeyEditing
+ * @returns {*}
+ */
 const handleEditableAction = function(elem, callback, callBeforeOnKeyEditing) {
     if (elem.is(':editable')) {
         throw new Error('handleEditableAction - must be called before setting the element as editable');
@@ -96,6 +135,12 @@ const handleEditableAction = function(elem, callback, callBeforeOnKeyEditing) {
     });
 };
 
+/**
+ * The default function of the module, which does the setup of the page.
+ *
+ * @param board
+ * @param options
+ */
 export default function(board, options) {
     // An array of strings to load as a batch later.
     var strings = {
@@ -165,6 +210,15 @@ export default function(board, options) {
         ratingenabled = options.ratingenabled,
         sortby = options.sortby || SORTBY_DATE;
 
+    /**
+     * Helper method to make calles to mod_board external services.
+     *
+     * @method serviceCall
+     * @param method
+     * @param args
+     * @param callback
+     * @param failcallback
+     */
     var serviceCall = function(method, args, callback, failcallback) {
         if (method !== 'board_history') {
             stopUpdating();
@@ -177,42 +231,108 @@ export default function(board, options) {
         }, failcallback);
     };
 
+    /**
+     * Returns the jquery element of a given note identifier.
+     *
+     * @method getNote
+     * @param ident
+     * @returns {jQuery|HTMLElement|*}
+     */
     var getNote = function(ident) {
         return $(".board_note[data-ident='" + ident + "']");
     };
 
+    /**
+     * Returns the jquery element of the note text for the given note identifier.
+     *
+     * @method getNoteText
+     * @param ident
+     * @returns {jQuery|HTMLElement|*}
+     */
     var getNoteText = function(ident) {
         return $(".board_note[data-ident='" + ident + "'] .note_text");
     };
 
+    /**
+     * Returns the jquery element of the note text for the given note element.
+     *
+     * @method getNoteTextForNote
+     * @param note
+     * @returns {*|jQuery}
+     */
     var getNoteTextForNote = function(note) {
         return $(note).find(".note_text");
     };
 
+    /**
+     * Returns the jquery element of the note heading for the given note identifier.
+     *
+     * @method getNoteHeading
+     * @param ident
+     * @returns {jQuery|HTMLElement|*}
+     */
     var getNoteHeading = function(ident) {
         return $(".board_note[data-ident='" + ident + "'] .note_heading");
     };
 
+    /**
+     * Returns the jquery element of the note heading for the given note element.
+     *
+     * @method getNoteHeadingForNote
+     * @param note
+     * @returns {*|jQuery}
+     */
     var getNoteHeadingForNote = function(note) {
         return $(note).find(".note_heading");
     };
 
+    /**
+     * Returns the jquery element of the note buttons for the given note element.
+     *
+     * @method getNoteButtonsForNote
+     * @param note
+     * @returns {*|jQuery}
+     */
     var getNoteButtonsForNote = function(note) {
         return $(note).find(".note_buttons");
     };
 
+    /**
+     * Shows the buttons creation new notes.
+     *
+     * @method showNewNoteButtons
+     */
     var showNewNoteButtons = function() {
         $('.board_column .board_column_newcontent .board_button.newnote').show();
     };
 
+    /**
+     * Hides the buttons for creating new notes.
+     *
+     * @method hideNewNoteButtons
+     */
     var hideNewNoteButtons = function() {
         $('.board_column .board_column_newcontent .board_button.newnote').hide();
     };
 
+    /**
+     * Gets a jquery node for the attachments of a given note.
+     *
+     * @method getNoteAttachmentsForNote
+     * @param note
+     * @returns {*|jQuery}
+     */
     var getNoteAttachmentsForNote = function(note) {
         return $(note).find(".note_attachment");
     };
 
+    /**
+     * Creates text identifier for a given node.
+     *
+     * @method textIdentifierForNote
+     * @param note
+     * @returns {null|*|jQuery}
+     */
     var textIdentifierForNote = function(note) {
         var noteText = getNoteTextForNote(note).html(),
             noteHeading = getNoteHeadingForNote(note).html(),
@@ -230,6 +350,12 @@ export default function(board, options) {
         return null;
     };
 
+    /**
+     * Update the Aria info for a given note id.
+     *
+     * @method updateNoteAria
+     * @param noteId
+     */
     var updateNoteAria = function(noteId) {
         var note = getNote(noteId),
             columnIdentifier = note.closest('.board_column').find('.column_name').text(),
@@ -289,6 +415,12 @@ export default function(board, options) {
         note.find('.choose_file_button').attr('aria-label', chooseFileButton);
     };
 
+    /**
+     * Update the Aria information for a given column id.
+     *
+     * @method updateColumnAria
+     * @param columnId
+     */
     var updateColumnAria = function(columnId) {
         var column = $('.board_column[data-ident=' + columnId + ']'),
             columnIdentifier = column.find('.column_name').text();
@@ -300,6 +432,11 @@ export default function(board, options) {
         });
     };
 
+    /**
+     * Clean things up after successfully editing a note.
+     *
+     * @method successNoteEdit
+     */
     var successNoteEdit = function() {
         noteTextCache = null;
         noteHeadingCache = null;
@@ -307,6 +444,11 @@ export default function(board, options) {
         stopNoteEdit();
     };
 
+    /**
+     * Stop the current note editing process.
+     *
+     * @method stopNoteEdit
+     */
     var stopNoteEdit = function() {
         if (!editingNote) {
             getNote(0).remove();
@@ -346,6 +488,12 @@ export default function(board, options) {
         editingNote = 0;
     };
 
+    /**
+     * Start the editing of a particular note, by identifier.
+     *
+     * @method startNoteEdit
+     * @param ident
+     */
     var startNoteEdit = function(ident) {
         if (editingNote) {
             if (editingNote == ident) {
@@ -378,6 +526,12 @@ export default function(board, options) {
         }
     };
 
+    /**
+     * Delete a given note, by identifier.
+     *
+     * @method deleteNote
+     * @param ident
+     */
     var deleteNote = function(ident) {
         Notification.confirm(
             strings.remove_note_text.split("\n")[1], // Are you sure?
@@ -395,6 +549,12 @@ export default function(board, options) {
         );
     };
 
+    /**
+     * Rate (star) a give note, by identifier.
+     *
+     * @method rateNote
+     * @param ident
+     */
     var rateNote = function(ident) {
         if (!ratingenabled) {
             return;
@@ -435,6 +595,12 @@ export default function(board, options) {
         });
     };
 
+    /**
+     * Update the attachment information of a note.
+     *
+     * @method attachmentTypeChanged
+     * @param note
+     */
     var attachmentTypeChanged = function(note) {
         var noteAttachment = getNoteAttachmentsForNote(note),
             type = noteAttachment.find('.type').val(),
@@ -488,6 +654,13 @@ export default function(board, options) {
         }
     };
 
+    /**
+     * Set the attachment of a note.
+     *
+     * @method setAttachment
+     * @param note
+     * @param attachment
+     */
     var setAttachment = function(note, attachment) {
         var noteAttachment = getNoteAttachmentsForNote(note);
         if (noteAttachment) {
@@ -507,6 +680,13 @@ export default function(board, options) {
         previewAttachment(note, attachment);
     };
 
+    /**
+     * Returns an object with various information about a note's attachment.
+     *
+     * @method attachmentDataForNote
+     * @param note
+     * @returns {{filename: null, filecontents: null, type: number, url: null, info: null}}
+     */
     var attachmentDataForNote = function(note) {
         var attachment = {type: 0, info: null, url: null, filename: null, filecontents: null},
             noteAttachment = getNoteAttachmentsForNote(note);
@@ -528,6 +708,13 @@ export default function(board, options) {
         return attachment;
     };
 
+    /**
+     * Get the string type of a attachment type number.
+     *
+     * @method attachmentTypeToString
+     * @param type
+     * @returns {string|null}
+     */
     var attachmentTypeToString = function(type) {
         switch (type) {
             case "1": return 'youtube';
@@ -538,10 +725,24 @@ export default function(board, options) {
     };
 
     var attachmentFAIcons = ['fa-youtube', 'fa-picture-o', 'fa-link'];
+    /**
+     * Get the fa icon for a given numeric attachment type.
+     *
+     * @method attachmentFAIcon
+     * @param type
+     * @returns {string|null}
+     */
     var attachmentFAIcon = function(type) {
         return attachmentFAIcons[type - 1] || null;
     };
 
+    /**
+     * Attempt to preload a give note file.
+     *
+     * @method preloadFile
+     * @param note
+     * @param callback
+     */
     var preloadFile = function(note, callback) {
         var noteAttachment = getNoteAttachmentsForNote(note);
         if (noteAttachment.length) {
@@ -572,6 +773,13 @@ export default function(board, options) {
         }
     };
 
+    /**
+     * Display the attachment preview for a note.
+     *
+     * @method previewAttachment
+     * @param note
+     * @param attachment
+     */
     var previewAttachment = function(note, attachment) {
         var elem = note.find('.preview');
         if (!attachment) {
@@ -624,6 +832,19 @@ export default function(board, options) {
         }
     };
 
+    /**
+     * Add a new note with the given information.
+     *
+     * @method addNote
+     * @param columnid
+     * @param ident
+     * @param heading
+     * @param content
+     * @param attachment
+     * @param owner
+     * @param sortorder
+     * @param rating
+     */
     var addNote = function(columnid, ident, heading, content, attachment, owner, sortorder, rating) {
         var ismynote = owner.id == userId || !ident;
         var iseditable = isEditor || (ismynote && !isReadOnlyBoard);
@@ -885,6 +1106,14 @@ export default function(board, options) {
         }
     };
 
+    /**
+     * Add a new column.
+     *
+     * @method addColumn
+     * @param ident
+     * @param name
+     * @param notes
+     */
     var addColumn = function(ident, name, notes) {
         var iseditable = isEditor,
             nameCache = null,
@@ -993,6 +1222,11 @@ export default function(board, options) {
         }
     };
 
+    /**
+     * Add the new column button.
+     *
+     * @method addNewColumnButton
+     */
     var addNewColumnButton = function() {
         var column = $('<div class="board_column board_column_empty"></div>'),
             newBusy = false;
@@ -1018,6 +1252,14 @@ export default function(board, options) {
         $(".mod_board").append(column);
     };
 
+    /**
+     * Update a note with the provided information.
+     *
+     * @method updateNote
+     * @param note
+     * @param heading
+     * @param data
+     */
     var updateNote = function(note, heading, data) {
         heading.html(data.heading);
         if (data.heading) {
@@ -1033,6 +1275,11 @@ export default function(board, options) {
         updateNoteAria(data.id);
     };
 
+    /**
+     * Fetch and process the recent board history.
+     *
+     * @method processBoardHistory
+     */
     var processBoardHistory = function() {
         serviceCall('board_history', {id: board.id, since: lastHistoryId}, function(boardhistory) {
             for (var index in boardhistory) {
@@ -1099,6 +1346,12 @@ export default function(board, options) {
         });
     };
 
+    /**
+     * Trigger a board update.
+     *
+     * @method updateBoard
+     * @param instant
+     */
     var updateBoard = function(instant) {
         if (instant) {
             processBoardHistory();
@@ -1110,11 +1363,23 @@ export default function(board, options) {
         }
     };
 
+    /**
+     * Stop/prevent the board reload timer from firing.
+     *
+     * @method stopUpdating
+     */
     var stopUpdating = function() {
         clearTimeout(reloadTimer);
         reloadTimer = null;
     };
 
+    /**
+     * Sort a set of notes.
+     *
+     * @sortNotes
+     * @param content
+     * @param toggle
+     */
     var sortNotes = function(content, toggle) {
         var sortCol = $(content).parent().find('.column_sort');
         var direction = $(content).data('sort');
@@ -1160,6 +1425,11 @@ export default function(board, options) {
 
     };
 
+    /**
+     * Update sorting of sortable content.
+     *
+     * @method updateSortable
+     */
     var updateSortable = function() {
         $(".board_column_content").sortable({
             connectWith: ".board_column_content",
@@ -1181,6 +1451,12 @@ export default function(board, options) {
             }
         });
     };
+
+    /**
+     * Initialize board.
+     *
+     * @method init
+     */
     var init = function() {
         serviceCall('get_board', {id: board.id}, function(columns) {
             // Init
