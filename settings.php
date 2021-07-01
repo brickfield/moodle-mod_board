@@ -17,6 +17,10 @@
 defined('MOODLE_INTERNAL') || die;
 
 if ($ADMIN->fulltree) {
+    $settings->add(new admin_setting_description('mod_board' . '/logo', '',
+        html_writer::img($OUTPUT->image_url('brickfield-logo-small', 'mod_board'), 'logo',
+            ['style' => 'display: block; margin: -50px auto -30px auto; float: right;'])));
+
     $settings->add(new admin_setting_configtext('new_column_icon', get_string('new_column_icon', 'mod_board'),
                        get_string('new_column_icon_desc', 'mod_board'), 'fa-plus', PARAM_RAW_TRIMMED));
 
