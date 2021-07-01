@@ -194,9 +194,14 @@ function board_extend_settings_navigation($settings, $boardnode) {
 }
 
 function mod_board_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
-    global $CFG, $DB;
-
+    global $CFG;
     require_once($CFG->libdir . '/filelib.php');
+
+    if ($context->contextlevel != CONTEXT_MODULE) {
+        return false;
+    }
+
+    require_login($course, false, $cm);
 
     if ($filearea === 'images') {
         $note = board::get_note($args[0]);
@@ -220,6 +225,7 @@ function mod_board_pluginfile($course, $cm, $context, $filearea, $args, $forcedo
 
         send_stored_file($file, 0, 0, $forcedownload);
     } else if ($filearea === 'background') {
+        require_capability('mod/board:addinstance', $context);
         $relativepath = implode('/', $args);
         $fullpath = '/' . $context->id . '/mod_board/background/' . $relativepath;
 
