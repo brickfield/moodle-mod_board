@@ -62,6 +62,7 @@ $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $b
     'sortby' => $board->sortby,
 )));
 
+$PAGE->set_title(format_string($board->name));
 $PAGE->set_heading($course->fullname);
 $PAGE->set_activity_record($board);
 

@@ -93,6 +93,10 @@ jobs:
         if: ${{ always() }}
         run: moodle-plugin-ci codechecker
 
+      - name: Moodle PHPDoc Checker
+        if: ${{ always() }}
+        run: moodle-plugin-ci phpdoc
+
       - name: validate
         if: ${{ always() }}
         run: moodle-plugin-ci validate
@@ -113,7 +117,6 @@ jobs:
         if: ${{ always() }}
         run: moodle-plugin-ci phpunit
 
-# Stopping behat testing until we get around registration issue.
-#      - name: behat
-#        if: ${{ always() }}
-#        run: moodle-plugin-ci behat --profile chrome
+      - name: behat
+        if: ${{ always() }}
+        run: moodle-plugin-ci behat --profile chrome
