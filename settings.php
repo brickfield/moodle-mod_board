@@ -38,5 +38,5 @@ if ($ADMIN->fulltree) {
                        get_string('post_max_length_desc', 'mod_board'), 250, PARAM_INT));
 
     $settings->add(new admin_setting_configtext('history_refresh', get_string('history_refresh', 'mod_board'),
-                       get_string('history_refresh_desc', 'mod_board'), 2, PARAM_INT));
+                       get_string('history_refresh_desc', 'mod_board'), 60, PARAM_INT));
 }
