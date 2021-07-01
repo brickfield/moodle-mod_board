@@ -590,6 +590,7 @@ class board {
 
         $heading = empty($heading) ? null : substr($heading, 0, 100);
         $content = empty($content) ? "" : substr($content, 0, $CFG->post_max_length);
+        $content = clean_text($content, FORMAT_HTML);
 
         $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $columnid));
 
@@ -678,6 +679,7 @@ class board {
 
         $heading = empty($heading) ? null : substr($heading, 0, 100);
         $content = empty($content) ? "" : substr($content, 0, $CFG->post_max_length);
+        $content = clean_text($content, FORMAT_HTML);
 
         $note = static::get_note($id);
         $columnid = $note->columnid;

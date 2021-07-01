@@ -51,7 +51,7 @@ class mod_board_external extends external_api {
                     'boardid' => new external_value(PARAM_INT, 'boardid'),
                     'action' => new external_value(PARAM_TEXT, 'action'),
                     'userid' => new external_value(PARAM_INT, 'userid'),
-                    'content' => new external_value(PARAM_TEXT, 'content')
+                    'content' => new external_value(PARAM_RAW, 'content')
                 )
             )
         );
@@ -89,7 +89,7 @@ class mod_board_external extends external_api {
                                 'id' => new external_value(PARAM_INT, 'post id'),
                                 'userid' => new external_value(PARAM_INT, 'user id'),
                                 'heading' => new external_value(PARAM_TEXT, 'post heading'),
-                                'content' => new external_value(PARAM_TEXT, 'post content'),
+                                'content' => new external_value(PARAM_RAW, 'post content'),
                                 'type' => new external_value(PARAM_INT, 'type'),
                                 'info' => new external_value(PARAM_TEXT, 'info'),
                                 'url' => new external_value(PARAM_TEXT, 'url'),
@@ -195,7 +195,7 @@ class mod_board_external extends external_api {
         return new external_function_parameters([
             'columnid' => new external_value(PARAM_INT, 'The column id', VALUE_REQUIRED),
             'heading' => new external_value(PARAM_TEXT, 'The note heading', VALUE_REQUIRED),
-            'content' => new external_value(PARAM_TEXT, 'The note content', VALUE_REQUIRED),
+            'content' => new external_value(PARAM_RAW, 'The note content', VALUE_REQUIRED),
             'attachment' => new external_single_structure(array(
                 'type' => new external_value(PARAM_INT, 'type'),
                 'info' => new external_value(PARAM_TEXT, 'info'),
@@ -248,7 +248,7 @@ class mod_board_external extends external_api {
         return new external_function_parameters([
             'id' => new external_value(PARAM_INT, 'The note id', VALUE_REQUIRED),
             'heading' => new external_value(PARAM_TEXT, 'The note heading', VALUE_REQUIRED),
-            'content' => new external_value(PARAM_TEXT, 'The note content', VALUE_REQUIRED),
+            'content' => new external_value(PARAM_RAW, 'The note content', VALUE_REQUIRED),
             'attachment' => new external_single_structure(array(
                 'type' => new external_value(PARAM_INT, 'type'),
                 'info' => new external_value(PARAM_TEXT, 'info'),
