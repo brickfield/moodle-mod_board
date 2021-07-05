@@ -43,15 +43,16 @@ require_capability('mod/board:view', $context);
 $pageurl = new moodle_url('/mod/board/view.php', array('id' => $cm->id));
 $PAGE->set_url($pageurl);
 
+$config = get_config('mod_board');
 $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $board, 'options' => array(
     'isEditor' => board::board_is_editor($board->id),
     'userId' => $USER->id,
     'readonly' => board::board_readonly($board->id),
-    'columnicon' => $CFG->new_column_icon,
-    'noteicon' => $CFG->new_note_icon,
-    'mediaselection' => $CFG->media_selection,
-    'post_max_length' => $CFG->post_max_length,
-    'history_refresh' => $CFG->history_refresh,
+    'columnicon' => $config->new_column_icon,
+    'noteicon' => $config->new_note_icon,
+    'mediaselection' => $config->media_selection,
+    'post_max_length' => $config->post_max_length,
+    'history_refresh' => $config->history_refresh,
     'file' => array(
         'extensions' => explode(',', ACCEPTED_FILE_EXTENSIONS),
         'size_min' => ACCEPTED_FILE_MIN_SIZE,

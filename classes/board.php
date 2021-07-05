@@ -581,7 +581,7 @@ class board {
      * @return array
      */
     public static function board_add_note($columnid, $heading, $content, $attachment) {
-        global $DB, $USER, $CFG;
+        global $DB, $USER;
 
         $context = static::context_for_column($columnid);
         if ($context) {
@@ -589,7 +589,7 @@ class board {
         }
 
         $heading = empty($heading) ? null : substr($heading, 0, 100);
-        $content = empty($content) ? "" : substr($content, 0, $CFG->post_max_length);
+        $content = empty($content) ? "" : substr($content, 0, get_config('mod_board', 'post_max_length'));
         $content = clean_text($content, FORMAT_HTML);
 
         $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $columnid));
@@ -673,12 +673,12 @@ class board {
      * @return array
      */
     public static function board_update_note($id, $heading, $content, $attachment) {
-        global $DB, $USER, $CFG;
+        global $DB, $USER;
 
         static::require_capability_for_note($id);
 
         $heading = empty($heading) ? null : substr($heading, 0, 100);
-        $content = empty($content) ? "" : substr($content, 0, $CFG->post_max_length);
+        $content = empty($content) ? "" : substr($content, 0, get_config('mod_board', 'post_max_length'));
         $content = clean_text($content, FORMAT_HTML);
 
         $note = static::get_note($id);
