@@ -8,33 +8,33 @@ optional names and then students add contributions to a column. Students do not 
 posted what.
 
 On the Board, Students can:
-* add a new post with some of the following:
-  * a heading
-  * some text
-  * Add A link
-  * Upload an image
-  * Embed a Youtube video
-* Edit or Delete one of their posts
+* Add a new post with some of the following:
+  * A heading.
+  * Some text.
+  * Add A link.
+  * Upload an image.
+  * Embed a Youtube video.
+* Edit or Delete one of their posts.
 
 They can also do the following depending on the settings of the teacher:
-* move their notes among columns
-* Star someone elses post
+* Move their notes among columns.
+* Star someone elses post.
 
 The teacher can set up the activity with the following options:
-* a closing date for submissions
-* how the posts are ordered in a column, by date or star count
-* whether posts can be starred - by students, teachers, or neither
+* A closing date for submissions.
+* How the posts are ordered in a column, by date or star count.
+* Whether posts can be starred - by students, teachers, or neither.
 
 On the board a teacher can:
-* move any of the posts from one column to another
-* Download a copy of the board contents
-* Download a spreadsheet of submissions of the students
+* Move any of the posts from one column to another.
+* Download a copy of the board contents.
+* Download a spreadsheet of submissions of the students.
 
 ## Funding credits ##
 Initial funding for this plugin was provided by the National Institute for Digital Learning
 at Dublin City University under the SATLE fund from the National Forum. Subsequent funding
 has been recieved from Athlone Institute of Technology under the SATLE fund from the
-National Forum.
+National Forum, and also from UCL.
 
 ## Version support ##
 This plugin has been developed to work on Moodle releases 3.9, 3.10, and 3.11.
@@ -52,8 +52,8 @@ All public documentation for this plugin will be maintained at the
 [Brickfield site](https://brickfield.ie/docs/mod_board).
 
 ## Important Links ##
-* [Code repository](https://github.com/brickfield/mod_bfboard)
-* [Plugin Directory](https://moodle.org/plugins/mod_bfboard)
+* [Code repository](https://github.com/brickfield/moodle-mod_board)
+* [Plugin Directory](https://moodle.org/plugins/mod_board)
 
 ## Installation ##
 * Unzip and copy "bfboard" folder into Moodle's "mod" folder
