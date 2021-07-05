@@ -16,8 +16,9 @@
 /**
  * A javascript module to handle the board.
  *
- * @module     mod_board/main
  * @package    mod_board
+ * @author     Karen Holland <karen@brickfieldlabs.ie>
+ * @copyright  2021 Brickfield Education Labs <https://www.brickfield.ie/>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

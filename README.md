@@ -42,7 +42,10 @@ This plugin has been developed to work on Moodle releases 3.9, 3.10, and 3.11.
 ## Development ##
 This Plugin has been developed and is maintained by Brickfield Education Labs.
 If you wish to contribute funding to the ongoing development of features and / or
-maintenance of the plugin - please contact support@brickfield.ie.
+maintenance of the plugin - please contact [support@brickfield.ie](mailto:support@brickfield.ie).
+
+This module uses code derived from ["jquery.editable.amd.js"](https://github.com/victorjonsson/jquery-editable/).
+This code written by [Victor Jonsson](http://victorjonsson.se/) is licensed under [GNU GPLv2](http://www.gnu.org/licenses/gpl-2.0.html).
 
 ## Documentation ##
 All public documentation for this plugin will be maintained at the

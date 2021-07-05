@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package     mod_board
+ * @author      Karen Holland <karen@brickfieldlabs.ie>
+ * @copyright   2021 Brickfield Education Labs <https://www.brickfield.ie/>
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/mod/board/backup/moodle2/backup_board_stepslib.php');
