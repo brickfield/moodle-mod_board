@@ -56,7 +56,7 @@ All public documentation for this plugin will be maintained at the
 * [Plugin Directory](https://moodle.org/plugins/mod_board)
 
 ## Installation ##
-* Unzip and copy "bfboard" folder into Moodle's "mod" folder
+* Unzip and copy "board" folder into Moodle's "mod" folder
 * Visit admin page to install module
 
 Further installation instructions can be found on the 
