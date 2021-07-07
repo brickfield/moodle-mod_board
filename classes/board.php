@@ -25,17 +25,35 @@ namespace mod_board;
 
 defined('MOODLE_INTERNAL') || die;
 
-define('ACCEPTED_FILE_EXTENSIONS', 'jpg,jpeg,png,bmp,gif');
-define('ACCEPTED_FILE_MIN_SIZE', 100); // 100 bites
-define('ACCEPTED_FILE_MAX_SIZE', 1024 * 1024 * 10); // 10Mb
-define('RATINGDISABLED', 0);
-define('RATINGBYSTUDENTS', 1);
-define('RATINGBYTEACHERS', 2);
-define('RATINGBYALL', 3);
-define('SORTBYDATE', 1);
-define('SORTBYRATING', 2);
-
 class board {
+
+    /** @var string String of accepted file types. */
+    const ACCEPTED_FILE_EXTENSIONS = 'jpg,jpeg,png,bmp,gif';
+
+    /** @var int Minumum file size of 100 bytes. */
+    const ACCEPTED_FILE_MIN_SIZE = 100;
+
+    /** @var int Maximum file size of 10Mb. */
+    const ACCEPTED_FILE_MAX_SIZE = 1024 * 1024 * 10;
+
+    /** @var int Value for disabling rating. */
+    const RATINGDISABLED = 0;
+
+    /** @var int Value for allowing students to rate posts. */
+    const RATINGBYSTUDENTS = 1;
+
+    /** @var int Value for allowing teachers to rate posts */
+    const RATINGBYTEACHERS = 2;
+
+    /** @var int Value for allowing all roles to rate posts */
+    const RATINGBYALL = 3;
+
+    /** @var int Value for sorting all posts by date */
+    const SORTBYDATE = 1;
+
+    /** @var int Value for sorting all posts by rating */
+    const SORTBYRATING = 2;
+
     /**
      * Retrieves the course module for the board
      *
@@ -542,15 +560,15 @@ class board {
      */
     public static function valid_for_upload($attachment) {
         $fileextension = strtolower(array_pop(explode('.', basename($attachment['filename']))));
-        if (!in_array($fileextension, explode(',', ACCEPTED_FILE_EXTENSIONS))) {
+        if (!in_array($fileextension, explode(',', self::ACCEPTED_FILE_EXTENSIONS))) {
             return false;
         }
         $filelength = strlen($attachment['filecontents']);
 
-        if ($filelength < ACCEPTED_FILE_MIN_SIZE) {
+        if ($filelength < self::ACCEPTED_FILE_MIN_SIZE) {
             return false;
         }
-        if ($filelength > ACCEPTED_FILE_MAX_SIZE) {
+        if ($filelength > self::ACCEPTED_FILE_MAX_SIZE) {
             return false;
         }
 
@@ -915,11 +933,11 @@ class board {
 
         $iseditor = has_capability('mod/board:manageboard', $context);
 
-        if ($board->addrating == RATINGBYSTUDENTS && $iseditor) {
+        if ($board->addrating == self::RATINGBYSTUDENTS && $iseditor) {
             return false;
         }
 
-        if ($board->addrating == RATINGBYTEACHERS && !$iseditor) {
+        if ($board->addrating == self::RATINGBYTEACHERS && !$iseditor) {
             return false;
         }
 

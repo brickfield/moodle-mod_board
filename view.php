@@ -61,9 +61,9 @@ $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $b
     'post_max_length' => $config->post_max_length,
     'history_refresh' => $config->history_refresh,
     'file' => array(
-        'extensions' => explode(',', ACCEPTED_FILE_EXTENSIONS),
-        'size_min' => ACCEPTED_FILE_MIN_SIZE,
-        'size_max' => ACCEPTED_FILE_MAX_SIZE
+        'extensions' => explode(',', board::ACCEPTED_FILE_EXTENSIONS),
+        'size_min' => board::ACCEPTED_FILE_MIN_SIZE,
+        'size_max' => board::ACCEPTED_FILE_MAX_SIZE
     ),
     'ratingenabled' => board::board_rating_enabled($board->id),
     'hideheaders' => board::board_hide_headers($board->id),
