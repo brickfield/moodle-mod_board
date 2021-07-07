@@ -559,8 +559,9 @@ class board {
      * @return bool
      */
     public static function valid_for_upload($attachment) {
-        $fileextension = strtolower(array_pop(explode('.', basename($attachment['filename']))));
-        if (!in_array($fileextension, explode(',', self::ACCEPTED_FILE_EXTENSIONS))) {
+        $fileparts = explode('.', basename($attachment['filename']));
+        $fileextension = strtolower(array_pop($fileparts));
+        if (!in_array($fileextension, explode(',', ACCEPTED_FILE_EXTENSIONS))) {
             return false;
         }
         $filelength = strlen($attachment['filecontents']);
