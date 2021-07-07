@@ -76,7 +76,7 @@ $PAGE->set_activity_record($board);
 
 echo $OUTPUT->header();
 
-echo '<h2>'.$board->name.'</h2>';
+echo $OUTPUT->heading(format_string($board->name));
 
 if (trim(strip_tags($board->intro))) {
     echo $OUTPUT->box_start('mod_introbox', 'pageintro');
