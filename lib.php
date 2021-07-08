@@ -232,7 +232,7 @@ function mod_board_pluginfile($course, $cm, $context, $filearea, $args, $forcedo
 
         send_stored_file($file, 0, 0, $forcedownload);
     } else if ($filearea === 'background') {
-        require_capability('mod/board:addinstance', $context);
+        require_capability('mod/board:view', $context);
         $relativepath = implode('/', $args);
         $fullpath = '/' . $context->id . '/mod_board/background/' . $relativepath;
 
