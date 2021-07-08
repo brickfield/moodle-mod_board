@@ -14,27 +14,38 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace mod_board\event;
+defined('MOODLE_INTERNAL') || die();
+
 /**
+ * Update note event handler.
  * @package     mod_board
  * @author      Karen Holland <karen@brickfieldlabs.ie>
  * @copyright   2021 Brickfield Education Labs <https://www.brickfield.ie/>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-namespace mod_board\event;
-defined('MOODLE_INTERNAL') || die();
-
 class update_note extends \core\event\base {
+    /**
+     * Init function.
+     */
     protected function init() {
         $this->data['crud'] = 'u'; // C(reate), r(ead), u(pdate), d(elete).
         $this->data['edulevel'] = self::LEVEL_OTHER;
         $this->data['objecttable'] = 'board';
     }
 
+    /**
+     * Get name.
+     * @return \lang_string|string
+     */
     public static function get_name() {
         return get_string('event_update_note', 'mod_board');
     }
 
+    /**
+     * Get description.
+     * @return \lang_string|string|null
+     */
     public function get_description() {
         $obj = new \stdClass;
         $obj->userid = $this->userid;
@@ -47,6 +58,10 @@ class update_note extends \core\event\base {
         return get_string('event_update_note_desc', 'mod_board', $obj);
     }
 
+    /**
+     * Get legacy logdata.
+     * @return array
+     */
     public function get_legacy_logdata() {
         return array($this->courseid, 'mod_board', 'update_note', null, $this->objectid, $this->other['heading'],
                      $this->other['content'], $this->other['attachment']);

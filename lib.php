@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * The main lib file.
  * @package     mod_board
  * @author      Karen Holland <karen@brickfieldlabs.ie>
  * @copyright   2021 Brickfield Education Labs <https://www.brickfield.ie/>
@@ -25,6 +26,11 @@ defined('MOODLE_INTERNAL') || die;
 
 use mod_board\board;
 
+/**
+ * Specify what the plugin supports.
+ * @param string $feature
+ * @return bool|null
+ */
 function board_supports($feature) {
     switch($feature) {
         case FEATURE_SHOW_DESCRIPTION:
@@ -42,7 +48,7 @@ function board_supports($feature) {
 
 /**
  * This function is used by the reset_course_userdata function in moodlelib.
- * @param $data the data submitted from the reset course.
+ * @param array $data the data submitted from the reset course.
  * @return array status array
  */
 function board_reset_userdata($data) {
@@ -182,6 +188,11 @@ function board_delete_instance($id) {
     return true;
 }
 
+/**
+ * Extend navigation.
+ * @param object $settings
+ * @param object $boardnode
+ */
 function board_extend_settings_navigation($settings, $boardnode) {
     global $PAGE;
 
@@ -200,6 +211,17 @@ function board_extend_settings_navigation($settings, $boardnode) {
     }
 }
 
+/**
+ * Handle plugin files.
+ * @param object $course
+ * @param object $cm
+ * @param object $context
+ * @param string $filearea
+ * @param array $args
+ * @param bool $forcedownload
+ * @param array $options
+ * @return false
+ */
 function mod_board_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
     global $CFG;
     require_once($CFG->libdir . '/filelib.php');

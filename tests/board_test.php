@@ -19,7 +19,7 @@ namespace mod_board;
 use mod_board\board;
 
 /**
- * Class board_test
+ * Class board_test.
  *
  * @package    mod_board
  * @copyright  2020 onward: Brickfield Education Labs, www.brickfield.ie
@@ -27,7 +27,6 @@ use mod_board\board;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @group mod_boards
  */
-
 class board_test extends \advanced_testcase {
 
     public function test_coursemodule_for_board() {
@@ -449,7 +448,12 @@ class board_test extends \advanced_testcase {
         $this->assertFalse($result);
     }
 
-    private static function add_board($courseid) {
+    /**
+     * Add board helper function.
+     * @param int $courseid
+     * @return false|mixed|\stdClass
+     */
+    private static function add_board(int $courseid) {
         global $DB;
 
         $record = [
@@ -470,7 +474,13 @@ class board_test extends \advanced_testcase {
         return $DB->get_record('board', array('name' => 'test'));
     }
 
-    private static function add_column($boardid, $name = 'New Heading') {
+    /**
+     * Add column helper function.
+     * @param int $boardid
+     * @param string $name
+     * @return false|mixed|\stdClass
+     */
+    private static function add_column(int $boardid, string $name = 'New Heading') {
         global $DB;
 
         $record = array(
@@ -483,7 +493,12 @@ class board_test extends \advanced_testcase {
         return $DB->get_record('board_columns', array('name' => $name));
     }
 
-    private static function add_note($columnid) {
+    /**
+     * Add note helper function.
+     * @param int $columnid
+     * @return false|mixed|\stdClass
+     */
+    private static function add_note(int $columnid) {
         global $DB;
 
         $record = array(
@@ -499,7 +514,13 @@ class board_test extends \advanced_testcase {
         return $DB->get_record('board_notes', array('columnid' => $columnid));
     }
 
-    private static function add_note_file($columnid, $url) {
+    /**
+     * Add note file helper function.
+     * @param int $columnid
+     * @param string $url
+     * @return false|mixed|\stdClass
+     */
+    private static function add_note_file(int $columnid, string $url) {
         global $DB;
 
         $record = array(
@@ -516,7 +537,13 @@ class board_test extends \advanced_testcase {
         return $DB->get_record('board_notes', array('url' => $url));
     }
 
-    private static function add_note_rating($noteid, $userid) {
+    /**
+     * Add note rating helper function.
+     * @param int $noteid
+     * @param int $userid
+     * @return false|mixed|\stdClass
+     */
+    private static function add_note_rating(int $noteid, int $userid) {
         global $DB;
 
         $record = array(

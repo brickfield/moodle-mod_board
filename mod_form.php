@@ -14,20 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * @package     mod_board
- * @author      Karen Holland <karen@brickfieldlabs.ie>
- * @copyright   2021 Brickfield Education Labs <https://www.brickfield.ie/>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
 
 use mod_board\board;
 
+/**
+ * The mod form.
+ * @package     mod_board
+ * @author      Karen Holland <karen@brickfieldlabs.ie>
+ * @copyright   2021 Brickfield Education Labs <https://www.brickfield.ie/>
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_board_mod_form extends moodleform_mod {
+    /**
+     * The definition function.
+     */
     public function definition() {
         global $CFG, $DB;
 
@@ -94,6 +97,10 @@ class mod_board_mod_form extends moodleform_mod {
         $mform->setDefault('revision', 1);
     }
 
+    /**
+     * Preprocess the data.
+     * @param array $defaultvalues
+     */
     public function data_preprocessing(&$defaultvalues) {
         $draftitemid = file_get_submitted_draft_itemid('background_image');
         file_prepare_draft_area($draftitemid, $this->context->id, 'mod_board', 'background', 0,
@@ -103,6 +110,12 @@ class mod_board_mod_form extends moodleform_mod {
         $defaultvalues['postbyenabled'] = !empty($defaultvalues['postby']);
     }
 
+    /**
+     * Validate the data.
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 

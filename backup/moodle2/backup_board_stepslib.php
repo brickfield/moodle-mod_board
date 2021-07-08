@@ -15,14 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * The stepslib class.
  * @package     mod_board
  * @author      Karen Holland <karen@brickfieldlabs.ie>
  * @copyright   2021 Brickfield Education Labs <https://www.brickfield.ie/>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class backup_board_activity_structure_step extends backup_activity_structure_step {
 
+    /**
+     * Define the structure.
+     * @return backup_nested_element
+     */
     protected function define_structure() {
 
         $userinfo = $this->get_setting_value('userinfo');
@@ -68,5 +72,4 @@ class backup_board_activity_structure_step extends backup_activity_structure_ste
 
         return $this->prepare_activity_structure($board);
     }
-
 }

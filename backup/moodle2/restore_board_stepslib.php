@@ -15,14 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Restore steps.
  * @package     mod_board
  * @author      Karen Holland <karen@brickfieldlabs.ie>
  * @copyright   2021 Brickfield Education Labs <https://www.brickfield.ie/>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class restore_board_activity_structure_step extends restore_activity_structure_step {
 
+    /**
+     * Structure definition.
+     * @return mixed
+     */
     protected function define_structure() {
 
         $paths = array();
@@ -38,6 +42,10 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
         return $this->prepare_activity_structure($paths);
     }
 
+    /**
+     * Process the restore.
+     * @param array $data
+     */
     protected function process_board($data) {
         global $DB;
 
@@ -52,6 +60,10 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
         $this->apply_activity_instance($newitemid);
     }
 
+    /**
+     * Restore columns.
+     * @param array $data
+     */
     protected function process_board_column($data) {
         global $DB;
 
@@ -65,6 +77,10 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
         $this->set_mapping('board_column', $oldid, $newitemid);
     }
 
+    /**
+     * Restore notes.
+     * @param array $data
+     */
     protected function process_board_note($data) {
         global $DB;
 
@@ -84,6 +100,10 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
         $this->set_mapping('board_note', $oldid, $newitemid, true);
     }
 
+    /**
+     * Restore ratings.
+     * @param array $data
+     */
     protected function process_board_note_rating($data) {
         global $DB;
 
@@ -100,6 +120,9 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
         $this->set_mapping('board_note_rating', $oldid, $newitemid, true);
     }
 
+    /**
+     * After execution steps.
+     */
     protected function after_execute() {
         global $DB;
 

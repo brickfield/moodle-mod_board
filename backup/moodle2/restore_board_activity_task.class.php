@@ -14,27 +14,37 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/mod/board/backup/moodle2/restore_board_stepslib.php'); // Because it exists (must).
+
 /**
+ * Restore activity class.
  * @package     mod_board
  * @author      Karen Holland <karen@brickfieldlabs.ie>
  * @copyright   2021 Brickfield Education Labs <https://www.brickfield.ie/>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->dirroot . '/mod/board/backup/moodle2/restore_board_stepslib.php'); // Because it exists (must).
-
 class restore_board_activity_task extends restore_activity_task {
 
+    /**
+     * Define any settings.
+     */
     protected function define_my_settings() {
         // No particular settings for this activity.
     }
 
+    /**
+     * Define the steps.
+     */
     protected function define_my_steps() {
         $this->add_step(new restore_board_activity_structure_step('board_structure', 'board.xml'));
     }
 
+    /**
+     * Define the content decode.
+     * @return array
+     */
     public static function define_decode_contents() {
         $contents = array();
 
@@ -44,10 +54,18 @@ class restore_board_activity_task extends restore_activity_task {
         return $contents;
     }
 
+    /**
+     * Define the decode rules.
+     * @return array
+     */
     public static function define_decode_rules() {
         return array();
     }
 
+    /**
+     * Get the file areas.
+     * @return string[]
+     */
     public function get_fileareas() {
         return array('images', 'backgrond');
     }
