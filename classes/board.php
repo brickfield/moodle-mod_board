@@ -14,17 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace mod_board;
+
+defined('MOODLE_INTERNAL') || die;
+
 /**
+ * The main board class functions.
  * @package     mod_board
  * @author      Jay Churchward <jay@brickfieldlabs.ie>
  * @copyright   2021 Brickfield Education Labs <https://www.brickfield.ie/>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-namespace mod_board;
-
-defined('MOODLE_INTERNAL') || die;
-
 class board {
 
     /** @var string String of accepted file types. */
@@ -234,9 +234,9 @@ class board {
      * Retrieves the board.
      *
      * @param int $boardid
-     * @return object
+     * @return array
      */
-    public static function board_get($boardid) {
+    public static function board_get(int $boardid): array {
         global $DB;
 
         static::require_capability_for_board_view($boardid);
@@ -274,9 +274,9 @@ class board {
      *
      * @param int $boardid
      * @param int $since
-     * @return mixed
+     * @return array
      */
-    public static function board_history($boardid, $since) {
+    public static function board_history(int $boardid, int $since): array {
         global $DB;
 
         static::require_capability_for_board_view($boardid);
@@ -306,7 +306,7 @@ class board {
      * @param string $name
      * @return array
      */
-    public static function board_add_column($boardid, $name) {
+    public static function board_add_column(int $boardid, string $name): array {
         global $DB, $USER;
 
         $name = substr($name, 0, 100);
@@ -352,7 +352,7 @@ class board {
      * @param string $name
      * @return array
      */
-    public static function board_update_column($id, $name) {
+    public static function board_update_column(int $id, string $name): array {
         global $DB, $USER;
 
         $name = substr($name, 0, 100);
@@ -402,7 +402,7 @@ class board {
      * @param int $id
      * @return array
      */
-    public static function board_delete_column($id) {
+    public static function board_delete_column(int $id): array {
         global $DB, $USER;
 
         static::require_capability_for_column($id);
@@ -606,7 +606,7 @@ class board {
      * @param array $attachment
      * @return array
      */
-    public static function board_add_note($columnid, $heading, $content, $attachment) {
+    public static function board_add_note(int $columnid, string $heading, string $content, array $attachment): array {
         global $DB, $USER;
 
         $context = static::context_for_column($columnid);
@@ -698,7 +698,7 @@ class board {
      * @param array $attachment
      * @return array
      */
-    public static function board_update_note($id, $heading, $content, $attachment) {
+    public static function board_update_note(int $id, string $heading, string $content, array $attachment): array {
         global $DB, $USER;
 
         static::require_capability_for_note($id);
@@ -777,7 +777,7 @@ class board {
      * @param int $id
      * @return array
      */
-    public static function board_delete_note($id) {
+    public static function board_delete_note(int $id): array {
         global $DB, $USER;
 
         static::require_capability_for_note($id);
@@ -839,7 +839,7 @@ class board {
      * @param int $columnid
      * @return array
      */
-    public static function board_move_note($id, $columnid) {
+    public static function board_move_note(int $id, int $columnid): array {
         global $DB, $USER;
 
         $note = static::get_note($id);
@@ -901,7 +901,7 @@ class board {
      * @param int $noteid
      * @return bool
      */
-    public static function board_can_rate_note($noteid) {
+    public static function board_can_rate_note(int $noteid): bool {
         global $DB, $USER;
 
         $note = static::get_note($noteid);
@@ -966,25 +966,26 @@ class board {
      * @param int $noteid
      * @return array
      */
-    public static function board_rate_note($noteid) {
+    public static function board_rate_note(int $noteid): array {
         global $DB, $USER;
 
+        $return = ['status' => false];
         $note = static::get_note($noteid);
         if (!$note) {
-            return false;
+            return $return;
         }
 
         $column = static::get_column($note->columnid);
         if (!$column) {
-            return false;
+            return $return;
         }
 
         $boardid = $column->boardid;
         if (!static::board_can_rate_note($noteid)) {
-            return false;
+            return $return;
         }
         if (static::board_readonly($boardid)) {
-            return false;
+            return $return;
         }
 
         if ($note) {
@@ -1091,7 +1092,7 @@ class board {
 
     /**
      * Prepares board notes for export.
-     * @param $note
+     * @param object $note
      * @return string
      */
     public static function get_export_note($note) {
@@ -1118,10 +1119,10 @@ class board {
 
     /**
      * Prepares submissions for export.
-     * @param $content
+     * @param string $content
      * @return array|string|string[]
      */
-    public static function get_export_submission($content) {
+    public static function get_export_submission(string $content) {
         $breaks = array("<br />", "<br>", "<br/>");
         return str_ireplace($breaks, "\n", $content);
     }

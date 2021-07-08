@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Upgrade functions.
  * @package     mod_board
  * @author      Mike Churchward <mike@brickfieldlabs.ie>
  * @copyright   2021 Brickfield Education Labs <https://www.brickfield.ie/>
@@ -23,7 +24,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-function xmldb_board_upgrade($oldversion) {
+/**
+ * The main upgrade function.
+ * @param int $oldversion
+ * @return bool
+ */
+function xmldb_board_upgrade(int $oldversion) {
     global $DB;
 
     $dbman = $DB->get_manager();
