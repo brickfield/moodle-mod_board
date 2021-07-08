@@ -49,6 +49,6 @@ class update_note extends \core\event\base {
 
     public function get_legacy_logdata() {
         return array($this->courseid, 'mod_board', 'update_note', null, $this->objectid, $this->other['heading'],
-                     $this->other['content'], $this->other['media']);
+                     $this->other['content'], $this->other['attachment']);
     }
 }
