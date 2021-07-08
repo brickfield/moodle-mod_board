@@ -59,17 +59,10 @@ foreach ($boarddata as $columnid => $column) {
             $users[$note->userid] = $DB->get_record('user', array('id' => $note->userid));
         }
         $user = $users[$note->userid];
-        fputcsv($fp, [$user->firstname, $user->lastname, $user->email, $note->heading, sanitize($note->content),
+        fputcsv($fp, [$user->firstname, $user->lastname, $user->email, $note->heading, board::get_export_submission($note->content),
         $note->info, $note->url, $note->timecreated ? userdate($note->timecreated) : null]);
     }
 }
 
 fclose($fp);
 exit();
-
-
-function sanitize($content) {
-    $breaks = array("<br />", "<br>", "<br/>");
-
-    return str_ireplace($breaks, "\n", $content);
-}

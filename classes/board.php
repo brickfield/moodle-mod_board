@@ -1088,4 +1088,41 @@ class board {
 
         return $readonlyboard;
     }
+
+    /**
+     * Prepares board notes for export.
+     * @param $note
+     * @return string
+     */
+    public static function get_export_note($note) {
+        $breaks = array("<br />", "<br>", "<br/>");
+
+        $rowstring = '';
+        if (!empty($note->heading)) {
+            $rowstring .= $note->heading;
+        }
+        if (!empty($note->content)) {
+            if (!empty($rowstring)) {
+                $rowstring .= "\n";
+            }
+            $rowstring .= str_ireplace($breaks, "\n", $note->content);
+        }
+        if (!empty($note->type)) {
+            if (!empty($rowstring)) {
+                $rowstring .= "\n";
+            }
+            $rowstring .= (!empty($note->info) ? ($note->info.' ') : '') . $note->url;
+        }
+        return $rowstring;
+    }
+
+    /**
+     * Prepares submissions for export.
+     * @param $content
+     * @return array|string|string[]
+     */
+    public static function get_export_submission($content) {
+        $breaks = array("<br />", "<br>", "<br/>");
+        return str_ireplace($breaks, "\n", $content);
+    }
 }
