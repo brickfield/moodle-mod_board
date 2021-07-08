@@ -39,7 +39,7 @@ $context = context_module::instance($cm->id);
 require_capability('mod/board:manageboard', $context);
 
 header('Content-Type: text/csv;charset=utf-8');
-header("Content-disposition: attachment; filename=\"" . $board->name.'_userposts_'.date('YmdHis').'.csv' . "\"");
+header("Content-disposition: attachment; filename=\"" . strip_tags($board->name).'_userposts_'.date('YmdHis').'.csv' . "\"");
 header("Pragma: no-cache");
 header("Expires: 0");
 
