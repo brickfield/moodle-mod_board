@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die;
 
 $plugin->component = 'mod_board'; // Full name of the plugin (used for diagnostics).
-$plugin->version   = 2021052401; // The current module version (Date: YYYYMMDDXX).
+$plugin->version   = 2021052402; // The current module version (Date: YYYYMMDDXX).
 $plugin->requires  = 2020061500; // Moodle 3.9 and up.
-$plugin->release = '1.39.02 (Build 2021070800)';
+$plugin->release = '1.39.03 (Build 2021070801)';
 $plugin->maturity  = MATURITY_STABLE;
