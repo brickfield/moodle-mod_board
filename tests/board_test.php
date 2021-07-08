@@ -28,7 +28,8 @@ use mod_board\board;
  * @group mod_boards
  */
 
- class board_test extends \advanced_testcase {
+class board_test extends \advanced_testcase {
+
     public function test_coursemodule_for_board() {
         $this->resetAfterTest();
         $this->setAdminUser();
@@ -217,7 +218,6 @@ use mod_board\board;
         $this->assertTrue($result['status']);
     }
 
-     // Undefined index: media -  media never gets set anywhere
     public function test_get_note_file() {
         $this->resetAfterTest();
         $this->setAdminUser();
@@ -243,7 +243,7 @@ use mod_board\board;
 
         $note = board::board_add_note($column->id, 'heading', 'content', $attachment);
         $result = board::get_note_file($note['note']->id);
-        $this->assertFalse($result);
+        $this->assertEmpty($result);
     }
 
     public function test_store_note_file() {
@@ -263,8 +263,8 @@ use mod_board\board;
         );
 
         $result = board::store_note_file($note->id, $attachment);
-        $this->assertContains('mod_board', $result);
-        $this->assertContains('testimage.png', $result);
+        $this->assertStringContainsString('mod_board', $result);
+        $this->assertStringContainsString('testimage.png', $result);
     }
 
     public function test_valid_for_upload() {
@@ -320,24 +320,22 @@ use mod_board\board;
         $this->assertEquals($result['url'], $attachment['url']);
     }
 
-     // Undefined index: media -  media never gets set anywhere
     public function test_board_add_note() {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
         $board = $this->getDataGenerator()->create_module('board', array('course' => $course->id));
         $column = self::add_column($board->id);
-        $attachment =  array(
+        $attachment = [
             'type' => 0,
             'info' => '',
             'url' => '',
-        );
+        ];
         $result = board::board_add_note($column->id, 'Test heading', 'Test content', $attachment);
 
         $this->assertIsArray($result);
     }
 
-    // Undefined index: media -  media never gets set anywhere
     public function test_board_update_note() {
         $this->resetAfterTest();
         $this->setAdminUser();
@@ -345,11 +343,11 @@ use mod_board\board;
         $board = $this->getDataGenerator()->create_module('board', array('course' => $course->id));
         $column = self::add_column($board->id);
         $note = self::add_note($column->id);
-        $attachment =  array(
+        $attachment = [
             'type' => 0,
             'info' => '',
             'url' => '',
-        );
+        ];
         $result = board::board_update_note($note->id, 'update heading', 'update content', $attachment);
 
         $this->assertIsArray($result);
@@ -452,9 +450,9 @@ use mod_board\board;
     }
 
     private static function add_board($courseid) {
-         global $DB;
+        global $DB;
 
-         $record = array(
+        $record = [
             'id' => 1,
             'course' => $courseid,
             'name' => 'test',
@@ -466,7 +464,7 @@ use mod_board\board;
             'hideheaders' => 0,
             'sortby' => 2,
             'postby' => 0
-        );
+        ];
 
         $DB->insert_record('board', $record);
         return $DB->get_record('board', array('name' => 'test'));

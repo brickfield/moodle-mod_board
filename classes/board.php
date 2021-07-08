@@ -561,7 +561,7 @@ class board {
     public static function valid_for_upload($attachment) {
         $fileparts = explode('.', basename($attachment['filename']));
         $fileextension = strtolower(array_pop($fileparts));
-        if (!in_array($fileextension, explode(',', ACCEPTED_FILE_EXTENSIONS))) {
+        if (!in_array($fileextension, explode(',', self::ACCEPTED_FILE_EXTENSIONS))) {
             return false;
         }
         $filelength = strlen($attachment['filecontents']);
@@ -991,6 +991,7 @@ class board {
             $transaction = $DB->start_delegated_transaction();
 
             $DB->insert_record('board_note_ratings', array('userid' => $USER->id, 'noteid' => $noteid, 'timecreated' => time()));
+            $rate = true;
             $rating = static::get_note_rating($noteid);
             $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'rate_note',
                                             'content' => json_encode(array('id' => $note->id, 'rating' => $rating)),
