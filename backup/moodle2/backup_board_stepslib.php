@@ -28,7 +28,8 @@ class backup_board_activity_structure_step extends backup_activity_structure_ste
         $userinfo = $this->get_setting_value('userinfo');
 
         $board = new backup_nested_element('board', array('id'), array(
-            'name', 'timemodified', 'intro', 'introformat', 'historyid', 'background_color', 'addrating', 'hideheaders', 'sortby'));
+            'course', 'name', 'timemodified', 'intro', 'introformat', 'historyid',
+            'background_color', 'addrating', 'hideheaders', 'sortby', 'postby'));
 
         $columns = new backup_nested_element('columns');
         $column = new backup_nested_element('column', array('id'), array('boardid', 'name'));

@@ -25,6 +25,8 @@ defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
 
+use mod_board\board;
+
 class mod_board_mod_form extends moodleform_mod {
     public function definition() {
         global $CFG, $DB;
@@ -60,10 +62,10 @@ class mod_board_mod_form extends moodleform_mod {
 
         $mform->addElement('select', 'addrating', get_string('addrating', 'mod_board'),
            array(
-                RATINGDISABLED => get_string('addrating_none', 'mod_board'),
-                RATINGBYSTUDENTS => get_string('addrating_students', 'mod_board'),
-                RATINGBYTEACHERS => get_string('addrating_teachers', 'mod_board'),
-                RATINGBYALL => get_string('addrating_all', 'mod_board')
+                board::RATINGDISABLED => get_string('addrating_none', 'mod_board'),
+                board::RATINGBYSTUDENTS => get_string('addrating_students', 'mod_board'),
+                board::RATINGBYTEACHERS => get_string('addrating_teachers', 'mod_board'),
+                board::RATINGBYALL => get_string('addrating_all', 'mod_board')
             )
         );
         $mform->setType('addrating', PARAM_INT);
@@ -73,8 +75,8 @@ class mod_board_mod_form extends moodleform_mod {
 
         $mform->addElement('select', 'sortby', get_string('sortby', 'mod_board'),
            array(
-                SORTBYDATE => get_string('sortbydate', 'mod_board'),
-                SORTBYRATING => get_string('sortbyrating', 'mod_board')
+                board::SORTBYDATE => get_string('sortbydate', 'mod_board'),
+                board::SORTBYRATING => get_string('sortbyrating', 'mod_board')
             )
         );
         $mform->setType('sortby', PARAM_INT);
