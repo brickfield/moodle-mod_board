@@ -238,6 +238,11 @@
     position: relative;
     width: 100%;
     text-align: right;
-    font-size: 0.9em;
-    padding-bottom: 3px;
+}
+
+.mod_board .mod_board_remove_attachment .mod_board_remove_attachment_button {
+    padding: 3px;
+    margin-right: 2px;
+    color: indianred;
+    cursor: pointer;
 }

@@ -969,9 +969,11 @@ export default function(board, options) {
             });
 
             if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
-                var removeAttachment = $('<div class="mod_board_remove mod_board_remove_attachment fa fa-remove"></div>');
+                var removeAttachmentButton = $('<div class="mod_board_remove_attachment_button fa fa-remove"></div>');
+                var removeAttachment = $('<div class="mod_board_remove_attachment"></div>');
+                removeAttachment.append(removeAttachmentButton);
                 removeAttachment.hide();
-                removeAttachment.on('click', function() {
+                removeAttachmentButton.on('click', function() {
                     attachmentType.val(0); attachmentType.trigger('change');
                 });
                 noteAttachment.append(removeAttachment);
