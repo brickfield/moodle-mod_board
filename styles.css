@@ -111,6 +111,11 @@
     background: #fff;
 }
 
+.mod_board .mod_board_note_border {
+    border-top: 1px solid lightgray;
+    padding-bottom: 10px;
+}
+
 .mod_board_mynote .mod_board_note_content {
     border: 2px solid lightblue;
 }
@@ -132,8 +137,6 @@
     line-height: 22px;
     width: 100%;
     padding-bottom: 5px;
-    border-bottom: 1px solid lightgray;
-    margin-bottom: 10px;
 }
 .mod_board .mod_board_note_content .mod_board_note_heading > textarea {
     border: 0;

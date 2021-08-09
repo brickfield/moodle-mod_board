@@ -299,6 +299,17 @@ export default function(board, options) {
     };
 
     /**
+     * Returns the jquery element of the note border for the given note element.
+     *
+     * @method getNoteBorderForNote
+     * @param note
+     * @returns {*|jQuery}
+     */
+    var getNoteBorderForNote = function(note) {
+        return $(note).find(".mod_board_note_border");
+    };
+
+    /**
      * Returns the jquery element of the note buttons for the given note element.
      *
      * @method getNoteButtonsForNote
@@ -493,8 +504,15 @@ export default function(board, options) {
             getNoteAttachmentsForNote(note).hide();
             showNewNoteButtons();
             var noteHeading = getNoteHeadingForNote(note);
+            var noteText = getNoteTextForNote(note);
+            var noteBorder = getNoteBorderForNote(note);
             if (!noteHeading.html()) {
                 noteHeading.hide();
+                noteBorder.hide();
+            }
+            if (!noteText.html() && noteHeading.html()) {
+                noteText.hide();
+                noteBorder.hide();
             }
         }
 
@@ -529,13 +547,17 @@ export default function(board, options) {
             hideNewNoteButtons();
 
             var noteHeading = getNoteHeadingForNote(note);
+            var noteText = getNoteTextForNote(note);
+            var noteBorder = getNoteBorderForNote(note);
             if (ident) {
                 attachmentCache = attachmentDataForNote(note);
-                noteTextCache = getNoteTextForNote(note).html();
+                noteTextCache = noteText.html();
                 noteHeadingCache = noteHeading.html();
                 editingNote = ident;
             }
             noteHeading.show();
+            noteBorder.show();
+            noteText.show();
         }
     };
 
@@ -881,6 +903,7 @@ export default function(board, options) {
 
         var notecontent = $('<div class="mod_board_note_content"></div>'),
             noteHeading = $('<div class="mod_board_note_heading" tabindex="0">' + (heading ? heading : '') + '</div>'),
+            noteBorder = $('<div class="mod_board_note_border"></div>'),
             noteText = $('<div class="mod_board_note_text" tabindex="0">' + (content ? content : '') + '</div>'),
             noteAriaText = $('<div class="note_ariatext hidden" role="heading" aria-level="4" tabindex="0"></div>'),
             attachmentPreview = $('<div class="mod_board_preview"></div>');
@@ -910,6 +933,7 @@ export default function(board, options) {
         }
 
         notecontent.append(noteHeading);
+        notecontent.append(noteBorder);
         notecontent.append(noteText);
         notecontent.append(noteAriaText);
         if (iseditable) {
@@ -1090,6 +1114,8 @@ export default function(board, options) {
                 closeOnEnter: true
             });
 
+            handleEditableAction(noteBorder, beginEdit);
+
             setAttachment(note, attachment);
         } else {
             previewAttachment(note, attachment);
@@ -1108,7 +1134,13 @@ export default function(board, options) {
 
             if (!noteHeading.html()) {
                 noteHeading.hide();
+                noteBorder.hide();
             }
+            if (!noteText.html() && noteHeading.html()) {
+                noteText.hide();
+                noteBorder.hide();
+            }
+
             var lastOne = column_content.find(".board_note").last();
             if (lastOne.length) {
                 note.insertAfter(lastOne);
