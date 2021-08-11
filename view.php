@@ -72,7 +72,7 @@ $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $b
     'ratingenabled' => board::board_rating_enabled($board->id),
     'hideheaders' => board::board_hide_headers($board->id),
     'sortby' => $board->sortby,
-)));
+), 'contextid' => $context->id));
 
 $PAGE->set_title(format_string($board->name));
 $PAGE->set_heading($course->fullname);

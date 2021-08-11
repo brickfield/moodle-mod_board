@@ -268,3 +268,72 @@ function mod_board_pluginfile($course, $cm, $context, $filearea, $args, $forcedo
 
     return false;
 }
+
+/**
+ * Returns a fragment, which contains the form for the modal popup note editor.
+ *
+ * @param $args
+ * @return string
+ */
+function mod_board_output_fragment_note_form($args) {
+    global $DB;
+
+    // Get the arguments and decode them.
+    $args = (object)$args;
+    $noteid = clean_param(($args->noteid ?? 0), PARAM_INT);
+    $columnid = clean_param(($args->columnid ?? 0), PARAM_INT);
+
+    if (empty($columnid)) {
+        throw new \coding_exception('invalidformrequest');
+    }
+
+    $column = board::get_column($columnid);
+    $context = board::context_for_board($column->boardid);
+
+    $formdata = [
+        'columnid' => $columnid
+    ];
+
+    if ($noteid) {
+        // Load data for an existing note.
+        $note = $DB->get_record('board_notes', ['id' => $noteid]);
+        $itemid = $noteid;
+
+        if (!$note) {
+            throw new \coding_exception('notenotfound');
+        }
+
+        $formdata['noteid'] = $note->id;
+        $formdata['heading'] = $note->heading;
+        $formdata['content'] = $note->content;
+        $formdata['mediatype'] = $note->type;
+
+        switch ($note->type) {
+            case 1:
+                $formdata['youtubetitle'] = $note->info;
+                $formdata['youtubeurl'] = $note->url;
+                break;
+            case 2:
+                $formdata['imagetitle'] = $note->info;
+                break;
+            case 3:
+                $formdata['linktitle'] = $note->info;
+                $formdata['linkurl'] = $note->url;
+                break;
+        }
+    } else {
+        $itemid = 0;
+    }
+
+    // Set up the filearea.
+    $pickerparams = board::get_image_picker_options();
+    $draftareaid = null;
+    file_prepare_draft_area($draftareaid, $context->id, 'mod_board', 'images', $itemid, $pickerparams);
+    $formdata['imagefile'] = $draftareaid;
+
+    // Make the form and setup the data.
+    $form = new \mod_board\note_form(null, null, 'post', '', null, true);
+    $form->set_data($formdata);
+
+    return $form->render();
+}

@@ -25,7 +25,7 @@
 import Board from "mod_board/board";
 
 export default {
-    initialize: function (board, options) {
-        new Board(board, options);
+    initialize: function (board, options, contextid) {
+        new Board(board, options, contextid);
     }
 };

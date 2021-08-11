@@ -26,8 +26,11 @@ import $ from "jquery";
 import "jqueryui";
 import {get_strings as getStrings} from "core/str";
 import Ajax from "core/ajax";
+import ModalFactory from "core/modal_factory";
+import ModalEvents from "core/modal_events";
 import Notification from "core/notification";
 import "mod_board/jquery.editable.amd";
+import Fragment from "core/fragment";
 
 /**
  * Execute a ajax call to a mod_board ajax service.
@@ -151,8 +154,9 @@ const handleEditableAction = function(elem, callback, callBeforeOnKeyEditing) {
  *
  * @param board
  * @param options
+ * @param contextid
  */
-export default function(board, options) {
+export default function(board, options, contextid) {
     // An array of strings to load as a batch later.
     // Not necessary, but used to load all the strings in one ajax call.
     var strings = {
@@ -167,16 +171,8 @@ export default function(board, options) {
         Ok: '',
         Cancel: '',
         warning: '',
-        option_youtube: '',
-        option_youtube_info: '',
-        option_youtube_url: '',
-        option_image: '',
-        option_image_info: '',
-        option_image_url: '',
-        option_link: '',
-        option_link_info: '',
-        option_link_url: '',
-        option_empty: '',
+        modal_title_new: '',
+        modal_title_edit: '',
 
         aria_newcolumn: '',
         aria_newpost: '',
@@ -193,14 +189,12 @@ export default function(board, options) {
         aria_choosefileedit: '',
         aria_ratepost: '',
 
-        choose_file: '',
         invalid_file_extension: '',
         invalid_file_size_min: '',
         invalid_file_size_max: '',
     };
 
     const MEDIA_SELECTION_BUTTONS = 1,
-          MEDIA_SELECTION_DROPDOWN = 2,
           ATTACHMENT_VIDEO = 1,
           ATTACHMENT_IMAGE = 2,
           ATTACHMENT_LINK = 3,
@@ -211,17 +205,10 @@ export default function(board, options) {
         isEditor = options.isEditor || false,
         userId = options.userId || -1,
         mediaSelection = options.mediaselection || MEDIA_SELECTION_BUTTONS,
-        noteTextCache = null,
-        noteHeadingCache = null,
-        attachmentCache = null,
         editingNote = 0,
         isReadOnlyBoard = options.readonly || false,
-        acceptedFileExtensions = options.file.extensions,
-        acceptedFileSizeMin = options.file.size_min,
-        acceptedFileSizeMax = options.file.size_max,
         ratingenabled = options.ratingenabled,
         sortby = options.sortby || SORTBY_DATE;
-
     /**
      * Helper method to make calles to mod_board external services.
      *
@@ -255,17 +242,6 @@ export default function(board, options) {
     };
 
     /**
-     * Returns the jquery element of the note text for the given note identifier.
-     *
-     * @method getNoteText
-     * @param ident
-     * @returns {jQuery|HTMLElement|*}
-     */
-    var getNoteText = function(ident) {
-        return $(".board_note[data-ident='" + ident + "'] .mod_board_note_text");
-    };
-
-    /**
      * Returns the jquery element of the note text for the given note element.
      *
      * @method getNoteTextForNote
@@ -274,17 +250,6 @@ export default function(board, options) {
      */
     var getNoteTextForNote = function(note) {
         return $(note).find(".mod_board_note_text");
-    };
-
-    /**
-     * Returns the jquery element of the note heading for the given note identifier.
-     *
-     * @method getNoteHeading
-     * @param ident
-     * @returns {jQuery|HTMLElement|*}
-     */
-    var getNoteHeading = function(ident) {
-        return $(".board_note[data-ident='" + ident + "'] .mod_board_note_heading");
     };
 
     /**
@@ -381,38 +346,10 @@ export default function(board, options) {
      */
     var updateNoteAria = function(noteId) {
         var note = getNote(noteId),
-            columnIdentifier = note.closest('.board_column').find('.mod_board_column_name').text(),
-            postButton = "",
-            cancelButton = "",
-            addYoutube = "",
-            addImage = "",
-            addLink = "",
-            removeAttachment = "",
-            chooseFileButton = "";
+            columnIdentifier = note.closest('.board_column').find('.mod_board_column_name').text();
 
-        if (!noteId) { // New post
-            postButton = strings.aria_postnew.replace('{column}', columnIdentifier);
-            cancelButton = strings.aria_cancelnew.replace('{column}', columnIdentifier);
-            addYoutube = strings.aria_addmedianew.replace('{type}', strings.option_youtube).replace('{column}',
-                          columnIdentifier);
-            addImage = strings.aria_addmedianew.replace('{type}', strings.option_image).replace('{column}', columnIdentifier);
-            addLink = strings.aria_addmedianew.replace('{type}', strings.option_link).replace('{column}', columnIdentifier);
-            chooseFileButton = strings.aria_choosefilenew.replace('{column}', strings.columnIdentifier);
-        } else {
+        if (noteId) { // New post
             var noteIdentifier = textIdentifierForNote(note);
-
-            postButton = strings.aria_postedit.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
-            cancelButton = strings.aria_canceledit.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
-            addYoutube = strings.aria_addmedia.replace('{type}', strings.option_youtube).replace('{column}',
-                          columnIdentifier).replace('{post}', noteIdentifier);
-            addImage = strings.aria_addmedia.replace('{type}', strings.option_image).replace('{column}',
-                          columnIdentifier).replace('{post}', noteIdentifier);
-            addLink = strings.aria_addmedia.replace('{type}', strings.option_link).replace('{column}',
-                          columnIdentifier).replace('{post}', noteIdentifier);
-            removeAttachment = strings.aria_deleteattachment.replace('{column}',
-            columnIdentifier).replace('{post}', noteIdentifier);
-            chooseFileButton = strings.aria_choosefileedit.replace('{column}',
-            columnIdentifier).replace('{post}', noteIdentifier);
 
             note.find('.delete_note').attr('aria-label', strings.aria_deletepost.replace('{column}',
                 columnIdentifier).replace('{post}', noteIdentifier));
@@ -421,22 +358,6 @@ export default function(board, options) {
             note.find('.note_ariatext').html(noteIdentifier);
         }
 
-        // Attach media buttons, if set.
-        if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
-            if (noteId) {
-                var attRemove = note.find('.mod_board_remove_attachment');
-                if (attRemove) {
-                    attRemove.attr('aria-label', removeAttachment);
-                }
-            }
-
-            note.find('.mod_board_attachment_button.youtube_button').attr('aria-label', addYoutube);
-            note.find('.mod_board_attachment_button.image_button').attr('aria-label', addImage);
-            note.find('.mod_board_attachment_button.link_button').attr('aria-label', addLink);
-        }
-        note.find('.post_button').attr('aria-label', postButton);
-        note.find('.cancel_button').attr('aria-label', cancelButton);
-        note.find('.choose_file_button').attr('aria-label', chooseFileButton);
     };
 
     /**
@@ -457,18 +378,6 @@ export default function(board, options) {
     };
 
     /**
-     * Clean things up after successfully editing a note.
-     *
-     * @method successNoteEdit
-     */
-    var successNoteEdit = function() {
-        noteTextCache = null;
-        noteHeadingCache = null;
-        attachmentCache = null;
-        stopNoteEdit();
-    };
-
-    /**
      * Stop the current note editing process.
      *
      * @method stopNoteEdit
@@ -480,28 +389,9 @@ export default function(board, options) {
             return;
         }
 
-        if (noteTextCache) {
-            getNoteText(editingNote).html(noteTextCache);
-            noteTextCache = null;
-        }
-
-        if (noteHeadingCache) {
-            getNoteHeading(editingNote).html(noteHeadingCache);
-            noteHeadingCache = null;
-        }
-
         var note = getNote(editingNote);
 
         if (note) {
-            if (attachmentCache) {
-                setAttachment(note, attachmentCache);
-                attachmentCache = null;
-            } else {
-                previewAttachment(note);
-            }
-
-            getNoteButtonsForNote(note).hide();
-            getNoteAttachmentsForNote(note).hide();
             showNewNoteButtons();
             var noteHeading = getNoteHeadingForNote(note);
             var noteText = getNoteTextForNote(note);
@@ -526,6 +416,7 @@ export default function(board, options) {
      * @param ident
      */
     var startNoteEdit = function(ident) {
+
         if (editingNote) {
             if (editingNote == ident) {
                 return;
@@ -542,22 +433,12 @@ export default function(board, options) {
 
         var note = getNote(ident);
         if (note) {
-            getNoteButtonsForNote(note).show();
-            getNoteAttachmentsForNote(note).show();
+            showModalForm(note);
             hideNewNoteButtons();
 
-            var noteHeading = getNoteHeadingForNote(note);
-            var noteText = getNoteTextForNote(note);
-            var noteBorder = getNoteBorderForNote(note);
             if (ident) {
-                attachmentCache = attachmentDataForNote(note);
-                noteTextCache = noteText.html();
-                noteHeadingCache = noteHeading.html();
                 editingNote = ident;
             }
-            noteHeading.show();
-            noteBorder.show();
-            noteText.show();
         }
     };
 
@@ -772,43 +653,6 @@ export default function(board, options) {
     };
 
     /**
-     * Attempt to preload a give note file.
-     *
-     * @method preloadFile
-     * @param note
-     * @param callback
-     */
-    var preloadFile = function(note, callback) {
-        var noteAttachment = getNoteAttachmentsForNote(note);
-        if (noteAttachment.length) {
-            var fileElem = noteAttachment.find('.mod_board_file>input');
-            if (FileReader && fileElem.prop('files').length) {
-                var file = fileElem.prop('files')[0];
-                if (acceptedFileExtensions.indexOf(file.name.split('.').pop().toLowerCase()) == -1) { // Wrong exception
-                    Notification.alert(strings.warning, strings.invalid_file_extension);
-                } else if (file.size < acceptedFileSizeMin) {
-                    Notification.alert(strings.warning, strings.invalid_file_size_min);
-                } else if (file.size > acceptedFileSizeMax) {
-                    Notification.alert(strings.warning, strings.invalid_file_size_max);
-                } else {
-                    fileElem.data('filename', file.name);
-                    var fr = new FileReader();
-                    fr.onload = function() {
-                        fileElem.data('filecontents', fr.result);
-                        callback();
-                        fileElem.val('');
-                    };
-                    fr.readAsDataURL(file);
-                }
-            } else {
-                callback();
-            }
-        } else {
-            callback();
-        }
-    };
-
-    /**
      * Display the attachment preview for a note.
      *
      * @method previewAttachment
@@ -893,7 +737,8 @@ export default function(board, options) {
             }
         }
 
-        var note = $('<div class="board_note" data-ident="' + ident + '" data-sortorder="' + sortorder + '"></div>');
+        var note = $('<div class="board_note" data-column="' + columnid + '" data-ident="' + ident +
+            '" data-sortorder="' + sortorder + '"></div>');
         if (ismynote) {
             note.addClass('mod_board_mynote');
         }
@@ -907,116 +752,18 @@ export default function(board, options) {
             noteText = $('<div class="mod_board_note_text" tabindex="0">' + (content ? content : '') + '</div>'),
             noteAriaText = $('<div class="note_ariatext hidden" role="heading" aria-level="4" tabindex="0"></div>'),
             attachmentPreview = $('<div class="mod_board_preview"></div>');
-        if (iseditable) {
-            var noteAttachment = $('<div class="mod_board_note_attachment form-group row" tabindex="0">' +
-                                '<select class="mod_board_type form-control form-control-sm ' +
-                                (mediaSelection == MEDIA_SELECTION_BUTTONS ? 'hidden' : '') + '">' +
-                                    '<option value="0">' + strings.option_empty + '</option>' +
-                                    '<option value="' + ATTACHMENT_VIDEO + '">' + strings.option_youtube + '</option>' +
-                                    '<option value="' + ATTACHMENT_IMAGE + '">' + strings.option_image + '</option>' +
-                                    '<option value="' + ATTACHMENT_LINK + '">' + strings.option_link + '</option>' +
-                                '</select>' +
-                                '<span class="mod_board_type_icon fa ' + (mediaSelection == MEDIA_SELECTION_DROPDOWN ?
-                                    'hidden' : '') + '">' +
-                                '</span>' +
-                                '<input type="text" class="info form-control form-control-sm col-sm-12 ' +
-                                (mediaSelection == MEDIA_SELECTION_BUTTONS ? 'mod_board_with_type_icon' : '') +
-                                '" placeholder="">' +
-                                '<input type="text" class="url form-control form-control-sm col-sm-12" placeholder="">' +
-                                '<div class="mod_board_file form-control form-control-sm"><label for="file' + ident +
-                                '" class="choose_file_button mod_board_action_button p-0 w-100" tabindex="0">' +
-                                strings.choose_file + '</label><input id="file' + ident + '" type="file" class="d-none"></div>' +
-                            '</div>'
-                        );
-
-            noteAttachment.hide();
-        }
 
         notecontent.append(noteHeading);
         notecontent.append(noteBorder);
         notecontent.append(noteText);
         notecontent.append(noteAriaText);
-        if (iseditable) {
-            notecontent.append(noteAttachment);
-        }
 
         notecontent.append(attachmentPreview);
         note.append(notecontent);
 
-        if (iseditable) {
-            var attachmentType = noteAttachment.find('.mod_board_type'),
-                attachmentInfo = noteAttachment.find('.info'),
-                attachmentUrl = noteAttachment.find('.url'),
-                attachmentFileInput = noteAttachment.find('.mod_board_file>input');
-
-            attachmentType.on('change', function() {
-                attachmentTypeChanged(note);
-                previewAttachment(note);
-            });
-
-            attachmentUrl.on('change', function() {
-                previewAttachment(note);
-            });
-
-            attachmentFileInput.on('change', function() {
-                preloadFile(note, function() {
-                    previewAttachment(note);
-                });
-            });
-
-            attachmentInfo.on('change', function() {
-                previewAttachment(note);
-            });
-
-            if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
-                var removeAttachmentButton = $('<div class="mod_board_remove_attachment_button fa fa-remove"></div>');
-                var removeAttachment = $('<div class="mod_board_remove_attachment"></div>');
-                removeAttachment.append(removeAttachmentButton);
-                removeAttachment.hide();
-                removeAttachmentButton.on('click', function() {
-                    attachmentType.val(0); attachmentType.trigger('change');
-                });
-                noteAttachment.append(removeAttachment);
-            }
-        }
-
-        var column_content = $('.board_column[data-ident=' + columnid + '] .board_column_content');
+        var columnContent = $('.board_column[data-ident=' + columnid + '] .board_column_content');
 
         if (iseditable) {
-            var buttons = $('<div class="mod_board_note_buttons"></div>');
-            buttons.hide();
-            var postbutton = $('<div class="post_button mod_board_action_button" role="button" tabindex="0">' +
-                              strings.post_button_text + '</div>');
-            var cancelbutton = $('<div class="cancel_button mod_board_action_button" role="button" tabindex="0">' +
-                                strings.cancel_button_text + '</div>');
-
-            buttons.append(postbutton);
-            buttons.append(cancelbutton);
-
-            if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
-                buttons.append('<div class="mod_board_spacer_button"></div>');
-                var ytButton = $('<div class="mod_board_attachment_button youtube_button mod_board_action_button fa ' +
-                                attachmentFAIcons[0] + '" role="button" tabindex="0"></div>');
-                handleAction(ytButton, function() {
-                    attachmentType.val(1); attachmentType.trigger("change");
-                });
-                var imgButton = $('<div class="mod_board_attachment_button image_button mod_board_action_button fa ' +
-                                 attachmentFAIcons[1] + '" role="button" tabindex="0"></div>');
-                handleAction(imgButton, function() {
-                    attachmentType.val(2); attachmentType.trigger("change");
-                });
-                var linkButton = $('<div class="mod_board_attachment_button link_button mod_board_action_button fa ' +
-                                  attachmentFAIcons[2] + '" role="button" tabindex="0"></div>');
-                handleAction(linkButton, function() {
-                    attachmentType.val(3); attachmentType.trigger("change");
-                });
-                buttons.append(ytButton);
-                buttons.append(imgButton);
-                buttons.append(linkButton);
-            }
-
-            note.append(buttons);
-
             var removeElement = $('<div class="mod_board_remove fa fa-remove delete_note" role="button" tabindex="0"></div>');
             handleAction(removeElement, function() {
                 deleteNote(ident);
@@ -1027,94 +774,11 @@ export default function(board, options) {
             }
             notecontent.append(removeElement);
 
-            handleAction(cancelbutton, function() {
-                stopNoteEdit();
-            });
-
-            noteText.on('click', function() {
-                if ((editingNote && editingNote == ident) || !ident) {
-                    noteText.editable('open');
-                }
-            });
-
             var beginEdit = function() {
                 startNoteEdit(ident);
             };
 
-            noteHeading.on('click', function() {
-                if ((editingNote && editingNote == ident) || !ident) {
-                    noteHeading.editable('open');
-                }
-            });
-
-            attachmentPreview.on('dblclick', beginEdit);
-
-            handleAction(postbutton, function() {
-                var sendAttach = attachmentDataForNote(note);
-
-                noteHeading.editable('close');
-
-                var theHeading = noteHeading.html();
-                noteText.editable('close');
-                var theText = noteText.html().substring(0, options.post_max_length);
-
-                if (!theHeading && !theText && !sendAttach.url && !sendAttach.filename) {
-                    return;
-                }
-
-                if (postbutton.data('disabled')) {
-                    return;
-                }
-
-                postbutton.data('disabled', true);
-
-
-                if (!ident) { // New
-                    serviceCall('add_note', {columnid: columnid, heading: theHeading, content: theText,
-                        attachment: sendAttach}, function(result) {
-                        if (result.status) {
-                            lastHistoryId = result.historyid;
-                            note.remove();
-                            showNewNoteButtons();
-                            addNote(columnid, result.note.id, result.note.heading, result.note.content,
-                                {type: result.note.type, info: result.note.info, url: result.note.url},
-                                {id: result.note.userid}, result.note.timecreated, result.note.rating);
-                            sortNotes(column_content);
-                            updateNoteAria(result.note.id);
-                        } else {
-                            postbutton.data('disabled', false);
-                        }
-                    });
-
-                } else { // Update
-                    serviceCall('update_note', {id: ident, heading: theHeading, content: theText,
-                        attachment: sendAttach}, function(result) {
-                        if (result.status) {
-                            lastHistoryId = result.historyid;
-                            successNoteEdit();
-                            noteText.html(result.note.content);
-                            updateNoteAria(ident);
-                            setAttachment(note, {type: result.note.type, info: result.note.info, url: result.note.url});
-                        }
-                        postbutton.data('disabled', false);
-                    });
-                }
-            });
-
-            handleEditableAction(noteText, beginEdit);
-            noteText.editable({
-                toggleFontSize: false,
-                closeOnEnter: false,
-                callback: function() {
-                    noteText.html(noteText.html().substring(0, options.post_max_length));
-                }
-            });
-
-            handleEditableAction(noteHeading, beginEdit);
-            noteHeading.editable({
-                toggleFontSize: false,
-                closeOnEnter: true
-            });
+            note.on('dblclick', beginEdit);
 
             handleEditableAction(noteBorder, beginEdit);
 
@@ -1143,11 +807,12 @@ export default function(board, options) {
                 noteBorder.hide();
             }
 
-            var lastOne = column_content.find(".board_note").last();
+            var lastOne = columnContent.find(".board_note").last();
+
             if (lastOne.length) {
                 note.insertAfter(lastOne);
             } else {
-                column_content.prepend(note);
+                columnContent.prepend(note);
             }
         } else {
             $('.board_column[data-ident=' + columnid + '] .board_column_newcontent').append(note);
@@ -1320,9 +985,6 @@ export default function(board, options) {
         }
         getNoteTextForNote(note).html(data.content);
         setAttachment(note, data.attachment);
-        noteTextCache = null;
-        noteHeadingCache = null;
-        attachmentCache = null;
         updateNoteAria(data.id);
     };
 
@@ -1502,6 +1164,188 @@ export default function(board, options) {
                     }
                 });
             }
+        });
+    };
+
+    /**
+     * Get the body fragment for the modal form.
+     *
+     * @param noteid
+     * @param columnid
+     * @returns {Deferred|*}
+     */
+    var getBody = function(noteid, columnid) {
+        // Get the content of the modal.
+        var params = {noteid: noteid, columnid: columnid};
+        return Fragment.loadFragment('mod_board', 'note_form', contextid, params);
+    };
+
+    /**
+     * Displays the modal form to edit a note.
+     *
+     * @param note
+     */
+    var showModalForm = function(note) {
+        let noteid = 0,
+            columnid = note.data('column'),
+            title = strings.modal_title_new;
+
+        if (note.data('ident')) {
+            noteid = note.data('ident');
+            title = strings.modal_title_edit;
+        }
+
+        ModalFactory.create({
+            type: ModalFactory.types.SAVE_CANCEL,
+            title: title,
+            body: getBody(noteid, columnid),
+            large: true,
+            removeOnClose: true
+        }).then(function(modal) {
+            modal.getBodyPromise().then(function () {
+
+                modal.setLarge();
+                modal.setSaveButtonText(strings.post_button_text);
+                modal.setButtonText('cancel', strings.cancel_button_text);
+
+                modal.getRoot().on(ModalEvents.hidden, function () {
+                    stopNoteEdit();
+                    if (!note.data('ident')) {
+                        note.remove();
+                    }
+                });
+
+                modal.getRoot().on(ModalEvents.save, function (e) {
+                    e.preventDefault();
+                    modal.getRoot().find('form').submit();
+                });
+
+                var changeEvent = document.createEvent('HTMLEvents');
+                changeEvent.initEvent('change', true, true);
+
+                modal.getRoot().on('submit', 'form', function (e) {
+                    e.preventDefault();
+
+                    // Prompt all inputs to run their validation functions.
+                    // Normally this would happen when the form is submitted, but
+                    // since we aren't submitting the form normally we need to run client side
+                    // validation.
+                    modal.getRoot().find(':input').each(function (index, element) {
+                        element.dispatchEvent(changeEvent);
+                    });
+
+                    // Now the change events have run, see if there are any "invalid" form fields.
+                    var invalid = $.merge(
+                        modal.getRoot().find('[aria-invalid="true"]'),
+                        modal.getRoot().find('.error')
+                    );
+
+                    // If we found invalid fields, focus on the first one and do not submit via ajax.
+                    if (invalid.length) {
+                        invalid.first().focus();
+                        return;
+                    }
+
+                    var formData = JSON.stringify(modal.getRoot().find('form').serialize());
+                    serviceCall('submit_form', {contextid: contextid, jsonformdata: formData}, function (result) {
+                        if (result.status) {
+                            if (result.action == 'insert') {
+                                // Added a new note.
+                                lastHistoryId = result.historyid;
+                                note.remove();
+                                addNote(columnid, result.note.id, result.note.heading, result.note.content,
+                                    {type: result.note.type, info: result.note.info, url: result.note.url},
+                                    {id: result.note.userid}, result.note.timecreated, result.note.rating);
+                                sortNotes($('.board_column[data-ident=' + columnid + '] .board_column_content'));
+                                updateNoteAria(result.note.id);
+                            } else {
+                                // Updated existing note.
+                                lastHistoryId = result.historyid;
+                                getNoteTextForNote(note).html(result.note.content);
+                                getNoteHeadingForNote(note).html(result.note.heading);
+                                updateNoteAria(result.note.id);
+                                setAttachment(note, {
+                                    type: result.note.type,
+                                    info: result.note.info, url: result.note.url
+                                });
+                            }
+                            stopNoteEdit();
+
+                            // Clear the form changed checker.
+                            Y.use('moodle-core-formchangechecker', function() {
+                                M.core_formchangechecker.reset_form_dirty_state();
+                            });
+
+                            modal.hide();
+                        } else {
+                            // TODO show error.
+                        }
+                    });
+
+                });
+
+                if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
+                    // First hide the select menu.
+                    modal.getRoot().find('#fitem_id_mediatype').hide();
+
+                    let mediaSelect = modal.getRoot().find('#fitem_id_mediatype select'),
+                        ytButton = modal.getRoot().find('.mod_board_attachment_button.youtube_button'),
+                        pictureButton = modal.getRoot().find('.mod_board_attachment_button.image_button'),
+                        linkButton = modal.getRoot().find('.mod_board_attachment_button.link_button'),
+                        updateMediaButtons = function() {
+                            ytButton.removeClass('selected');
+                            pictureButton.removeClass('selected');
+                            linkButton.removeClass('selected');
+                            switch (mediaSelect.val()) {
+                                case ("1"):
+                                    ytButton.addClass('selected');
+                                    break;
+                                case ("2"):
+                                    pictureButton.addClass('selected');
+                                    break;
+                                case ("3"):
+                                    linkButton.addClass('selected');
+                                    break;
+                            }
+                        };
+
+                    updateMediaButtons();
+                    ytButton.on('click', function () {
+                        if (mediaSelect.val() === "1") {
+                            mediaSelect.val(0);
+                        } else {
+                            mediaSelect.val(1);
+                        }
+                        updateMediaButtons();
+                        mediaSelect[0].dispatchEvent(changeEvent);
+                    });
+                    pictureButton.on('click', function () {
+                        if (mediaSelect.val() === "2") {
+                            mediaSelect.val(0);
+                        } else {
+                            mediaSelect.val(2);
+                        }
+                        updateMediaButtons();
+                        mediaSelect[0].dispatchEvent(changeEvent);
+                    });
+                    linkButton.on('click', function () {
+                        if (mediaSelect.val() === "3") {
+                            mediaSelect.val(0);
+                        } else {
+                            mediaSelect.val(3);
+                        }
+                        updateMediaButtons();
+                        mediaSelect[0].dispatchEvent(changeEvent);
+                    });
+                } else {
+                    modal.getRoot().find('#fitem_id_mediabuttons').hide();
+                }
+
+                modal.show();
+
+                return modal;
+            });
+            return modal;
         });
     };
 

@@ -59,6 +59,12 @@ $string['option_empty'] = 'None';
 $string['invalid_file_extension'] = 'File extension not accepted for upload.';
 $string['invalid_file_size_min'] = 'File size too small to be accepted.';
 $string['invalid_file_size_max'] = 'File size too big to be accepted.';
+$string['form_title'] = 'Post title';
+$string['form_body'] = 'Content';
+$string['form_image_file'] = 'Image file';
+$string['form_mediatype'] = 'Media';
+$string['modal_title_new'] = 'New post';
+$string['modal_title_edit'] = 'Edit post';
 
 $string['new_column_icon'] = 'New column icon';
 $string['new_column_icon_desc'] = 'Icon displayed on the new button for columns.';

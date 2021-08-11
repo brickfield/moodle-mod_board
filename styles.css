@@ -193,13 +193,13 @@
     background: #f1f1f1;
 }
 
-.mod_board .mod_board_note_buttons {
+.path-mod-board  .mod_board_note_buttons {
     display: flex;
     flex-direction: row-reverse;
     flex-wrap: wrap;
 }
 
-.mod_board .mod_board_action_button {
+.path-mod-board .mod_board_action_button {
     text-align: center;
     border: 1px solid lightblue;
     background: lightblue;
@@ -208,15 +208,20 @@
     padding: 2px 3px;
     margin: 0 2px;
 }
-.mod_board .mod_board_attachment_button {
+.path-mod-board .mod_board_attachment_button {
     padding: 4px 10px;
+    font-size: 150%;
+}
+.path-mod-board .mod_board_attachment_button.selected {
+    border: 2px solid blue;
+    background: lightblue;
 }
 .mod_board .mod_board_spacer_button {
     width: 10px;
 }
 
-.mod_board .mod_board_action_button:hover,
-.mod_board .mod_board_action_button:focus {
+.path-mod-board  .mod_board_action_button:hover,
+.path-mod-board  .mod_board_action_button:focus {
     opacity: 0.8;
 }
 

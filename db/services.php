@@ -80,28 +80,6 @@ $functions = [
         'loginrequired' => true,
     ],
 
-    'mod_board_add_note' => [
-        'classname'     => 'mod_board_external',
-        'methodname'    => 'add_note',
-        'classpath'     => 'mod/board/external.php',
-        'description'   => 'Add a note on the board',
-        'type'          => 'write',
-        'capabilities'  => '',
-        'ajax'          => true,
-        'loginrequired' => true,
-    ],
-
-    'mod_board_update_note' => [
-        'classname'     => 'mod_board_external',
-        'methodname'    => 'update_note',
-        'classpath'     => 'mod/board/external.php',
-        'description'   => 'Update a note on the board',
-        'type'          => 'write',
-        'capabilities'  => '',
-        'ajax'          => true,
-        'loginrequired' => true,
-    ],
-
     'mod_board_delete_note' => [
         'classname'     => 'mod_board_external',
         'methodname'    => 'delete_note',
@@ -145,4 +123,15 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
+
+    'mod_board_submit_form' => [
+        'classname'     => 'mod_board_external',
+        'methodname'    => 'submit_form',
+        'classpath'     => 'mod/board/external.php',
+        'description'   => 'Process the submission of the note add/edit form',
+        'type'          => 'write',
+        'capabilities'  => '',
+        'ajax'          => true,
+        'loginrequired' => true,
+    ]
 ];

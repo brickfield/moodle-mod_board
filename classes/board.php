@@ -530,50 +530,27 @@ class board {
      * Stores the added file.
      *
      * @param int $noteid
-     * @param array $attachment
-     * @return \moodle_url
+     * @param int $draftitemid
+     * @return string|null
      */
-    public static function store_note_file($noteid, $attachment) {
-        $file = static::get_file_storage_settings($noteid);
-        $file->filename = $attachment['filename'];
+    public static function store_note_file($noteid, $draftitemid) {
+        $settings = static::get_file_storage_settings($noteid);
 
-        static::delete_note_file($noteid);
+        file_save_draft_area_files($draftitemid, $settings->contextid, $settings->component, $settings->filearea,
+            $settings->itemid);
+
         $fs = get_file_storage();
+        $files = $fs->get_area_files($settings->contextid, $settings->component, $settings->filearea, $settings->itemid,
+            'itemid, filepath, filename', false);
 
-        $storedfile = static::get_note_file($noteid);
-        if ($storedfile) {
-            $storedfile->delete();
+        $storedfile = reset($files);
+        if (!$storedfile) {
+            return null;
         }
-
-        $storedfile = $fs->create_file_from_string($file, $attachment['filecontents']);
 
         return \moodle_url::make_pluginfile_url($storedfile->get_contextid(), $storedfile->get_component(),
-                $storedfile->get_filearea(), $storedfile->get_itemid(), $storedfile->get_filepath(),
-                $file->filename)->get_path();
-    }
-
-    /**
-     * Check if the file fits the requirements to be uploaded.
-     *
-     * @param array $attachment
-     * @return bool
-     */
-    public static function valid_for_upload($attachment) {
-        $fileparts = explode('.', basename($attachment['filename']));
-        $fileextension = strtolower(array_pop($fileparts));
-        if (!in_array($fileextension, explode(',', self::ACCEPTED_FILE_EXTENSIONS))) {
-            return false;
-        }
-        $filelength = strlen($attachment['filecontents']);
-
-        if ($filelength < self::ACCEPTED_FILE_MIN_SIZE) {
-            return false;
-        }
-        if ($filelength > self::ACCEPTED_FILE_MAX_SIZE) {
-            return false;
-        }
-
-        return true;
+            $storedfile->get_filearea(), $storedfile->get_itemid(), $storedfile->get_filepath(),
+            $storedfile->get_filename())->get_path();
     }
 
     /**
@@ -586,14 +563,11 @@ class board {
     public static function board_note_update_attachment($noteid, $attachment) {
         global $DB;
 
-        if (!empty($attachment['filename'])) {
-            $attachment['filecontents'] = base64_decode(explode(',', $attachment['filecontents'])[1]);
-            if (static::valid_for_upload($attachment)) {
-                $attachment['url'] = static::store_note_file($noteid, $attachment);
-            }
-            unset($attachment['filename']);
-            unset($attachment['filecontents']);
+        if (!empty($attachment['draftitemid'])) {
+            $attachment['url'] = static::store_note_file($noteid, $attachment['draftitemid']);
+            unset($attachment['draftitemid']);
         }
+
         return $attachment;
     }
 
@@ -1125,5 +1099,24 @@ class board {
     public static function get_export_submission(string $content) {
         $breaks = array("<br />", "<br>", "<br/>");
         return str_ireplace($breaks, "\n", $content);
+    }
+
+    /**
+     * Returns basic options for the image file picker.
+     *
+     * @return array
+     */
+    public static function get_image_picker_options() {
+        $extensions = explode(',', self::ACCEPTED_FILE_EXTENSIONS);
+        $extensions = array_map(function($extension) {
+            return '.' . $extension;
+        }, $extensions);
+
+        return [
+            'accepted_types' => $extensions,
+            'maxfiles' => 1,
+            'subdirs' => 0,
+            'maxbytes' => self::ACCEPTED_FILE_MAX_SIZE
+        ];
     }
 }
