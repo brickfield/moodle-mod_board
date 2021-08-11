@@ -278,8 +278,8 @@ class mod_board_external extends external_api {
     /**
      * Process the modal form submission.
      *
-     * @param $contextid
-     * @param $jsonformdata
+     * @param int $contextid
+     * @param string $jsonformdata
      * @return array
      * @throws moodle_exception
      */
@@ -330,16 +330,6 @@ class mod_board_external extends external_api {
                     $attachment['info'] = $data->linktitle ?? '';
                     $attachment['url'] = $data->linkurl ?? '';
                     break;
-            }
-
-            if (empty($attachment['info']) && empty($attachment['url']) && empty($attachment['draftitemid'])) {
-                // In this case, we want to reset the media type to none.
-                $attachment = [
-                    'type' => $data->mediatype,
-                    'info' => '',
-                    'url' => ''
-                ];
-                // TODO check for no file.
             }
 
             // Process either as an update or insert.

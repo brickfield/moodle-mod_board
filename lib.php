@@ -272,7 +272,7 @@ function mod_board_pluginfile($course, $cm, $context, $filearea, $args, $forcedo
 /**
  * Returns a fragment, which contains the form for the modal popup note editor.
  *
- * @param $args
+ * @param array $args
  * @return string
  */
 function mod_board_output_fragment_note_form($args) {

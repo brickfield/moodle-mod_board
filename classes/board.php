@@ -545,6 +545,7 @@ class board {
 
         $storedfile = reset($files);
         if (!$storedfile) {
+            // This means there is no file here.
             return null;
         }
 
@@ -558,14 +559,30 @@ class board {
      *
      * @param int $noteid
      * @param array $attachment
+     * @param int|null $previoustype
      * @return array
      */
-    public static function board_note_update_attachment($noteid, $attachment) {
-        global $DB;
-
+    public static function board_note_update_attachment($noteid, $attachment, $previoustype = null) {
         if (!empty($attachment['draftitemid'])) {
             $attachment['url'] = static::store_note_file($noteid, $attachment['draftitemid']);
             unset($attachment['draftitemid']);
+        }
+
+        if (empty($attachment['info']) && empty($attachment['url'])) {
+            // In this case, we want to reset the media type to none.
+            $attachment['type'] = 0;
+            $attachment['info'] = null;
+            $attachment['url'] = null;
+        }
+
+        if ($previoustype) {
+            if (isset($attachment['type']) && $attachment['type'] != 2 && $previoustype == 2) {
+                // This case is if we are changing from a picture type to a non-picture type. We should remove files.
+                $fs = get_file_storage();
+                $settings = static::get_file_storage_settings($noteid);
+
+                $fs->delete_area_files($settings->contextid, $settings->component, $settings->filearea, $settings->itemid);
+            }
         }
 
         return $attachment;
@@ -695,7 +712,8 @@ class board {
 
         if ($columnid && $boardid) {
             $transaction = $DB->start_delegated_transaction();
-            $attachment = static::board_note_update_attachment($id, $attachment);
+            $previoustype = $note->type;
+            $attachment = static::board_note_update_attachment($id, $attachment, $previoustype);
 
             $type = !empty($attachment['type']) ? $attachment['type'] : 0;
             $info = !empty($type) ? substr($attachment['info'], 0, 100) : null;

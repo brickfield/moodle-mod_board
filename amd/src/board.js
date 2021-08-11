@@ -173,6 +173,9 @@ export default function(board, options, contextid) {
         warning: '',
         modal_title_new: '',
         modal_title_edit: '',
+        option_youtube: '',
+        option_image: '',
+        option_link: '',
 
         aria_newcolumn: '',
         aria_newpost: '',
@@ -185,8 +188,6 @@ export default function(board, options, contextid) {
         aria_canceledit: '',
         aria_postnew: '',
         aria_cancelnew: '',
-        aria_choosefilenew: '',
-        aria_choosefileedit: '',
         aria_ratepost: '',
 
         invalid_file_extension: '',
@@ -349,10 +350,10 @@ export default function(board, options, contextid) {
             columnIdentifier = note.closest('.board_column').find('.mod_board_column_name').text();
 
         if (noteId) { // New post
-            var noteIdentifier = textIdentifierForNote(note);
+            var noteIdentifier = textIdentifierForNote(note),
+                deleteNoteString = strings.aria_deletepost.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
 
-            note.find('.delete_note').attr('aria-label', strings.aria_deletepost.replace('{column}',
-                columnIdentifier).replace('{post}', noteIdentifier));
+            note.find('.delete_note').attr('aria-label', deleteNoteString).attr('title', deleteNoteString);
             note.find('.mod_board_rating').attr('aria-label', strings.aria_ratepost.replace('{column}',
                 columnIdentifier).replace('{post}', noteIdentifier));
             note.find('.note_ariatext').html(noteIdentifier);
@@ -368,9 +369,11 @@ export default function(board, options, contextid) {
      */
     var updateColumnAria = function(columnId) {
         var column = $('.board_column[data-ident=' + columnId + ']'),
-            columnIdentifier = column.find('.mod_board_column_name').text();
-        column.find('.newnote').attr('aria-label', strings.aria_newpost.replace('{column}', columnIdentifier));
-        column.find('.delete_column').attr('aria-label', strings.aria_deletecolumn.replace('{column}', columnIdentifier));
+            columnIdentifier = column.find('.mod_board_column_name').text(),
+            newNoteString = strings.aria_newpost.replace('{column}', columnIdentifier),
+            deleteColumnString = strings.aria_deletecolumn.replace('{column}', columnIdentifier);
+        column.find('.newnote').attr('aria-label', newNoteString).attr('title', newNoteString);
+        column.find('.delete_column').attr('aria-label', deleteColumnString).attr('title', deleteColumnString);
 
         column.find(".board_note").each(function(index, note) {
             updateNoteAria($(note).data('ident'));
@@ -947,8 +950,8 @@ export default function(board, options, contextid) {
         var column = $('<div class="board_column board_column_empty"></div>'),
             newBusy = false;
         column.append('<div class="board_button newcolumn" role="button" tabindex="0" aria-label="' +
-        strings.aria_newcolumn + '"><div class="button_content"><span class="fa ' + options.columnicon +
-        '"></span></div></div>');
+            strings.aria_newcolumn + '" title="' + strings.aria_newcolumn + '"><div class="button_content"><span class="fa '
+            + options.columnicon + '"></span></div></div>');
 
         handleAction(column.find('.newcolumn'), function() {
             if (newBusy) {
@@ -1181,6 +1184,62 @@ export default function(board, options, contextid) {
     };
 
     /**
+     * Setup the aria labels for the modal.
+     *
+     * @param note
+     * @param modal
+     */
+    var updateModalAria = function(note, modal) {
+        let columnIdentifier = note.closest('.board_column').find('.mod_board_column_name').text(),
+            addYoutube,
+            addImage,
+            addLink,
+            postButton,
+            cancelButton,
+            modalRoot = modal.getRoot();
+
+        if (note.data('ident')) {
+            // Is a note update.
+            var noteIdentifier = textIdentifierForNote(note);
+
+            postButton = strings.aria_postedit.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
+            cancelButton = strings.aria_canceledit.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
+            addYoutube = strings.aria_addmedia.replace('{type}', strings.option_youtube).replace('{column}',
+                columnIdentifier).replace('{post}', noteIdentifier);
+            addImage = strings.aria_addmedia.replace('{type}', strings.option_image).replace('{column}',
+                columnIdentifier).replace('{post}', noteIdentifier);
+            addLink = strings.aria_addmedia.replace('{type}', strings.option_link).replace('{column}',
+                columnIdentifier).replace('{post}', noteIdentifier);
+        } else {
+            // Note is new.
+            postButton = strings.aria_postnew.replace('{column}', columnIdentifier);
+            cancelButton = strings.aria_cancelnew.replace('{column}', columnIdentifier);
+            addYoutube = strings.aria_addmedianew.replace('{type}', strings.option_youtube).replace('{column}',
+                columnIdentifier);
+            addImage = strings.aria_addmedianew.replace('{type}', strings.option_image).replace('{column}', columnIdentifier);
+            addLink = strings.aria_addmedianew.replace('{type}', strings.option_link).replace('{column}', columnIdentifier);
+        }
+
+        if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
+            modalRoot.find('.mod_board_attachment_button.youtube_button').attr('aria-label', addYoutube);
+            modalRoot.find('.mod_board_attachment_button.youtube_button').attr('title', addYoutube);
+            modalRoot.find('.mod_board_attachment_button.image_button').attr('aria-label', addImage);
+            modalRoot.find('.mod_board_attachment_button.image_button').attr('title', addImage);
+            modalRoot.find('.mod_board_attachment_button.link_button').attr('aria-label', addLink);
+            modalRoot.find('.mod_board_attachment_button.link_button').attr('title', addLink);
+        }
+
+        let button = modalRoot.find(modal.getActionSelector('save'));
+        if (button) {
+            button.attr('aria-label', postButton);
+        }
+        button = modalRoot.find(modal.getActionSelector('cancel'));
+        if (button) {
+            button.attr('aria-label', cancelButton);
+        }
+    };
+
+    /**
      * Displays the modal form to edit a note.
      *
      * @param note
@@ -1202,6 +1261,7 @@ export default function(board, options, contextid) {
             large: true,
             removeOnClose: true
         }).then(function(modal) {
+            // Use the body promise so we know body content is loaded.
             modal.getBodyPromise().then(function () {
 
                 modal.setLarge();
@@ -1341,6 +1401,7 @@ export default function(board, options, contextid) {
                     modal.getRoot().find('#fitem_id_mediabuttons').hide();
                 }
 
+                updateModalAria(note, modal);
                 modal.show();
 
                 return modal;
