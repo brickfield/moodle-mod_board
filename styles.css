@@ -199,29 +199,25 @@
     flex-wrap: wrap;
 }
 
-.path-mod-board .mod_board_action_button {
+.path-mod-board .mod_board_attachment_button {
     text-align: center;
-    border: 1px solid lightblue;
+    border: 3px solid lightblue;
     background: lightblue;
+    padding: 8px 15px;
+    font-size: 150%;
     cursor: pointer;
     display: inline-block;
-    padding: 2px 3px;
     margin: 0 2px;
 }
-.path-mod-board .mod_board_attachment_button {
-    padding: 4px 10px;
-    font-size: 150%;
-}
 .path-mod-board .mod_board_attachment_button.selected {
-    border: 2px solid blue;
-    background: lightblue;
+    border: 3px solid blue;
 }
 .mod_board .mod_board_spacer_button {
     width: 10px;
 }
 
-.path-mod-board  .mod_board_action_button:hover,
-.path-mod-board  .mod_board_action_button:focus {
+.path-mod-board  .mod_board_attachment_button:hover,
+.path-mod-board  .mod_board_attachment_button:focus {
     opacity: 0.8;
 }
 

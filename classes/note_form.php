@@ -50,7 +50,8 @@ class note_form extends \moodleform {
         $mform->addRule('heading', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
 
         $maxlen = $config->post_max_length;
-        $mform->addElement('textarea', 'content', get_string('form_body', 'mod_board'), ['maxlength' => $maxlen]);
+        $options = ['maxlength' => $maxlen, 'cols' => 30, 'rows' => 3];
+        $mform->addElement('textarea', 'content', get_string('form_body', 'mod_board'), $options);
         $mform->setType('content', PARAM_TEXT);
         $mform->addRule('content', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
 
@@ -64,9 +65,9 @@ class note_form extends \moodleform {
         $mform->addElement('select', 'mediatype', get_string('form_mediatype', 'mod_board'), $options, $attr);
 
         $html = '<div class="mod_board_note_buttons">
-                     <div class="mod_board_attachment_button youtube_button mod_board_action_button fa fa-youtube" role="button" tabindex="0"></div>
-                     <div class="mod_board_attachment_button image_button mod_board_action_button fa fa-picture-o" role="button" tabindex="0"></div>
-                     <div class="mod_board_attachment_button link_button mod_board_action_button fa fa-link" role="button" tabindex="0"></div>
+                     <div class="mod_board_attachment_button youtube_button fa fa-youtube" role="button" tabindex="0"></div>
+                     <div class="mod_board_attachment_button image_button fa fa-picture-o" role="button" tabindex="0"></div>
+                     <div class="mod_board_attachment_button link_button fa fa-link" role="button" tabindex="0"></div>
             </div>';
 
         $mform->addElement('static', 'mediabuttons', get_string('form_mediatype', 'mod_board'), $html);
@@ -78,8 +79,8 @@ class note_form extends \moodleform {
         $mform->hideIf('linktitle', 'mediatype', 'neq', 3);
         $mform->addRule('linktitle', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
 
-        $options = ['maxlength' => 200, 'placeholder' => get_string('option_link_url', 'mod_board')];
-        $mform->addElement('text', 'linkurl', get_string('option_link_url', 'mod_board'), $options);
+        $attr = ['maxlength' => 200, 'placeholder' => get_string('option_link_url', 'mod_board')];
+        $mform->addElement('url', 'linkurl', get_string('option_link_url', 'mod_board'), $attr, ['usefilepicker' => false]);
         $mform->setType('linkurl', PARAM_URL);
         $mform->hideIf('linkurl', 'mediatype', 'neq', 3);
         $mform->addRule('linkurl', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
@@ -108,4 +109,5 @@ class note_form extends \moodleform {
         $mform->addElement('filemanager', 'imagefile', get_string('form_image_file', 'mod_board'), null, $pickerparams);
         $mform->hideIf('imagefile', 'mediatype', 'neq', 2);
     }
+
 }

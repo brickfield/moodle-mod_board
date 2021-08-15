@@ -287,24 +287,6 @@ export default function(board, options, contextid) {
     };
 
     /**
-     * Shows the buttons creation new notes.
-     *
-     * @method showNewNoteButtons
-     */
-    var showNewNoteButtons = function() {
-        $('.board_column .board_column_newcontent .board_button.newnote').show();
-    };
-
-    /**
-     * Hides the buttons for creating new notes.
-     *
-     * @method hideNewNoteButtons
-     */
-    var hideNewNoteButtons = function() {
-        $('.board_column .board_column_newcontent .board_button.newnote').hide();
-    };
-
-    /**
      * Gets a jquery node for the attachments of a given note.
      *
      * @method getNoteAttachmentsForNote
@@ -388,14 +370,12 @@ export default function(board, options, contextid) {
     var stopNoteEdit = function() {
         if (!editingNote) {
             getNote(0).remove();
-            showNewNoteButtons();
             return;
         }
 
         var note = getNote(editingNote);
 
         if (note) {
-            showNewNoteButtons();
             var noteHeading = getNoteHeadingForNote(note);
             var noteText = getNoteTextForNote(note);
             var noteBorder = getNoteBorderForNote(note);
@@ -437,7 +417,6 @@ export default function(board, options, contextid) {
         var note = getNote(ident);
         if (note) {
             showModalForm(note);
-            hideNewNoteButtons();
 
             if (ident) {
                 editingNote = ident;
@@ -819,8 +798,8 @@ export default function(board, options, contextid) {
             }
         } else {
             $('.board_column[data-ident=' + columnid + '] .board_column_newcontent').append(note);
-            updateNoteAria(ident);
-            noteText.editable('open'); // Trigger edit of note
+            // This is effectively a note placeholder. So we don't need to show ot.
+            note.hide();
             beginEdit();
         }
     };
@@ -1245,19 +1224,23 @@ export default function(board, options, contextid) {
      * @param note
      */
     var showModalForm = function(note) {
-        let noteid = 0,
-            columnid = note.data('column'),
-            title = strings.modal_title_new;
+        let noteId = 0,
+            columnId = note.data('column'),
+            column = $('.board_column[data-ident=' + columnId + ']'),
+            columnIdentifier = column.find('.mod_board_column_name').text(),
+            title;
 
         if (note.data('ident')) {
-            noteid = note.data('ident');
-            title = strings.modal_title_edit;
+            noteId = note.data('ident');
+            title = strings.modal_title_edit.replace('{column}', columnIdentifier);
+        } else {
+            title = strings.modal_title_new.replace('{column}', columnIdentifier);
         }
 
         ModalFactory.create({
             type: ModalFactory.types.SAVE_CANCEL,
             title: title,
-            body: getBody(noteid, columnid),
+            body: getBody(noteId, columnId),
             large: true,
             removeOnClose: true
         }).then(function(modal) {
@@ -1286,6 +1269,12 @@ export default function(board, options, contextid) {
                 modal.getRoot().on('submit', 'form', function (e) {
                     e.preventDefault();
 
+                    // First, make sure the native html5 validity checks are run.
+                    let valid = modal.getRoot().find('form').get(0).reportValidity();
+                    if (!valid) {
+                        return;
+                    }
+
                     // Prompt all inputs to run their validation functions.
                     // Normally this would happen when the form is submitted, but
                     // since we aren't submitting the form normally we need to run client side
@@ -1297,7 +1286,8 @@ export default function(board, options, contextid) {
                     // Now the change events have run, see if there are any "invalid" form fields.
                     var invalid = $.merge(
                         modal.getRoot().find('[aria-invalid="true"]'),
-                        modal.getRoot().find('.error')
+                        modal.getRoot().find('.error'),
+                        modal.getRoot().find(':invalid')
                     );
 
                     // If we found invalid fields, focus on the first one and do not submit via ajax.
@@ -1313,10 +1303,10 @@ export default function(board, options, contextid) {
                                 // Added a new note.
                                 lastHistoryId = result.historyid;
                                 note.remove();
-                                addNote(columnid, result.note.id, result.note.heading, result.note.content,
+                                addNote(columnId, result.note.id, result.note.heading, result.note.content,
                                     {type: result.note.type, info: result.note.info, url: result.note.url},
                                     {id: result.note.userid}, result.note.timecreated, result.note.rating);
-                                sortNotes($('.board_column[data-ident=' + columnid + '] .board_column_content'));
+                                sortNotes($('.board_column[data-ident=' + columnId + '] .board_column_content'));
                                 updateNoteAria(result.note.id);
                             } else {
                                 // Updated existing note.
@@ -1336,7 +1326,7 @@ export default function(board, options, contextid) {
                                 M.core_formchangechecker.reset_form_dirty_state();
                             });
 
-                            modal.hide();
+                            modal.destroy();
                         } else {
                             // TODO show error.
                         }

@@ -298,6 +298,8 @@ class mod_board_external extends external_api {
 
         // Make the form with the ajax data to validate.
         $form = new note_form(null, null, 'post', '', null, true, $data);
+        // $errors = $form->validation($data);
+        // if (!empty())
 
         $data = $form->get_data();
         if ($data) {
