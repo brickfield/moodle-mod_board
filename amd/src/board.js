@@ -487,8 +487,12 @@ export default function(board, options, contextid) {
                             rating.data('disabled', false);
                         });
                     }
-                );
-
+                ).then(function(rateModal) {
+                    // Do this here, because it catches both cancel clicks, or someone clicking the X.
+                    rateModal.getRoot().on(ModalEvents.hidden, function() {
+                        rating.data('disabled', false);
+                    });
+                });
             }
         });
     };
