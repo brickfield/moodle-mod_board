@@ -42,6 +42,9 @@ if ($b) {
     $board = $DB->get_record('board', array('id' => $cm->instance), '*', MUST_EXIST);
 }
 
+// Make sure the board history ID is set.
+$board->historyid = $board->historyid ?? 0;
+
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 
 require_course_login($course, true, $cm);
