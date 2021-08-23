@@ -380,6 +380,11 @@ export default function(board, options, contextid) {
             var noteHeading = getNoteHeadingForNote(note);
             var noteText = getNoteTextForNote(note);
             var noteBorder = getNoteBorderForNote(note);
+
+            // Reset the visibility state.
+            noteHeading.show();
+            noteBorder.show();
+            noteText.show();
             if (!noteHeading.html()) {
                 noteHeading.hide();
                 noteBorder.hide();
@@ -964,15 +969,27 @@ export default function(board, options, contextid) {
      * @param data
      */
     var updateNote = function(note, heading, data) {
-        heading.html(data.heading);
-        if (data.heading) {
-            heading.show();
-        } else {
-            heading.hide();
-        }
-        getNoteTextForNote(note).html(data.content);
+        var noteHeading = getNoteHeadingForNote(note);
+        var noteText = getNoteTextForNote(note);
+        var noteBorder = getNoteBorderForNote(note);
+
+        noteText.html(data.content);
+        noteHeading.html(data.heading);
         setAttachment(note, data.attachment);
         updateNoteAria(data.id);
+
+        // Reset the visibility state.
+        noteHeading.show();
+        noteBorder.show();
+        noteText.show();
+        if (!noteHeading.html()) {
+            noteHeading.hide();
+            noteBorder.hide();
+        }
+        if (!noteText.html() && noteHeading.html()) {
+            noteText.hide();
+            noteBorder.hide();
+        }
     };
 
     /**
