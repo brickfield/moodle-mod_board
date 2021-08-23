@@ -277,17 +277,6 @@ export default function(board, options, contextid) {
     };
 
     /**
-     * Returns the jquery element of the note buttons for the given note element.
-     *
-     * @method getNoteButtonsForNote
-     * @param note
-     * @returns {*|jQuery}
-     */
-    var getNoteButtonsForNote = function(note) {
-        return $(note).find(".mod_board_note_buttons");
-    };
-
-    /**
      * Gets a jquery node for the attachments of a given note.
      *
      * @method getNoteAttachmentsForNote
@@ -516,17 +505,7 @@ export default function(board, options, contextid) {
             attachmentUrl = noteAttachment.find('.url'),
             attachmentFile = noteAttachment.find('.mod_board_file');
 
-        if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
-            var attachmentIcon = noteAttachment.find('.mod_board_type_icon'),
-                removeAttachment = noteAttachment.find('.mod_board_remove_attachment');
-        } else {
-            getNoteButtonsForNote(note).find('.mod_board_attachment_button').hide();
-        }
-
         if (type > "0") {
-            if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
-                removeAttachment.show();
-            }
             attachmentInfo.prop('placeholder', strings['option_' + attachmentTypeToString(type) + '_info']);
             attachmentUrl.prop('placeholder', strings['option_' + attachmentTypeToString(type) + '_url']);
 
@@ -538,27 +517,14 @@ export default function(board, options, contextid) {
                 attachmentFile.hide();
                 attachmentUrl.show();
             }
-
-            if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
-                attachmentIcon.removeClass().addClass(['mod_board_type_icon', 'fa', attachmentFAIcon(type)]);
-                attachmentIcon.show();
-                getNoteButtonsForNote(note).find('.mod_board_attachment_button').hide();
-            }
         } else {
-            if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
-                removeAttachment.hide();
-            }
             attachmentInfo.hide();
             attachmentUrl.hide();
             attachmentFile.hide();
-            if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
-                attachmentIcon.hide();
-            }
+
             attachmentInfo.val('');
             attachmentUrl.val('');
-            if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
-                getNoteButtonsForNote(note).find('.mod_board_attachment_button').show();
-            }
+
         }
     };
 
@@ -630,18 +596,6 @@ export default function(board, options, contextid) {
             case "3": return 'link';
             default: return null;
         }
-    };
-
-    var attachmentFAIcons = ['fa-youtube', 'fa-picture-o', 'fa-link'];
-    /**
-     * Get the fa icon for a given numeric attachment type.
-     *
-     * @method attachmentFAIcon
-     * @param type
-     * @returns {string|null}
-     */
-    var attachmentFAIcon = function(type) {
-        return attachmentFAIcons[type - 1] || null;
     };
 
     /**
@@ -770,8 +724,8 @@ export default function(board, options, contextid) {
                 startNoteEdit(ident);
             };
 
-            note.on('dblclick', beginEdit);
-
+            handleEditableAction(noteText, beginEdit);
+            handleEditableAction(noteHeading, beginEdit);
             handleEditableAction(noteBorder, beginEdit);
 
             setAttachment(note, attachment);
@@ -1271,7 +1225,7 @@ export default function(board, options, contextid) {
         }).then(function(modal) {
             // Use the body promise so we know body content is loaded.
             modal.getBodyPromise().then(function () {
-
+                let saveInProgress = false;
                 editModal = modal;
                 modal.setLarge();
                 modal.setSaveButtonText(strings.post_button_text);
@@ -1294,6 +1248,12 @@ export default function(board, options, contextid) {
 
                 modal.getRoot().on('submit', 'form', function (e) {
                     e.preventDefault();
+
+                    // Prevent multiple form submissions from being sent.
+                    if (saveInProgress) {
+                        return;
+                    }
+                    saveInProgress = true;
 
                     // First, make sure the native html5 validity checks are run.
                     let valid = modal.getRoot().find('form').get(0).reportValidity();
@@ -1386,7 +1346,7 @@ export default function(board, options, contextid) {
                         };
 
                     updateMediaButtons();
-                    ytButton.on('click', function () {
+                    handleAction(ytButton, function() {
                         if (mediaSelect.val() === "1") {
                             mediaSelect.val(0);
                         } else {
@@ -1395,7 +1355,7 @@ export default function(board, options, contextid) {
                         updateMediaButtons();
                         mediaSelect[0].dispatchEvent(changeEvent);
                     });
-                    pictureButton.on('click', function () {
+                    handleAction(pictureButton, function() {
                         if (mediaSelect.val() === "2") {
                             mediaSelect.val(0);
                         } else {
@@ -1404,7 +1364,7 @@ export default function(board, options, contextid) {
                         updateMediaButtons();
                         mediaSelect[0].dispatchEvent(changeEvent);
                     });
-                    linkButton.on('click', function () {
+                    handleAction(linkButton, function() {
                         if (mediaSelect.val() === "3") {
                             mediaSelect.val(0);
                         } else {

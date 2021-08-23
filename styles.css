@@ -195,7 +195,7 @@
 
 .path-mod-board  .mod_board_note_buttons {
     display: flex;
-    flex-direction: row-reverse;
+    flex-direction: row;
     flex-wrap: wrap;
 }
 
