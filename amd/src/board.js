@@ -209,7 +209,8 @@ export default function(board, options, contextid) {
         editingNote = 0,
         isReadOnlyBoard = options.readonly || false,
         ratingenabled = options.ratingenabled,
-        sortby = options.sortby || SORTBY_DATE;
+        sortby = options.sortby || SORTBY_DATE,
+        editModal = null;
     /**
      * Helper method to make calles to mod_board external services.
      *
@@ -994,9 +995,11 @@ export default function(board, options, contextid) {
                     updateNoteAria(data.id);
                     sortNotes($('.board_column[data-ident=' + data.columnid + '] .board_column_content'));
                 } else if (item.action == 'update_note') {
-                    var note = getNote(data.id);
+                    let note = getNote(data.id),
+                        formModal = editModal,
+                        historyData = data;
                     if (note) {
-                        var heading = getNoteHeadingForNote(note);
+                        let noteHeading = getNoteHeadingForNote(note);
 
                         if (editingNote == data.id) {
                             Notification.confirm(
@@ -1004,13 +1007,14 @@ export default function(board, options, contextid) {
                                 strings.note_changed_text.split("\n")[1], // Are you sure?
                                 strings.Ok,
                                 strings.Cancel,
-                                function(note, heading, data) {
-                                    updateNote(note, heading, data);
+                                function() {
+                                    formModal.hide();
+                                    updateNote(note, noteHeading, historyData);
                                     stopNoteEdit();
                                 }
                             );
                         } else {
-                            updateNote(note, heading, data);
+                            updateNote(note, noteHeading, data);
                         }
                     }
                 } else if (item.action == 'delete_note') {
@@ -1251,6 +1255,7 @@ export default function(board, options, contextid) {
             // Use the body promise so we know body content is loaded.
             modal.getBodyPromise().then(function () {
 
+                editModal = modal;
                 modal.setLarge();
                 modal.setSaveButtonText(strings.post_button_text);
                 modal.setButtonText('cancel', strings.cancel_button_text);
