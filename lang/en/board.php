@@ -78,6 +78,8 @@ $string['post_max_length'] = 'Post maximum length';
 $string['post_max_length_desc'] = 'The maximum allowed content length. Anything over this length will be trimmed.';
 $string['history_refresh'] = 'Board refresh timer';
 $string['history_refresh_desc'] = 'Timeout in seconds between automatic board refreshes. If set to 0 or empty then the board will only refresh during board actions (add/update/etc)';
+$string['column_colours'] = 'Column Colours';
+$string['column_colours_desc'] = 'The colours used at the top of each column. These are hex colors and should be placed once per line as 3 or 6 characters. If any of these values are not equal to a colour then the defaults will be used.';
 
 $string['export_board'] = 'Export CSV';
 $string['export_submissions'] = 'Export Submissions';

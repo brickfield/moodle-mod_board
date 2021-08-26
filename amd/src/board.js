@@ -709,39 +709,36 @@ export default function(board, options, contextid) {
 
         var columnContent = $('.board_column[data-ident=' + columnid + '] .board_column_content');
 
-        if (iseditable) {
-            var removeElement = $('<div class="mod_board_remove fa fa-remove delete_note" role="button" tabindex="0"></div>');
-            handleAction(removeElement, function() {
-                deleteNote(ident);
-            });
-
-            if (!ident) {
-                removeElement.hide();
-            }
-            notecontent.append(removeElement);
-
-            var beginEdit = function() {
-                startNoteEdit(ident);
-            };
-
-            handleEditableAction(noteText, beginEdit);
-            handleEditableAction(noteHeading, beginEdit);
-            handleEditableAction(noteBorder, beginEdit);
-
-            setAttachment(note, attachment);
-        } else {
-            previewAttachment(note, attachment);
-        }
+        var beginEdit = () => {
+            startNoteEdit(ident);
+        };
 
         if (ident) {
             if (ratingenabled) {
                 note.addClass('mod_board_rateablenote');
-                var rateElement = $('<div class="fa fa-star mod_board_rating" role="button" tabindex="0">' + rating + '</div>');
+                var rateElement = $(`<div class="fa fa-star mod_board_rating" role="button" tabindex="0"> ${rating} </div>`);
 
-                handleAction(rateElement, function() {
+                handleAction(rateElement, () => {
                     rateNote(ident);
                 });
                 notecontent.append(rateElement);
+            }
+
+            if (iseditable) {
+                var removeElement = $('<div class="mod_board_remove fa fa-remove delete_note" role="button" tabindex="0"></div>');
+                handleAction(removeElement, () => {
+                    deleteNote(ident);
+                });
+
+                notecontent.append(removeElement);
+
+                handleEditableAction(noteText, beginEdit);
+                handleEditableAction(noteHeading, beginEdit);
+                handleEditableAction(noteBorder, beginEdit);
+
+                setAttachment(note, attachment);
+            } else {
+                previewAttachment(note, attachment);
             }
 
             if (!noteHeading.html()) {
@@ -762,7 +759,7 @@ export default function(board, options, contextid) {
             }
         } else {
             $('.board_column[data-ident=' + columnid + '] .board_column_newcontent').append(note);
-            // This is effectively a note placeholder. So we don't need to show ot.
+            // This is effectively a note placeholder. So we don't need to show it.
             note.hide();
             beginEdit();
         }
@@ -776,10 +773,11 @@ export default function(board, options, contextid) {
      * @param name
      * @param notes
      */
-    var addColumn = function(ident, name, notes) {
+    var addColumn = function (ident, name, notes, colour) {
+        let headerStyle = `style="border-top: 10px solid #${colour}"`;
         var iseditable = isEditor,
             nameCache = null,
-            column = $('<div class="board_column board_column_hasdata" data-ident="' + ident + '"></div>'),
+            column = $(`<div class="board_column board_column_hasdata" ${headerStyle} data-ident="${ident}"></div>`),
             columnHeader = $('<div class="board_column_header"></div>'),
             columnSort = $('<div class="mod_board_column_sort fa"></div>'),
             columnName = $('<div class="mod_board_column_name" tabindex="0" aria-level="3" role="heading">' + name + '</div>'),
@@ -903,7 +901,7 @@ export default function(board, options, contextid) {
             newBusy = true;
 
             serviceCall('add_column', {boardid: board.id, name: strings.default_column_heading}, function(result) {
-                addColumn(result.id, strings.default_column_heading);
+                addColumn(result.id, strings.default_column_heading, {}, selectHeadingColour());
                 lastHistoryId = result.historyid;
                 newBusy = false;
             }, function() {
@@ -912,6 +910,18 @@ export default function(board, options, contextid) {
         });
 
         $(".mod_board").append(column);
+    };
+
+    /**
+     * This selects the next heading colour from options based on the count of the
+     * current columns. Length of decremented by one as the new column button is
+     * also denoted as a column.
+     * @returns {string} colour hex string.
+     */
+    const selectHeadingColour = () => {
+        let colCount = $('.board_column').length - 1;
+        let colourCount = options.colours.length;
+        return options.colours[colCount % colourCount];
     };
 
     /**
@@ -996,7 +1006,7 @@ export default function(board, options, contextid) {
                     getNote(data.id).remove();
 
                 } else if (item.action == 'add_column') {
-                    addColumn(data.id, data.name);
+                    addColumn(data.id, data.name, {}, selectHeadingColour());
                 } else if (item.action == 'update_column') {
                     $(".board_column[data-ident='" + data.id + "'] .mod_board_column_name").html(data.name);
                     updateColumnAria(data.id);
@@ -1396,7 +1406,12 @@ export default function(board, options, contextid) {
             // Init
             if (columns) {
                 for (var index in columns) {
-                    addColumn(columns[index].id, columns[index].name, columns[index].notes || {});
+                    addColumn(
+                        columns[index].id,
+                        columns[index].name,
+                        columns[index].notes || {},
+                        options.colours[index % options.colours.length]
+                    );
                 }
             }
 

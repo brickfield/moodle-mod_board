@@ -13,6 +13,9 @@
     flex-grow: 1;
     flex-basis: 200px;
     min-width: 200px;
+    background: #eaeaea;
+    margin: 4px;
+    border-radius: 0.5em;
 }
 
 .mod_board .board_column.board_column_empty {
@@ -24,12 +27,11 @@
 .mod_board .board_column_header {
     margin: 10px 5px 0 5px;
     padding: 10px;
-    border: 2px solid lightgray;
     font-size: 1.1em;
     font-weight: 800;
     position: relative;
-    background: #fff;
 }
+
 .board_column_header .mod_board_column_name {
     float: left;
     overflow: hidden;
@@ -61,7 +63,8 @@
     cursor: pointer;
     border: 2px solid #efefef;
     border-radius: 5px;
-    margin-top: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
     background: #fff;
 }
 
@@ -79,17 +82,16 @@
     font-size: 1.5em;
 }
 
-.mod_board .mod_board_remove,
-.mod_board .mod_board_rating {
+.mod_board .board_column_header .mod_board_remove {
     position: absolute;
     top: 3px;
     right: 5px;
-    color: indianred;
+    color: #333;
     cursor: pointer;
 }
 
 .mod_board .mod_board_rating {
-    color: yellowgreen;
+    color: #333;
 }
 
 .mod_board .mod_board_editablenote .mod_board_rating {
@@ -104,20 +106,16 @@
 }
 
 .mod_board .mod_board_note_content {
-    border: 2px solid #ccc;
-    margin-top: 2px;
+    margin-top: 4px;
     position: relative;
-    padding: 1px;
-    background: #fff;
+    padding: 8px;
+    background: #fafafa;
+    border-radius: 0.2em;
 }
 
 .mod_board .mod_board_note_border {
     border-top: 1px solid lightgray;
     padding-bottom: 10px;
-}
-
-.mod_board_mynote .mod_board_note_content {
-    border: 2px solid lightblue;
 }
 
 .mod_board_editablenote .mod_board_note_content {
@@ -126,7 +124,6 @@
 
 .mod_board .mod_board_note_content .mod_board_note_text {
     font-size: 0.9em;
-    word-break: break-all;
 }
 .mod_board .mod_board_editablenote .mod_board_note_text,
 .mod_board .mod_board_rateablenote .mod_board_note_text {
@@ -190,7 +187,7 @@
 .mod_board .board_button:hover,
 .mod_board_editablenote .mod_board_note_content:focus,
 .mod_board .board_button:focus {
-    background: #f1f1f1;
+    background: #fff;
 }
 
 .path-mod-board  .mod_board_note_buttons {
@@ -244,6 +241,10 @@
 .mod_board .mod_board_remove_attachment .mod_board_remove_attachment_button {
     padding: 3px;
     margin-right: 2px;
-    color: indianred;
+    color: #333;
     cursor: pointer;
+}
+
+.delete_note {
+    margin-left: 8px;
 }

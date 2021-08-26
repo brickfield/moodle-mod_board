@@ -1137,4 +1137,44 @@ class board {
             'maxbytes' => self::ACCEPTED_FILE_MAX_SIZE
         ];
     }
+
+    /**
+     * Gets the available column colours in order or the backup
+     * colours if the config is not set.
+     * @return string[] An array of hex colour strings.
+     */
+    public static function get_column_colours($default = false) {
+        if ($default) {
+            $colours = explode(PHP_EOL, self::get_default_colours());
+        } else {
+            $setting = get_config('mod_board')->column_colours;
+            $colours = explode(PHP_EOL, $setting);
+        }
+        foreach ($colours as $index => $colour) {
+            $colours[$index] = trim($colour,  "\t\n\r\0\x0B#");
+            $matched = preg_match('/\b[A-Fa-f0-9]{6}\b|\b[A-Fa-f0-9]{3}\b/', $colours[$index]);
+            if ($matched != 1) {
+                // One hex was wrong, use the default.
+                return self::get_column_colours(true);
+            }
+        }
+        return $colours;
+    }
+
+    /**
+     * Returns a single string containing the 7 default colours for
+     * column headings.
+     * @return string
+     */
+    public static function get_default_colours() {
+        return <<<COLOURS
+        1B998B
+        2D3047
+        FFFD82
+        FF9B71
+        E84855
+        AF9BB6
+        F18F01
+        COLOURS;
+    }
 }
