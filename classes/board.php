@@ -1150,7 +1150,7 @@ class board {
             $matched = preg_match('/\b[A-Fa-f0-9]{6}\b|\b[A-Fa-f0-9]{3}\b/', $colours[$index]);
             if ($matched != 1) {
                 // One hex was wrong, use the default.
-                return self::get_column_colours(true);
+                return self::get_default_colours();
             }
         }
         return $colours;
@@ -1159,17 +1159,9 @@ class board {
     /**
      * Returns a single string containing the 7 default colours for
      * column headings.
-     * @return string
+     * @return string[]
      */
     public static function get_default_colours() {
-        return <<<COLOURS
-        1B998B
-        2D3047
-        FFFD82
-        FF9B71
-        E84855
-        AF9BB6
-        F18F01
-        COLOURS;
+        return ["1B998B", "2D3047", "FFFD82", "FF9B71", "E84855", "AF9BB6", "F18F01"];
     }
 }

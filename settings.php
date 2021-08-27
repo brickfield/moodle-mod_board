@@ -50,7 +50,13 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configtext('mod_board/history_refresh', get_string('history_refresh', 'mod_board'),
                        get_string('history_refresh_desc', 'mod_board'), 60, PARAM_INT));
 
-    $settings->add(new admin_setting_configtextarea('mod_board/column_colours', get_string('column_colours', 'mod_board'),
-                       get_string('column_colours_desc', 'mod_board'), board::get_default_colours(), PARAM_TEXT, 60, 7));
+    $settings->add(new admin_setting_configtextarea(
+        'mod_board/column_colours',
+        get_string('column_colours', 'mod_board'),
+        get_string('column_colours_desc', 'mod_board'),
+        implode("\n", board::get_default_colours()),
+        PARAM_TEXT
+        )
+    );
 
 }
