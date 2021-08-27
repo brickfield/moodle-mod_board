@@ -5,6 +5,8 @@
     margin-bottom: 30px;
     padding-bottom: 10px;
     overflow-x: auto;
+    padding-left: 6px;
+    padding-right: 6px;
 }
 
 .mod_board .board_column {
@@ -14,7 +16,7 @@
     flex-basis: 200px;
     min-width: 200px;
     background: #eaeaea;
-    margin: 4px;
+    margin: 12px 6px;
     border-radius: 0.5em;
 }
 
@@ -61,21 +63,25 @@
 
 .mod_board .board_button {
     cursor: pointer;
-    border: 2px solid #efefef;
     border-radius: 5px;
     margin-top: 5px;
     margin-bottom: 5px;
+    background: #fbfbfb;
+}
+
+.mod_board .board_button:hover {
     background: #fff;
 }
 
 .mod_board .board_column_empty .board_button {
-    margin: 10px;
+    margin: 5px;
 }
 
 .mod_board .board_button .button_content {
     text-align: center;
     font-weight: 800;
     font-size: 1.2em;
+    padding: 5px;
 }
 
 .board_column_empty .board_button .button_content {
@@ -88,10 +94,12 @@
     right: 5px;
     color: #333;
     cursor: pointer;
+    margin-top: 10px;
 }
 
 .mod_board .mod_board_rating {
     color: #333;
+    margin-top: 10px;
 }
 
 .mod_board .mod_board_editablenote .mod_board_rating {
@@ -109,7 +117,7 @@
     margin-top: 4px;
     position: relative;
     padding: 8px;
-    background: #fafafa;
+    background: #fbfbfb;
     border-radius: 0.2em;
 }
 

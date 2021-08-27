@@ -1144,12 +1144,7 @@ class board {
      * @return string[] An array of hex colour strings.
      */
     public static function get_column_colours($default = false) {
-        if ($default) {
-            $colours = explode(PHP_EOL, self::get_default_colours());
-        } else {
-            $setting = get_config('mod_board')->column_colours;
-            $colours = explode(PHP_EOL, $setting);
-        }
+        $colours = explode(PHP_EOL, $default ? self::get_default_colours() : get_config('mod_board', 'column_colours'));
         foreach ($colours as $index => $colour) {
             $colours[$index] = trim($colour,  "\t\n\r\0\x0B#");
             $matched = preg_match('/\b[A-Fa-f0-9]{6}\b|\b[A-Fa-f0-9]{3}\b/', $colours[$index]);

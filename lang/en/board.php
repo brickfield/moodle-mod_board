@@ -92,6 +92,7 @@ $string['export_info'] = 'Post Title';
 $string['export_url'] = 'Post URL';
 $string['export_timecreated'] = 'Date created';
 $string['background_color'] = 'Background color';
+$string['background_color_help'] = 'Should be a valid hex colour, such as #00cc99';
 $string['background_image'] = 'Background Image';
 
 $string['event_add_column'] = 'Column added';
