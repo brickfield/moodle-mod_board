@@ -621,7 +621,7 @@ class board {
             }
             $transaction = $DB->start_delegated_transaction();
             $type = !empty($attachment['type']) ? $attachment['type'] : 0;
-            $info = !empty($type) ? substr($attachment['info'], 0, 100) : null;
+            $info = !empty($type) ? substr(s($attachment['info']), 0, 100) : null;
             $url = !empty($type) ? substr($attachment['url'], 0, 200) : null;
 
             $notecreated = time();
@@ -716,7 +716,7 @@ class board {
             $attachment = static::board_note_update_attachment($id, $attachment, $previoustype);
 
             $type = !empty($attachment['type']) ? $attachment['type'] : 0;
-            $info = !empty($type) ? substr($attachment['info'], 0, 100) : null;
+            $info = !empty($type) ? substr(s($attachment['info']), 0, 100) : null;
             $url = !empty($type) ? substr($attachment['url'], 0, 200) : null;
 
             $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'update_note',

@@ -624,8 +624,8 @@ export default function(board, options, contextid) {
         elem.removeClass('wrapper_image');
         elem.removeClass('wrapper_url');
         if (attachment.filename && parseInt(attachment.type) == ATTACHMENT_IMAGE) { // Before uploading
-            elem.html('<img src="' + attachment.filecontents + '" class="mod_board_preview_element" alt="' +
-            attachment.info + '"/>');
+            elem.html(`<img src="${attachment.filecontents}" alt="${attachment.info}"
+                class="mod_board_preview_element"/>`);
             elem.addClass('wrapper_image');
             elem.show();
         } else if (attachment.url) {
@@ -638,8 +638,8 @@ export default function(board, options, contextid) {
                     elem.show();
                 break;
                 case ATTACHMENT_IMAGE: // Image
-                    elem.html('<img src="' + attachment.url + '" class="mod_board_preview_element" alt="' +
-                    attachment.info + '"/>');
+                    elem.html(`<img src="${attachment.url}" alt="${attachment.info}"
+                        class="mod_board_preview_element"/>`);
                     elem.addClass('wrapper_image');
                     elem.show();
                 break;
