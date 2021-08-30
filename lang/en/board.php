@@ -142,3 +142,5 @@ $string['sortbyrating'] = 'Rating';
 $string['postbydate'] = 'Post by date';
 $string['boardsettings'] = 'Board settings';
 $string['postbyenabled'] = 'Limit students posting by date';
+
+$string['invalid_youtube_url'] = 'Invalid YouTube URL';

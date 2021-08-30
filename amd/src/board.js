@@ -193,6 +193,8 @@ export default function(board, options, contextid) {
         invalid_file_extension: '',
         invalid_file_size_min: '',
         invalid_file_size_max: '',
+
+        invalid_youtube_url: '',
     };
 
     const MEDIA_SELECTION_BUTTONS = 1,
@@ -599,6 +601,22 @@ export default function(board, options, contextid) {
     };
 
     /**
+     * This parses a youtube video ID from a URL. We can use this ID to
+     * construct the embed URL.
+     * @param {string} url The URL entered to the modal.
+     * @returns {string | null} The youtube embed URL or null.
+     */
+    const getEmbedUrl = (url) => {
+        // Thanks for the regex from: https://gist.github.com/rodrigoborgesdeoliveira/987683cfbfcc8d800192da1e73adc486
+        let regex = /(\/|%3D|v=)([0-9A-z-_]{11})([%#?&]|$)/;
+        let videoID = url.match(regex);
+        if (!videoID || videoID[2] === undefined || videoID[2].length !== 11) {
+            return null;
+        }
+        return `https://youtube.com/embed/${videoID[2]}`;
+    };
+
+    /**
      * Display the attachment preview for a note.
      *
      * @method previewAttachment
@@ -610,9 +628,6 @@ export default function(board, options, contextid) {
         if (!attachment) {
             attachment = attachmentDataForNote(note);
         }
-        var fixEmbedUrlIfNeeded = function(url) {
-            return url.replace(/watch\?v=/gi, '/embed/').replace(/youtu\.be/, 'youtube.com/embed');
-        };
 
         if (!getNoteTextForNote(note).html().length) {
             elem.addClass('mod_board_notext');
@@ -630,12 +645,18 @@ export default function(board, options, contextid) {
             elem.show();
         } else if (attachment.url) {
             switch (parseInt(attachment.type)) {
-                case ATTACHMENT_VIDEO: // Youtube
-                    elem.html('<iframe src="' + fixEmbedUrlIfNeeded(attachment.url) +
-                    '" class="mod_board_preview_element" frameborder="0" allow="accelerometer; autoplay; clipboard-write;' +
-                    'encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>');
-                    elem.addClass('wrapper_youtube');
+                case ATTACHMENT_VIDEO: { // Youtube
+                    let url = getEmbedUrl(attachment.url);
+                    if (url === null) {
+                        elem.html(strings.invalid_youtube_url);
+                    } else {
+                        elem.html('<iframe src="' + url +
+                            '" class="mod_board_preview_element" frameborder="0" allow="accelerometer; autoplay; clipboard-write;' +
+                            'encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>');
+                        elem.addClass('wrapper_youtube');
+                    }
                     elem.show();
+                }
                 break;
                 case ATTACHMENT_IMAGE: // Image
                     elem.html(`<img src="${attachment.url}" alt="${attachment.info}"
