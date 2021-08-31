@@ -93,12 +93,12 @@
     right: 5px;
     color: #333;
     cursor: pointer;
-    margin-top: 10px;
 }
 
 .mod_board .mod_board_rating {
     color: #333;
     margin-top: 10px;
+    padding: 2px 8px 0 0;
 }
 
 .mod_board .mod_board_editablenote .mod_board_rating {
@@ -254,5 +254,5 @@
 }
 
 .delete_note {
-    margin-left: 8px;
+    padding: 2px 8px 0;
 }
