@@ -42,6 +42,9 @@ if ($b) {
     $board = $DB->get_record('board', array('id' => $cm->instance), '*', MUST_EXIST);
 }
 
+// Make sure the board history ID is set.
+$board->historyid = $board->historyid ?? 0;
+
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 
 require_course_login($course, true, $cm);
@@ -69,7 +72,8 @@ $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $b
     'ratingenabled' => board::board_rating_enabled($board->id),
     'hideheaders' => board::board_hide_headers($board->id),
     'sortby' => $board->sortby,
-)));
+    'colours' => board::get_column_colours()
+), 'contextid' => $context->id));
 
 $PAGE->set_title(format_string($board->name));
 $PAGE->set_heading($course->fullname);

@@ -54,6 +54,7 @@ class mod_board_mod_form extends moodleform_mod {
         $mform->addElement('text', 'background_color', get_string('background_color', 'mod_board'), array('size' => '50'));
         $mform->setType('background_color', PARAM_TEXT);
         $mform->addRule('background_color', get_string('maximumchars', '', 9), 'maxlength', 9, 'client');
+        $mform->addHelpButton('background_color', 'background_color', 'mod_board');
 
         $filemanageroptions = array();
         $filemanageroptions['accepted_types'] = array('.png', '.jpg', '.jpeg', '.bmp');

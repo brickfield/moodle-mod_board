@@ -5,6 +5,8 @@
     margin-bottom: 30px;
     padding-bottom: 10px;
     overflow-x: auto;
+    padding-left: 6px;
+    padding-right: 6px;
 }
 
 .mod_board .board_column {
@@ -13,6 +15,9 @@
     flex-grow: 1;
     flex-basis: 200px;
     min-width: 200px;
+    background: #eaeaea;
+    margin: 12px 4px;
+    border-radius: 0.5em;
 }
 
 .mod_board .board_column.board_column_empty {
@@ -24,12 +29,11 @@
 .mod_board .board_column_header {
     margin: 10px 5px 0 5px;
     padding: 10px;
-    border: 2px solid lightgray;
     font-size: 1.1em;
     font-weight: 800;
     position: relative;
-    background: #fff;
 }
+
 .board_column_header .mod_board_column_name {
     float: left;
     overflow: hidden;
@@ -50,7 +54,7 @@
 
 .mod_board .board_column_content,
 .mod_board .board_column_newcontent {
-    margin: 0 5px;
+    margin: 2px 4px;
 }
 
 .mod_board .board_column_content {
@@ -59,37 +63,42 @@
 
 .mod_board .board_button {
     cursor: pointer;
-    border: 2px solid #efefef;
     border-radius: 5px;
-    margin-top: 10px;
+    margin: 0 4px 8px;
+    background: #fbfbfb;
+}
+
+.mod_board .board_button:hover {
     background: #fff;
 }
 
 .mod_board .board_column_empty .board_button {
-    margin: 10px;
+    margin: 5px;
 }
 
 .mod_board .board_button .button_content {
     text-align: center;
     font-weight: 800;
     font-size: 1.2em;
+    padding: 5px;
 }
 
 .board_column_empty .board_button .button_content {
     font-size: 1.5em;
 }
 
-.mod_board .mod_board_remove,
-.mod_board .mod_board_rating {
+.mod_board .board_column_header .mod_board_remove {
     position: absolute;
     top: 3px;
     right: 5px;
-    color: indianred;
+    color: #333;
     cursor: pointer;
 }
 
 .mod_board .mod_board_rating {
-    color: yellowgreen;
+    color: #333;
+    margin-top: 10px;
+    padding: 2px 8px 0 0;
 }
 
 .mod_board .mod_board_editablenote .mod_board_rating {
@@ -104,15 +113,16 @@
 }
 
 .mod_board .mod_board_note_content {
-    border: 2px solid #ccc;
-    margin-top: 2px;
+    margin: 4px 4px 8px;
     position: relative;
-    padding: 1px;
-    background: #fff;
+    padding: 8px;
+    background: #fbfbfb;
+    border-radius: 0.2em;
 }
 
-.mod_board_mynote .mod_board_note_content {
-    border: 2px solid lightblue;
+.mod_board .mod_board_note_border {
+    border-top: 1px solid lightgray;
+    padding-bottom: 10px;
 }
 
 .mod_board_editablenote .mod_board_note_content {
@@ -121,7 +131,6 @@
 
 .mod_board .mod_board_note_content .mod_board_note_text {
     font-size: 0.9em;
-    word-break: break-all;
 }
 .mod_board .mod_board_editablenote .mod_board_note_text,
 .mod_board .mod_board_rateablenote .mod_board_note_text {
@@ -132,8 +141,7 @@
     line-height: 22px;
     width: 100%;
     padding-bottom: 5px;
-    border-bottom: 1px solid lightgray;
-    margin-bottom: 10px;
+    font-weight: 600;
 }
 .mod_board .mod_board_note_content .mod_board_note_heading > textarea {
     border: 0;
@@ -187,33 +195,34 @@
 .mod_board .board_button:hover,
 .mod_board_editablenote .mod_board_note_content:focus,
 .mod_board .board_button:focus {
-    background: #f1f1f1;
+    background: #fff;
 }
 
-.mod_board .mod_board_note_buttons {
+.path-mod-board  .mod_board_note_buttons {
     display: flex;
-    flex-direction: row-reverse;
+    flex-direction: row;
     flex-wrap: wrap;
 }
 
-.mod_board .mod_board_action_button {
+.path-mod-board .mod_board_attachment_button {
     text-align: center;
-    border: 1px solid lightblue;
+    border: 3px solid lightblue;
     background: lightblue;
+    padding: 8px 15px;
+    font-size: 150%;
     cursor: pointer;
     display: inline-block;
-    padding: 2px 3px;
     margin: 0 2px;
 }
-.mod_board .mod_board_attachment_button {
-    padding: 4px 10px;
+.path-mod-board .mod_board_attachment_button.selected {
+    border: 3px solid blue;
 }
 .mod_board .mod_board_spacer_button {
     width: 10px;
 }
 
-.mod_board .mod_board_action_button:hover,
-.mod_board .mod_board_action_button:focus {
+.path-mod-board  .mod_board_attachment_button:hover,
+.path-mod-board  .mod_board_attachment_button:focus {
     opacity: 0.8;
 }
 
@@ -235,6 +244,15 @@
     position: relative;
     width: 100%;
     text-align: right;
-    font-size: 0.9em;
-    padding-bottom: 3px;
+}
+
+.mod_board .mod_board_remove_attachment .mod_board_remove_attachment_button {
+    padding: 3px;
+    margin-right: 2px;
+    color: #333;
+    cursor: pointer;
+}
+
+.delete_note {
+    padding: 2px 8px 0;
 }

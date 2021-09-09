@@ -19,6 +19,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once("$CFG->libdir/externallib.php");
 
 use mod_board\board;
+use mod_board\note_form;
 
 /**
  * Provides the mod_board external functions.
@@ -261,56 +262,102 @@ class mod_board_external extends external_api {
     }
 
     /**
-     * Function add_note_parameters.
+     * Parameters for submit_form.
+     *
      * @return external_function_parameters
      */
-    public static function add_note_parameters(): external_function_parameters {
-        return new external_function_parameters([
-            'columnid' => new external_value(PARAM_INT, 'The column id', VALUE_REQUIRED),
-            'heading' => new external_value(PARAM_TEXT, 'The note heading', VALUE_REQUIRED),
-            'content' => new external_value(PARAM_RAW, 'The note content', VALUE_REQUIRED),
-            'attachment' => new external_single_structure(array(
-                'type' => new external_value(PARAM_INT, 'type'),
-                'info' => new external_value(PARAM_TEXT, 'info'),
-                'url' => new external_value(PARAM_TEXT, 'url'),
-                'filename' => new external_value(PARAM_TEXT, 'filename'),
-                'filecontents' => new external_value(PARAM_RAW, 'filecontents'),
-            ), 'Post Attachment', VALUE_OPTIONAL)
-        ]);
+    public static function submit_form_parameters(): external_function_parameters {
+        return new external_function_parameters(
+            array(
+                'contextid' => new external_value(PARAM_INT, 'The context id for the course'),
+                'jsonformdata' => new external_value(PARAM_RAW, 'The data from the create group form, encoded as a json array')
+            )
+        );
     }
 
     /**
-     * Function add_note.
-     * @param int $columnid
-     * @param string $heading
-     * @param string $content
-     * @param array $attachment
+     * Process the modal form submission.
+     *
+     * @param int $contextid
+     * @param string $jsonformdata
      * @return array
+     * @throws moodle_exception
      */
-    public static function add_note(int $columnid, string $heading, string $content, array $attachment): array {
-        // Validate recieved parameters.
-        $params = self::validate_parameters(self::add_note_parameters(), [
-            'columnid' => $columnid,
-            'heading' => $heading,
-            'content' => $content,
-            'attachment' => $attachment
-        ]);
+    public static function submit_form($contextid, $jsonformdata): array {
+        $params = self::validate_parameters(self::submit_form_parameters(),
+            ['contextid' => $contextid, 'jsonformdata' => $jsonformdata]);
 
-        // Request and permission validation.
-        $column = board::get_column($params['columnid']);
-        $context = board::context_for_board($column->boardid);
+        // Check the context.
+        $context = context::instance_by_id($params['contextid'], MUST_EXIST);
         self::validate_context($context);
 
-        return board::board_add_note($params['columnid'], $params['heading'], $params['content'], $params['attachment']);
+        // Extract data out of the form content.
+        $serialiseddata = json_decode($params['jsonformdata']);
+        $data = array();
+        parse_str($serialiseddata, $data);
+
+        // Make the form with the ajax data to validate.
+        $form = new note_form(null, null, 'post', '', null, true, $data);
+        // $errors = $form->validation($data);
+        // if (!empty())
+
+        $data = $form->get_data();
+        if ($data) {
+            // Check that the passed context, and the context with this note/column match.
+            $column = board::get_column($data->columnid);
+            $ccontext = board::context_for_board($column->boardid);
+            if ($context->id !== $ccontext->id) {
+                throw new moodle_exception('formcontextmismatch');
+            }
+
+            // Extract the attachment data.
+            $attachment = [
+                'type' => $data->mediatype,
+                'info' => '',
+                'url' => ''
+            ];
+            switch ($data->mediatype) {
+                case 1:
+                    $attachment['info'] = $data->youtubetitle ?? '';
+                    $attachment['url'] = $data->youtubeurl ?? '';
+                    break;
+                case 2:
+                    if (!empty($data->imagefile)) {
+                        $attachment['info'] = $data->imagetitle ?? '';
+                        $attachment['url'] = $data->filepicker ?? '';
+                        $attachment['draftitemid'] = $data->imagefile;
+                    }
+                    break;
+                case 3:
+                    $attachment['info'] = $data->linktitle ?? '';
+                    $attachment['url'] = $data->linkurl ?? '';
+                    break;
+            }
+
+            // Process either as an update or insert.
+            if ($data->noteid) {
+                $result = board::board_update_note($data->noteid, $data->heading, $data->content, $attachment);
+                $result['action'] = 'update';
+            } else {
+                $result = board::board_add_note($data->columnid, $data->heading, $data->content, $attachment);
+                $result['action'] = 'insert';
+            }
+
+            return $result;
+        } else {
+            throw new moodle_exception('formsubmissioninvalid');
+        }
     }
 
     /**
-     * Function add_note_returns.
+     * Return definition for submit_form.
+     *
      * @return external_single_structure
      */
-    public static function add_note_returns(): external_single_structure {
+    public static function submit_form_returns(): external_single_structure {
         return new external_single_structure([
-            'status' => new external_value(PARAM_BOOL, 'The insert status'),
+            'status' => new external_value(PARAM_BOOL, 'The status'),
+            'action' => new external_value(PARAM_TEXT, 'The action that was performed'),
             'note' => new external_single_structure(
                 array(
                     'id' => new external_value(PARAM_INT, 'post id'),
@@ -321,75 +368,7 @@ class mod_board_external extends external_api {
                     'info' => new external_value(PARAM_TEXT, 'info'),
                     'url' => new external_value(PARAM_TEXT, 'url'),
                     'timecreated' => new external_value(PARAM_INT, 'timecreated'),
-                    'rating' => new external_value(PARAM_INT, 'rating')
-                )
-            ),
-            'historyid' => new external_value(PARAM_INT, 'The last history id')
-        ]);
-    }
-
-    /**
-     * Function update_note_parameters.
-     * @return external_function_parameters
-     */
-    public static function update_note_parameters(): external_function_parameters {
-        return new external_function_parameters([
-            'id' => new external_value(PARAM_INT, 'The note id', VALUE_REQUIRED),
-            'heading' => new external_value(PARAM_TEXT, 'The note heading', VALUE_REQUIRED),
-            'content' => new external_value(PARAM_RAW, 'The note content', VALUE_REQUIRED),
-            'attachment' => new external_single_structure(array(
-                'type' => new external_value(PARAM_INT, 'type'),
-                'info' => new external_value(PARAM_TEXT, 'info'),
-                'url' => new external_value(PARAM_TEXT, 'url'),
-                'filename' => new external_value(PARAM_TEXT, 'filename'),
-                'filecontents' => new external_value(PARAM_RAW, 'filecontents'),
-            ), 'Post Attachment', VALUE_OPTIONAL)
-        ]);
-    }
-
-    /**
-     * Function update_note.
-     * @param int $id
-     * @param string $heading
-     * @param string $content
-     * @param array $attachment
-     * @return array
-     */
-    public static function update_note(int $id, string $heading, string $content, array $attachment): array {
-        // Validate recieved parameters.
-        $params = self::validate_parameters(self::update_note_parameters(), [
-            'id' => $id,
-            'heading' => $heading,
-            'content' => $content,
-            'attachment' => $attachment
-        ]);
-
-        // Request and permission validation.
-        $note = board::get_note($params['id']);
-        $column = board::get_column($note->columnid);
-        $context = board::context_for_board($column->boardid);
-        self::validate_context($context);
-
-        return board::board_update_note($params['id'], $params['heading'], $params['content'], $params['attachment']);
-    }
-
-    /**
-     * Function update_note_returns.
-     * @return external_single_structure
-     */
-    public static function update_note_returns(): external_single_structure {
-        return new external_single_structure([
-            'status' => new external_value(PARAM_BOOL, 'The update status'),
-            'note' => new external_single_structure(
-                array(
-                    'id' => new external_value(PARAM_INT, 'post id'),
-                    'userid' => new external_value(PARAM_INT, 'user id'),
-                    'heading' => new external_value(PARAM_RAW, 'post heading'),
-                    'content' => new external_value(PARAM_RAW, 'post content'),
-                    'type' => new external_value(PARAM_INT, 'type'),
-                    'info' => new external_value(PARAM_TEXT, 'info'),
-                    'url' => new external_value(PARAM_TEXT, 'url'),
-                    'timecreated' => new external_value(PARAM_INT, 'timecreated')
+                    'rating' => new external_value(PARAM_INT, 'rating', VALUE_OPTIONAL)
                 )
             ),
             'historyid' => new external_value(PARAM_INT, 'The last history id')

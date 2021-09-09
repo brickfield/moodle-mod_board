@@ -245,59 +245,6 @@ class board_test extends \advanced_testcase {
         $this->assertEmpty($result);
     }
 
-    public function test_store_note_file() {
-        $this->resetAfterTest();
-        $this->setAdminUser();
-        $course = $this->getDataGenerator()->create_course();
-        $board = $this->getDataGenerator()->create_module('board', array('course' => $course->id));
-        $column = self::add_column($board->id);
-        $note = self::add_note($column->id);
-
-        $attachment = array(
-            'type' => 2,
-            'info' => '',
-            'url' => '',
-            'filename' => 'testimage.png',
-            'filecontents' => '�PNG'
-        );
-
-        $result = board::store_note_file($note->id, $attachment);
-        $this->assertStringContainsString('mod_board', $result);
-        $this->assertStringContainsString('testimage.png', $result);
-    }
-
-    public function test_valid_for_upload() {
-        $attachment = array(
-            'type' => 2,
-            'info' => '',
-            'url' => '',
-            'filename' => 'testimage.png',
-            'filecontents' => '�PNGdata:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABpAAAAQaCAIAhEUgAABpAAAAQaCAIAAADL9awBAAAACXBIWXMA'
-        );
-        $result = board::valid_for_upload($attachment);
-        $this->assertTrue($result);
-
-        $attachment = array(
-            'type' => 2,
-            'info' => '',
-            'url' => '',
-            'filename' => 'testimage.hhhh',
-            'filecontents' => '�PNGdata:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABpAAAAQaCAIAhEUgAABpAAAAQaCAIAAADL9awBAAAACXBIWXMA'
-        );
-        $result = board::valid_for_upload($attachment);
-        $this->assertFalse($result);
-
-        $attachment = array(
-            'type' => 2,
-            'info' => '',
-            'url' => '',
-            'filename' => 'testimage.png',
-            'filecontents' => '�PNGdata:image/png;base64,AQAADL9awBAAAACXBIWXMA'
-        );
-        $result = board::valid_for_upload($attachment);
-        $this->assertFalse($result);
-    }
-
     public function test_board_note_update_attachment() {
         $this->resetAfterTest();
         $this->setAdminUser();

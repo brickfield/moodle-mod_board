@@ -530,50 +530,28 @@ class board {
      * Stores the added file.
      *
      * @param int $noteid
-     * @param array $attachment
-     * @return \moodle_url
+     * @param int $draftitemid
+     * @return string|null
      */
-    public static function store_note_file($noteid, $attachment) {
-        $file = static::get_file_storage_settings($noteid);
-        $file->filename = $attachment['filename'];
+    public static function store_note_file($noteid, $draftitemid) {
+        $settings = static::get_file_storage_settings($noteid);
 
-        static::delete_note_file($noteid);
+        file_save_draft_area_files($draftitemid, $settings->contextid, $settings->component, $settings->filearea,
+            $settings->itemid);
+
         $fs = get_file_storage();
+        $files = $fs->get_area_files($settings->contextid, $settings->component, $settings->filearea, $settings->itemid,
+            'itemid, filepath, filename', false);
 
-        $storedfile = static::get_note_file($noteid);
-        if ($storedfile) {
-            $storedfile->delete();
+        $storedfile = reset($files);
+        if (!$storedfile) {
+            // This means there is no file here.
+            return null;
         }
-
-        $storedfile = $fs->create_file_from_string($file, $attachment['filecontents']);
 
         return \moodle_url::make_pluginfile_url($storedfile->get_contextid(), $storedfile->get_component(),
-                $storedfile->get_filearea(), $storedfile->get_itemid(), $storedfile->get_filepath(),
-                $file->filename)->get_path();
-    }
-
-    /**
-     * Check if the file fits the requirements to be uploaded.
-     *
-     * @param array $attachment
-     * @return bool
-     */
-    public static function valid_for_upload($attachment) {
-        $fileparts = explode('.', basename($attachment['filename']));
-        $fileextension = strtolower(array_pop($fileparts));
-        if (!in_array($fileextension, explode(',', self::ACCEPTED_FILE_EXTENSIONS))) {
-            return false;
-        }
-        $filelength = strlen($attachment['filecontents']);
-
-        if ($filelength < self::ACCEPTED_FILE_MIN_SIZE) {
-            return false;
-        }
-        if ($filelength > self::ACCEPTED_FILE_MAX_SIZE) {
-            return false;
-        }
-
-        return true;
+            $storedfile->get_filearea(), $storedfile->get_itemid(), $storedfile->get_filepath(),
+            $storedfile->get_filename())->get_path();
     }
 
     /**
@@ -581,19 +559,32 @@ class board {
      *
      * @param int $noteid
      * @param array $attachment
+     * @param int|null $previoustype
      * @return array
      */
-    public static function board_note_update_attachment($noteid, $attachment) {
-        global $DB;
-
-        if (!empty($attachment['filename'])) {
-            $attachment['filecontents'] = base64_decode(explode(',', $attachment['filecontents'])[1]);
-            if (static::valid_for_upload($attachment)) {
-                $attachment['url'] = static::store_note_file($noteid, $attachment);
-            }
-            unset($attachment['filename']);
-            unset($attachment['filecontents']);
+    public static function board_note_update_attachment($noteid, $attachment, $previoustype = null) {
+        if (!empty($attachment['draftitemid'])) {
+            $attachment['url'] = static::store_note_file($noteid, $attachment['draftitemid']);
+            unset($attachment['draftitemid']);
         }
+
+        if (empty($attachment['info']) && empty($attachment['url'])) {
+            // In this case, we want to reset the media type to none.
+            $attachment['type'] = 0;
+            $attachment['info'] = null;
+            $attachment['url'] = null;
+        }
+
+        if ($previoustype) {
+            if (isset($attachment['type']) && $attachment['type'] != 2 && $previoustype == 2) {
+                // This case is if we are changing from a picture type to a non-picture type. We should remove files.
+                $fs = get_file_storage();
+                $settings = static::get_file_storage_settings($noteid);
+
+                $fs->delete_area_files($settings->contextid, $settings->component, $settings->filearea, $settings->itemid);
+            }
+        }
+
         return $attachment;
     }
 
@@ -630,7 +621,7 @@ class board {
             }
             $transaction = $DB->start_delegated_transaction();
             $type = !empty($attachment['type']) ? $attachment['type'] : 0;
-            $info = !empty($type) ? substr($attachment['info'], 0, 100) : null;
+            $info = !empty($type) ? substr(s($attachment['info']), 0, 100) : null;
             $url = !empty($type) ? substr($attachment['url'], 0, 200) : null;
 
             $notecreated = time();
@@ -721,10 +712,11 @@ class board {
 
         if ($columnid && $boardid) {
             $transaction = $DB->start_delegated_transaction();
-            $attachment = static::board_note_update_attachment($id, $attachment);
+            $previoustype = $note->type;
+            $attachment = static::board_note_update_attachment($id, $attachment, $previoustype);
 
             $type = !empty($attachment['type']) ? $attachment['type'] : 0;
-            $info = !empty($type) ? substr($attachment['info'], 0, 100) : null;
+            $info = !empty($type) ? substr(s($attachment['info']), 0, 100) : null;
             $url = !empty($type) ? substr($attachment['url'], 0, 200) : null;
 
             $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'update_note',
@@ -1125,5 +1117,51 @@ class board {
     public static function get_export_submission(string $content) {
         $breaks = array("<br />", "<br>", "<br/>");
         return str_ireplace($breaks, "\n", $content);
+    }
+
+    /**
+     * Returns basic options for the image file picker.
+     *
+     * @return array
+     */
+    public static function get_image_picker_options() {
+        $extensions = explode(',', self::ACCEPTED_FILE_EXTENSIONS);
+        $extensions = array_map(function($extension) {
+            return '.' . $extension;
+        }, $extensions);
+
+        return [
+            'accepted_types' => $extensions,
+            'maxfiles' => 1,
+            'subdirs' => 0,
+            'maxbytes' => self::ACCEPTED_FILE_MAX_SIZE
+        ];
+    }
+
+    /**
+     * Gets the available column colours in order or the backup
+     * colours if the config is not set.
+     * @return string[] An array of hex colour strings.
+     */
+    public static function get_column_colours($default = false) {
+        $colours = explode(PHP_EOL, $default ? self::get_default_colours() : get_config('mod_board', 'column_colours'));
+        foreach ($colours as $index => $colour) {
+            $colours[$index] = trim($colour,  "\t\n\r\0\x0B#");
+            $matched = preg_match('/\b[A-Fa-f0-9]{6}\b|\b[A-Fa-f0-9]{3}\b/', $colours[$index]);
+            if ($matched != 1) {
+                // One hex was wrong, use the default.
+                return self::get_default_colours();
+            }
+        }
+        return $colours;
+    }
+
+    /**
+     * Returns a single string containing the 7 default colours for
+     * column headings.
+     * @return string[]
+     */
+    public static function get_default_colours() {
+        return ["1B998B", "2D3047", "FFFD82", "FF9B71", "E84855", "AF9BB6", "F18F01"];
     }
 }
