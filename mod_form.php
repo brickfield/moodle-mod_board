@@ -89,6 +89,8 @@ class mod_board_mod_form extends moodleform_mod {
         $mform->addElement('date_time_selector', 'postby', get_string('postbydate', 'mod_board'));
         $mform->hideIf('postby', 'postbyenabled', 'notchecked');
 
+        $mform->addElement('advcheckbox', 'userscanedit', get_string('userscanedit', 'mod_board'));
+
         $this->standard_coursemodule_elements();
 
         $this->add_action_buttons();

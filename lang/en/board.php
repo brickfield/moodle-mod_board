@@ -146,5 +146,6 @@ $string['sortbyrating'] = 'Rating';
 $string['postbydate'] = 'Post by date';
 $string['boardsettings'] = 'Board settings';
 $string['postbyenabled'] = 'Limit students posting by date';
+$string['userscanedit'] = 'Allow all users to edit the placement of their own posts.';
 
 $string['invalid_youtube_url'] = 'Invalid YouTube URL';

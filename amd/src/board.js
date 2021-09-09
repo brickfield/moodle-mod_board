@@ -209,6 +209,7 @@ export default function(board, options, contextid) {
     var reloadTimer = null,
         lastHistoryId = null,
         isEditor = options.isEditor || false,
+        usersCanEdit = options.usersCanEdit,
         userId = options.userId || -1,
         mediaSelection = options.mediaselection || MEDIA_SELECTION_BUTTONS,
         editingNote = 0,
@@ -901,7 +902,7 @@ export default function(board, options, contextid) {
         }
         sortNotes(columnContent);
         updateColumnAria(ident);
-        if (isEditor) {
+        if (isEditor || usersCanEdit == 1) {
             updateSortable();
         }
     };
@@ -1152,6 +1153,7 @@ export default function(board, options, contextid) {
     var updateSortable = function() {
         $(".board_column_content").sortable({
             connectWith: ".board_column_content",
+            items: usersCanEdit == 1 && !isEditor ? "> .board_note.mod_board_mynote" : "> *",
             stop: function(e, ui) {
                 var note = $(ui.item),
                     tocolumn = note.closest('.board_column'),

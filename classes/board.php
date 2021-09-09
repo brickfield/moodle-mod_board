@@ -835,9 +835,11 @@ class board {
         global $DB, $USER;
 
         $note = static::get_note($id);
-        static::require_capability_for_column($note->columnid);
-
         $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $columnid));
+
+        if (!static::board_users_can_edit($boardid) && $USER->id != $note->userid) {
+            static::require_capability_for_column($note->columnid);
+        }
 
         if ($columnid && $boardid) {
 
@@ -1060,6 +1062,18 @@ class board {
     }
 
     /**
+     * Asserts whether users may edit their own note placement on
+     * a particular board.
+     *
+     * @param int $boardid
+     * @return void
+     */
+    public static function board_users_can_edit($boardid) {
+        global $DB;
+        return $DB->get_field('board', 'userscanedit', ['id' => $boardid], IGNORE_MISSING);
+    }
+
+    /**
      * Checks if the user can only view the board
      *
      * @param int $boardid
@@ -1143,8 +1157,8 @@ class board {
      * colours if the config is not set.
      * @return string[] An array of hex colour strings.
      */
-    public static function get_column_colours($default = false) {
-        $colours = explode(PHP_EOL, $default ? self::get_default_colours() : get_config('mod_board', 'column_colours'));
+    public static function get_column_colours() {
+        $colours = explode(PHP_EOL, get_config('mod_board', 'column_colours'));
         foreach ($colours as $index => $colour) {
             $colours[$index] = trim($colour,  "\t\n\r\0\x0B#");
             $matched = preg_match('/\b[A-Fa-f0-9]{6}\b|\b[A-Fa-f0-9]{3}\b/', $colours[$index]);
