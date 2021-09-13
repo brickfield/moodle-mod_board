@@ -54,6 +54,9 @@ class board {
     /** @var int Value for sorting all posts by rating */
     const SORTBYRATING = 2;
 
+    /** @var int Value for no sorting on posts */
+    const SORTBYNONE = 3;
+
     /**
      * Retrieves the course module for the board
      *
@@ -258,8 +261,8 @@ class board {
             if (!empty($groupid)) {
                 $params['groupid'] = $groupid;
             }
-            $column->notes = $DB->get_records('board_notes', $params, 'id',
-                                            'id, userid, heading, content, type, info, url, timecreated');
+            $column->notes = $DB->get_records('board_notes', $params, 'sortorder',
+                                            'id, userid, heading, content, type, info, url, timecreated, sortorder');
             foreach ($column->notes as $colid => $note) {
                 $note->rating = static::get_note_rating($note->id);
             }
@@ -610,6 +613,8 @@ class board {
         $content = clean_text($content, FORMAT_HTML);
 
         $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $columnid));
+        // Get the count of notes in the column to add to bottom of sort order.
+        $countnotes = $DB->count_records('board_notes', ['columnid' => $columnid]);
 
         if ($boardid) {
             $cm = static::coursemodule_for_board(static::get_board($boardid));
@@ -627,7 +632,8 @@ class board {
             $notecreated = time();
             $noteid = $DB->insert_record('board_notes', array('groupid' => $groupid, 'columnid' => $columnid,
                                         'heading' => $heading, 'content' => $content, 'type' => $type, 'info' => $info,
-                                        'url' => $url, 'userid' => $USER->id, 'timecreated' => $notecreated));
+                                        'url' => $url, 'userid' => $USER->id, 'timecreated' => $notecreated,
+                                        'sortorder' => $countnotes));
 
             $attachment = static::board_note_update_attachment($noteid, $attachment);
             $url = $attachment['url'];
@@ -638,7 +644,7 @@ class board {
                                             'content' => json_encode(array('id' => $noteid, 'columnid' => $columnid,
                                             'heading' => $heading, 'content' => $content,
                                             'attachment' => array('type' => $type, 'info' => $info, 'url' => $url), 'rating' => 0,
-                                            'timecreated' => $notecreated)),
+                                            'timecreated' => $notecreated, 'sortorder' => $countnotes)),
                                             'timecreated' => time()));
 
             $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
@@ -775,6 +781,7 @@ class board {
         static::require_capability_for_note($id);
 
         $note = static::get_note($id);
+        $sortorder = $note->sortorder;
         $columnid = $note->columnid;
         $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $columnid));
 
@@ -795,6 +802,12 @@ class board {
             $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'delete_note',
                                             'content' => json_encode(array('id' => $id, 'columnid' => $columnid)),
                                             'userid' => $USER->id, 'timecreated' => time()));
+
+            $sql = "UPDATE {board_notes} bn
+                       SET sortorder = sortorder - 1
+                     WHERE sortorder > :sortorder AND columnid = :columnid";
+            $DB->execute($sql, ['sortorder' => $sortorder, 'columnid' => $columnid]);
+
             $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
             $transaction->allow_commit();
 
@@ -831,7 +844,7 @@ class board {
      * @param int $columnid
      * @return array
      */
-    public static function board_move_note(int $id, int $columnid): array {
+    public static function board_move_note(int $id, int $columnid, int $sortorder): array {
         global $DB, $USER;
 
         $note = static::get_note($id);
@@ -854,10 +867,46 @@ class board {
                                             'heading' => $note->heading, 'content' => $note->content,
                                             'attachment' => array('type' => $note->type, 'info' => $note->info,
                                             'url' => $note->url), 'timecreated' => $note->timecreated,
-                                            'rating' => static::get_note_rating($note->id))),
+                                            'rating' => static::get_note_rating($note->id), 'sortorder' => $sortorder)),
                                             'timecreated' => time()));
-
+            // Checking if we move the note up or down.
+            $ismovingup = $note->sortorder < $sortorder;
+            $ismovingdown = $note->sortorder > $sortorder;
+            $issamecolumn = $columnid == $note->columnid;
+            // Check whether it is the same column and then increment or decrement notes above or below
+            // the set sortorder according to whether the sortorder has moved up or down.
+            if ($issamecolumn) {
+                $params = ['newsort' => $sortorder, 'oldsort' => $note->sortorder, 'columnid' => $columnid];
+                if ($ismovingup) {
+                    $sql = "UPDATE {board_notes} bn
+                               SET sortorder = bn.sortorder - 1
+                             WHERE sortorder <= :newsort
+                                   AND sortorder >= :oldsort
+                                   AND columnid = :columnid";
+                    $DB->execute($sql, $params);
+                } else if ($ismovingdown) {
+                    $sql = "UPDATE {board_notes} bn
+                               SET sortorder = bn.sortorder + 1
+                             WHERE sortorder >= :newsort
+                                   AND sortorder <= :oldsort
+                                   AND columnid = :columnid";
+                    $DB->execute($sql, $params);
+                }
+            } else {
+                // Increment the new column notes to fit the moved note.
+                $sql = "UPDATE {board_notes} bn
+                           SET sortorder = bn.sortorder + 1
+                         WHERE sortorder >= :newsort AND columnid = :columnid";
+                $DB->execute($sql, ['newsort' => $sortorder, 'columnid' => $columnid]);
+                // Decrement the old column notes above where the moved note left.
+                $sql = "UPDATE {board_notes} bn
+                           SET sortorder = sortorder - 1
+                         WHERE sortorder > :oldsort AND columnid = :columnid";
+                $DB->execute($sql, ['oldsort' => $note->sortorder, 'columnid' => $note->columnid]);
+            }
+            // Update the note record.
             $note->columnid = $columnid;
+            $note->sortorder = $sortorder;
             $move = $DB->update_record('board_notes', $note);
 
             $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));

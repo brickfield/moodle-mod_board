@@ -205,7 +205,8 @@ export default function(board, options, contextid) {
           ATTACHMENT_IMAGE = 2,
           ATTACHMENT_LINK = 3,
           SORTBY_DATE = 1,
-          SORTBY_RATING = 2;
+          SORTBY_RATING = 2,
+          SORTBY_NONE = 3;
     var reloadTimer = null,
         lastHistoryId = null,
         isEditor = options.isEditor || false,
@@ -242,8 +243,8 @@ export default function(board, options, contextid) {
      * Returns the jquery element of a given note identifier.
      *
      * @method getNote
-     * @param ident
-     * @returns {jQuery|HTMLElement|*}
+     * @param {number} ident
+     * @returns {jQuery<HTMLElement>}
      */
     var getNote = function(ident) {
         return $(".board_note[data-ident='" + ident + "']");
@@ -438,14 +439,40 @@ export default function(board, options, contextid) {
             strings.delete,
             strings.Cancel,
             function() {
-                serviceCall('delete_note', {id: ident}, function(result) {
+                serviceCall('delete_note', { id: ident }, function (result) {
                     if (result.status) {
                         lastHistoryId = result.historyid;
-                        getNote(ident).remove();
+                        let note = getNote(ident);
+                        if (sortby == SORTBY_NONE) {
+                            let columnID = note.data('column');
+                            let sortorder = note.data('sortorder');
+                            sortAfterDelete(columnID, sortorder);
+                        }
+                        note.remove();
                     }
                 });
             }
         );
+    };
+
+    /**
+     * This function gets a board column as a jQuery element.
+     * @param {number} columnID The column ID.
+     * @returns {jQuery<HTMLElement>}
+     */
+    const getColumn = (columnID) => {
+        return $(`.board_column[data-ident='${columnID}'] .board_column_content`);
+    };
+
+    const sortAfterDelete = (columnID, sortorder) => {
+        let column = getColumn(columnID);
+        let elements = column.children().filter((_, element) => {
+            return parseInt($(element).data('sortorder')) > parseInt(sortorder);
+        });
+        elements.each((_, element) => {
+            let so = $(element).data('sortorder');
+            $(element).data('sortorder', so - 1);
+        });
     };
 
     /**
@@ -708,6 +735,18 @@ export default function(board, options, contextid) {
             }
         }
 
+        // Making space for this note if necessary in the sort order.
+        if (sortby == SORTBY_NONE) {
+            let children = $(`.board_column[data-ident='${columnid}'] .board_column_content`).children();
+            let elements = children.filter((_, element) => {
+                return parseInt($(element).data('sortorder')) >= parseInt(sortorder);
+            });
+            elements.each((_, element) => {
+                let so = $(element).data('sortorder');
+                $(element).data('sortorder', so + 1);
+            });
+        }
+
         var note = $('<div class="board_note" data-column="' + columnid + '" data-ident="' + ident +
             '" data-sortorder="' + sortorder + '"></div>');
         if (ismynote) {
@@ -715,6 +754,9 @@ export default function(board, options, contextid) {
         }
         if (iseditable) {
             note.addClass('mod_board_editablenote');
+        }
+        if (!ismynote && !iseditable) {
+            note.addClass('mod_board_nosort');
         }
 
         var notecontent = $('<div class="mod_board_note_content"></div>'),
@@ -808,7 +850,10 @@ export default function(board, options, contextid) {
             columnName = $('<div class="mod_board_column_name" tabindex="0" aria-level="3" role="heading">' + name + '</div>'),
             columnContent = $('<div class="board_column_content"></div>'),
             columnNewContent = $('<div class="board_column_newcontent"></div>');
-        columnHeader.append(columnSort);
+        // Only add the sort button if it makes sense.
+        if (sortby != SORTBY_NONE) {
+            columnHeader.append(columnSort);
+        }
         columnHeader.append(columnName);
 
         if (options.hideheaders) {
@@ -895,9 +940,10 @@ export default function(board, options, contextid) {
 
         if (notes) {
             for (var index in notes) {
+                let sortorder = sortby == 3 ? notes[index].sortorder : notes[index].timecreated;
                 addNote(ident, notes[index].id, notes[index].heading, notes[index].content,
                     {type: notes[index].type, info: notes[index].info, url: notes[index].url},
-                    {id: notes[index].userid}, notes[index].timecreated, notes[index].rating);
+                    {id: notes[index].userid}, sortorder, notes[index].rating);
             }
         }
         sortNotes(columnContent);
@@ -1005,8 +1051,9 @@ export default function(board, options, contextid) {
 
                 var data = JSON.parse(item.content);
                 if (item.action == 'add_note') {
+                    let sortorder = sortby == 3 ? data.sortorder : data.timecreated;
                     addNote(data.columnid, data.id, data.heading, data.content, data.attachment,
-                        {id: item.userid}, data.timecreated, data.rating);
+                        {id: item.userid}, sortorder, data.rating);
                     updateNoteAria(data.id);
                     sortNotes($('.board_column[data-ident=' + data.columnid + '] .board_column_content'));
                 } else if (item.action == 'update_note') {
@@ -1037,7 +1084,13 @@ export default function(board, options, contextid) {
                         Notification.alert(strings.warning, strings.note_deleted_text);
                         stopNoteEdit();
                     }
-                    getNote(data.id).remove();
+                    let note = getNote(data.id);
+                    if (sortby == SORTBY_NONE) {
+                        let columnID = note.data('column');
+                        let sortorder = note.data('sortorder');
+                        sortAfterDelete(columnID, sortorder);
+                    }
+                    note.remove();
 
                 } else if (item.action == 'add_column') {
                     addColumn(data.id, data.name, {}, selectHeadingColour());
@@ -1130,7 +1183,7 @@ export default function(board, options, contextid) {
             asc = function(a, b) {
                 return $(a).data("sortorder") - $(b).data("sortorder");
             };
-        } else {
+        } else if (sortby == SORTBY_RATING) {
             desc = function(a, b) {
                 return $(b).find('.mod_board_rating').text() - $(a).find('.mod_board_rating').text() ||
                 $(b).data("sortorder") - $(a).data("sortorder");
@@ -1139,6 +1192,12 @@ export default function(board, options, contextid) {
                 return $(a).find('.mod_board_rating').text() - $(b).find('.mod_board_rating').text() ||
                 $(a).data("sortorder") - $(b).data("sortorder");
             };
+        } else if (sortby == SORTBY_NONE) {
+            let sortElements = (a, b) => {
+                return $(a).data("sortorder") - $(b).data("sortorder");
+            };
+            $('> .board_note', $(content)).sort(sortElements).appendTo($(content));
+            return;
         }
 
         $('> .board_note', $(content)).sort(direction === 'asc' ? asc : desc).appendTo($(content));
@@ -1151,26 +1210,86 @@ export default function(board, options, contextid) {
      * @method updateSortable
      */
     var updateSortable = function() {
+        let fromColumnID;
         $(".board_column_content").sortable({
             connectWith: ".board_column_content",
-            items: usersCanEdit == 1 && !isEditor ? "> .board_note.mod_board_mynote" : "> *",
-            stop: function(e, ui) {
+            cancel: ".mod_board_nosort",
+            start: function(_, ui) {
+                fromColumnID = $(ui.item).closest('.board_column').data('ident');
+            },
+            stop: function(_, ui) {
                 var note = $(ui.item),
                     tocolumn = note.closest('.board_column'),
-                    columnid = tocolumn.data('ident'),
-                    elem = $(this);
-
-                serviceCall('move_note', {id: note.data('ident'), columnid: columnid}, function(result) {
+                    elem = $(this),
+                    noteid = note.data('ident'),
+                    columnid = tocolumn.data('ident');
+                let columnElements = tocolumn.find('.board_column_content').children();
+                let sortorder = columnElements.index($(`.board_note[data-ident=${noteid}]`));
+                let payload = {
+                    id: noteid,
+                    columnid: columnid,
+                    sortorder: sortorder
+                };
+                updateSortOrders(fromColumnID, payload.columnid, payload.id, payload.sortorder);
+                serviceCall('move_note', payload, (result) => {
                     if (result.status) {
                         lastHistoryId = result.historyid;
-                        updateNoteAria(note.data('ident'));
-                        sortNotes($('.board_column[data-ident=' + columnid + '] .board_column_content'));
+                        updateNoteAria(payload.id);
+                        sortNotes($(`.board_column[data-ident=${payload.columnid}] .board_column_content`));
                     } else {
                         elem.sortable('cancel');
                     }
                 });
             }
         });
+    };
+
+    /**
+     * Updates the inline data attributes necessary for rendering the lists
+     * in the correct sort order. Note: the data attribute values updated by
+     * jQuery are not reflected in DOM inspection but are still set.
+     * @param {number} fromColumnID The column ID of the column to sort.
+     * @param {number} toColumnID The column ID of the column to sort.
+     * @param {number} noteID  The note ID that was moved.
+     * @param {number} newSortOrder The new position of the note sort order.
+     */
+    const updateSortOrders = (fromColumnID, toColumnID, noteID, newSortOrder) => {
+        let toColumn = $(`.board_column[data-ident=${toColumnID}] .board_column_content`);
+        let movedNote = $(`.board_note[data-ident=${noteID}]`);
+        let oldSortOrder = movedNote.data('sortorder');
+        // Check whether it is the same column and then increment or decrement notes above or below
+        // then set sortorder according to whether the sortorder has moved up or down.
+        let toChildren = toColumn.children();
+        if (fromColumnID == toColumnID) {
+            toChildren.each((_, note) => {
+                let sortOrder = $(note).data('sortorder');
+                if (oldSortOrder < newSortOrder) {
+                    if (sortOrder <= newSortOrder && sortOrder >= oldSortOrder) {
+                        $(note).data('sortorder', sortOrder - 1);
+                    }
+                } else if (oldSortOrder > newSortOrder) {
+                    if (sortOrder >= newSortOrder && sortOrder <= oldSortOrder) {
+                        $(note).data('sortorder', sortOrder + 1);
+                    }
+                }
+            });
+        } else {
+            let fromColumn = $(`.board_column[data-ident=${fromColumnID}] .board_column_content`);
+            let fromChildren = fromColumn.children();
+            toChildren.each((_, note) => {
+                let sortOrder = $(note).data('sortorder');
+                if (sortOrder >= newSortOrder) {
+                    $(note).data('sortorder', sortOrder + 1);
+                }
+            });
+            fromChildren.each((_, note) => {
+                let sortOrder = $(note).data('sortorder');
+                if (sortOrder > oldSortOrder) {
+                    $(note).data('sortorder', sortOrder - 1);
+                }
+            });
+        }
+        movedNote.data('sortorder', newSortOrder);
     };
 
     /**

@@ -142,6 +142,7 @@ $string['addrating_all'] = 'by All';
 $string['sortby'] = 'Sort by';
 $string['sortbydate'] = 'Creation date';
 $string['sortbyrating'] = 'Rating';
+$string['sortbynone'] = 'None';
 
 $string['postbydate'] = 'Post by date';
 $string['boardsettings'] = 'Board settings';

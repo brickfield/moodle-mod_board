@@ -79,6 +79,7 @@ class mod_board_mod_form extends moodleform_mod {
 
         $mform->addElement('select', 'sortby', get_string('sortby', 'mod_board'),
            array(
+                board::SORTBYNONE => get_string('sortbynone', 'mod_board'),
                 board::SORTBYDATE => get_string('sortbydate', 'mod_board'),
                 board::SORTBYRATING => get_string('sortbyrating', 'mod_board')
             )
