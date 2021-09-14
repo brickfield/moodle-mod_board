@@ -24,7 +24,7 @@
 
 import $ from "jquery";
 import "jqueryui";
-import {get_strings as getStrings} from "core/str";
+import {get_strings as getStrings, get_string as getString} from "core/str";
 import Ajax from "core/ajax";
 import ModalFactory from "core/modal_factory";
 import ModalEvents from "core/modal_events";
@@ -166,7 +166,6 @@ export default function(board, options, contextid) {
         remove_note_title: '',
         remove_note_text: '',
         remove_column_title: '',
-        remove_column_text: '',
         note_changed_title: '',
         note_changed_text: '',
         note_deleted_text: '',
@@ -823,10 +822,10 @@ export default function(board, options, contextid) {
             column.addClass('mod_board_editablecolumn');
 
             var removeElement = $('<div class="mod_board_remove fa fa-remove delete_column" role="button" tabindex="0"></div>');
-            handleAction(removeElement, function() {
+            handleAction(removeElement, () => {
                 Notification.confirm(
                     strings.remove_column_title, // Are you sure?
-                    strings.remove_column_text, // This will effect others.
+                    getString('remove_column_text', 'mod_board', getColumnName(ident)),
                     strings.delete,
                     strings.Cancel,
                     function() {
@@ -905,6 +904,15 @@ export default function(board, options, contextid) {
         if (isEditor) {
             updateSortable();
         }
+    };
+
+    /**
+     * Gets the text name used in the heading of a column.
+     * @param {number} id The ID data attribute on the column element.
+     * @returns {string}
+     */
+    const getColumnName = (id) => {
+        return $(`.board_column[data-ident='${id}']`).find('.mod_board_column_name').html();
     };
 
     /**
