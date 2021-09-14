@@ -163,12 +163,16 @@ export default function(board, options, contextid) {
         default_column_heading: '',
         post_button_text: '',
         cancel_button_text: '',
+        remove_note_title: '',
         remove_note_text: '',
+        remove_column_title: '',
         remove_column_text: '',
+        note_changed_title: '',
         note_changed_text: '',
         note_deleted_text: '',
         rate_note_text: '',
         Ok: '',
+        delete: '',
         Cancel: '',
         warning: '',
         modal_title_new: '',
@@ -429,9 +433,9 @@ export default function(board, options, contextid) {
      */
     var deleteNote = function(ident) {
         Notification.confirm(
-            strings.remove_note_text.split("\n")[1], // Are you sure?
-            strings.remove_note_text.split("\n")[0], // This will effect others.
-            strings.Ok,
+            strings.remove_note_title, // Are you sure?
+            strings.remove_note_text, // This will effect others.
+            strings.delete,
             strings.Cancel,
             function() {
                 serviceCall('delete_note', {id: ident}, function(result) {
@@ -821,9 +825,9 @@ export default function(board, options, contextid) {
             var removeElement = $('<div class="mod_board_remove fa fa-remove delete_column" role="button" tabindex="0"></div>');
             handleAction(removeElement, function() {
                 Notification.confirm(
-                    strings.remove_column_text.split(". ")[1], // Are you sure?
-                    strings.remove_column_text.split(". ")[0], // This will effect others.
-                    strings.Ok,
+                    strings.remove_column_title, // Are you sure?
+                    strings.remove_column_text, // This will effect others.
+                    strings.delete,
                     strings.Cancel,
                     function() {
                         serviceCall('delete_column', {id: ident}, function(result) {
@@ -1005,8 +1009,8 @@ export default function(board, options, contextid) {
 
                         if (editingNote == data.id) {
                             Notification.confirm(
-                                strings.note_changed_text.split("\n")[0], // Confirm.
-                                strings.note_changed_text.split("\n")[1], // Are you sure?
+                                strings.note_changed_title, // Confirm.
+                                strings.note_changed_text, // Are you sure?
                                 strings.Ok,
                                 strings.Cancel,
                                 function() {
