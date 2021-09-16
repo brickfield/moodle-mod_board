@@ -842,6 +842,7 @@ class board {
      *
      * @param int $id
      * @param int $columnid
+     * @param int $sortorder The order in the column the note was placed.
      * @return array
      */
     public static function board_move_note(int $id, int $columnid, int $sortorder): array {

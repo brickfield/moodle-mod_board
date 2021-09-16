@@ -433,6 +433,7 @@ class mod_board_external extends external_api {
      * Function move_note.
      * @param int $id
      * @param int $columnid
+     * @param int $sortorder The order in the column that the note was placed.
      * @return array
      */
     public static function move_note(int $id, int $columnid, int $sortorder): array {

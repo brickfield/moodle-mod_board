@@ -320,7 +320,7 @@ class board_test extends \advanced_testcase {
         $column = self::add_column($board->id);
         $note = self::add_note($column->id);
         $column2 = self::add_column($board->id, 'New column');
-        $result = board::board_move_note($note->id, $column2->id);
+        $result = board::board_move_note($note->id, $column2->id, 0);
 
         $this->assertIsArray($result);
         $this->assertTrue($result['status']);
