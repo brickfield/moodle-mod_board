@@ -127,7 +127,8 @@ class mod_board_external extends external_api {
                                 'info' => new external_value(PARAM_TEXT, 'info'),
                                 'url' => new external_value(PARAM_TEXT, 'url'),
                                 'timecreated' => new external_value(PARAM_INT, 'timecreated'),
-                                'rating' => new external_value(PARAM_INT, 'rating')
+                                'rating' => new external_value(PARAM_INT, 'rating'),
+                                'sortorder' => new external_value(PARAM_INT, 'note sort order')
                             )
                         )
                     )
@@ -423,7 +424,8 @@ class mod_board_external extends external_api {
     public static function move_note_parameters(): external_function_parameters {
         return new external_function_parameters([
             'id' => new external_value(PARAM_INT, 'The note id', VALUE_REQUIRED),
-            'columnid' => new external_value(PARAM_INT, 'The new column id', VALUE_REQUIRED)
+            'columnid' => new external_value(PARAM_INT, 'The new column id', VALUE_REQUIRED),
+            'sortorder' => new external_value(PARAM_INT, 'The new sort order for the note', VALUE_REQUIRED)
         ]);
     }
 
@@ -431,13 +433,15 @@ class mod_board_external extends external_api {
      * Function move_note.
      * @param int $id
      * @param int $columnid
+     * @param int $sortorder The order in the column that the note was placed.
      * @return array
      */
-    public static function move_note(int $id, int $columnid): array {
+    public static function move_note(int $id, int $columnid, int $sortorder): array {
         // Validate recieved parameters.
         $params = self::validate_parameters(self::move_note_parameters(), [
             'id' => $id,
             'columnid' => $columnid,
+            'sortorder' => $sortorder,
         ]);
 
         // Request and permission validation.
@@ -445,7 +449,7 @@ class mod_board_external extends external_api {
         $context = board::context_for_board($column->boardid);
         self::validate_context($context);
 
-        return board::board_move_note($params['id'], $params['columnid']);
+        return board::board_move_note($params['id'], $params['columnid'], $params['sortorder']);
     }
 
     /**

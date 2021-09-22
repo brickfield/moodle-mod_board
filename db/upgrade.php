@@ -39,5 +39,34 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2021052400, 'board');
     }
 
+    if ($oldversion < 2021052405) {
+        // Define field userscanedit to be added to board.
+        $table = new xmldb_table('board');
+        $field = new xmldb_field('userscanedit', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'postby');
+
+        // Conditionally launch add field userscanedit.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2021052405, 'board');
+    }
+
+    if ($oldversion < 2021052406) {
+
+        // Define field sortorder to be added to board_notes.
+        $table = new xmldb_table('board_notes');
+        $field = new xmldb_field('sortorder', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'timecreated');
+
+        // Conditionally launch add field sortorder.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2021052406, 'board');
+    }
+
     return true;
 }

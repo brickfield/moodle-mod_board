@@ -57,6 +57,7 @@ $PAGE->set_url($pageurl);
 $config = get_config('mod_board');
 $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $board, 'options' => array(
     'isEditor' => board::board_is_editor($board->id),
+    'usersCanEdit' => board::board_users_can_edit($board->id),
     'userId' => $USER->id,
     'readonly' => board::board_readonly($board->id),
     'columnicon' => $config->new_column_icon,

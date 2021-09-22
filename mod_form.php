@@ -79,6 +79,7 @@ class mod_board_mod_form extends moodleform_mod {
 
         $mform->addElement('select', 'sortby', get_string('sortby', 'mod_board'),
            array(
+                board::SORTBYNONE => get_string('sortbynone', 'mod_board'),
                 board::SORTBYDATE => get_string('sortbydate', 'mod_board'),
                 board::SORTBYRATING => get_string('sortbyrating', 'mod_board')
             )
@@ -88,6 +89,8 @@ class mod_board_mod_form extends moodleform_mod {
         $mform->addElement('checkbox', 'postbyenabled', get_string('postbyenabled', 'mod_board'));
         $mform->addElement('date_time_selector', 'postby', get_string('postbydate', 'mod_board'));
         $mform->hideIf('postby', 'postbyenabled', 'notchecked');
+
+        $mform->addElement('advcheckbox', 'userscanedit', get_string('userscanedit', 'mod_board'));
 
         $this->standard_coursemodule_elements();
 
