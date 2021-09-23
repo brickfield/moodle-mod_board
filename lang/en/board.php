@@ -69,6 +69,7 @@ $string['form_image_file'] = 'Image file';
 $string['form_mediatype'] = 'Media';
 $string['modal_title_new'] = 'New post for column {column}';
 $string['modal_title_edit'] = 'Edit post for column {column}';
+$string['posts'] = 'Posts';
 
 $string['new_column_icon'] = 'New column icon';
 $string['new_column_icon_desc'] = 'Icon displayed on the new button for columns.';
@@ -80,6 +81,8 @@ $string['media_selection'] = 'Media selection';
 $string['media_selection_desc'] = 'Configure how the media selection for posts will be displayed as.';
 $string['post_max_length'] = 'Post maximum length';
 $string['post_max_length_desc'] = 'The maximum allowed content length. Anything over this length will be trimmed.';
+$string['history'] = 'Board history';
+$string['historyinfo'] = 'The Board history table is only used to store temporary records, which are used by javascript processes to refresh board views, and are then deleted immediately.';
 $string['history_refresh'] = 'Board refresh timer';
 $string['history_refresh_desc'] = 'Timeout in seconds between automatic board refreshes. If set to 0 or empty then the board will only refresh during board actions (add/update/etc)';
 $string['column_colours'] = 'Column Colours';
@@ -138,6 +141,7 @@ $string['addrating_none'] = 'Disabled';
 $string['addrating_students'] = 'by Students';
 $string['addrating_teachers'] = 'by Teachers';
 $string['addrating_all'] = 'by All';
+$string['ratings'] = 'Ratings';
 
 $string['sortby'] = 'Sort by';
 $string['sortbydate'] = 'Creation date';
@@ -150,3 +154,22 @@ $string['postbyenabled'] = 'Limit students posting by date';
 $string['userscanedit'] = 'Allow all users to edit the placement of their own posts.';
 
 $string['invalid_youtube_url'] = 'Invalid YouTube URL';
+
+$string['privacy:metadata:board_notes'] = 'Information about the individual posts for each board.';
+$string['privacy:metadata:board_notes:columnid'] = 'The column location of the post';
+$string['privacy:metadata:board_notes:content'] = 'The content of the post';
+$string['privacy:metadata:board_notes:heading'] = 'The heading of the post';
+$string['privacy:metadata:board_notes:info'] = 'The media information of the post';
+$string['privacy:metadata:board_notes:timecreated'] = 'The time when the post was created';
+$string['privacy:metadata:board_notes:url'] = 'The media URL of the post';
+$string['privacy:metadata:board_notes:userid'] = 'The ID of the user who created the post';
+$string['privacy:metadata:board_history'] = 'Temporary board history records information, used by javascript processes to refresh board views, and then deleted immediately.';
+$string['privacy:metadata:board_history:action'] = 'The action performed';
+$string['privacy:metadata:board_history:boardid'] = 'The ID of the board';
+$string['privacy:metadata:board_history:content'] = 'The JSON data of the action performed';
+$string['privacy:metadata:board_history:timecreated'] = 'The time the action was performed';
+$string['privacy:metadata:board_history:userid'] = 'The ID of the user who performed the action';
+$string['privacy:metadata:board_note_ratings'] = 'Information about the individual ratings for each board post.';
+$string['privacy:metadata:board_note_ratings:noteid'] = 'The ID of the related post';
+$string['privacy:metadata:board_note_ratings:timecreated'] = 'The time when the post rating was created';
+$string['privacy:metadata:board_note_ratings:userid'] = 'The ID of the user who created the post rating';
