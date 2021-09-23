@@ -1136,6 +1136,7 @@ class board {
 
         $iseditor = static::board_is_editor($boardid);
         $cm = static::coursemodule_for_board($board);
+        $context = static::context_for_board($boardid);
         $groupmode = groups_get_activity_groupmode($cm);
         $postbyoverdue = !empty($board->postby) && time() > $board->postby;
 
