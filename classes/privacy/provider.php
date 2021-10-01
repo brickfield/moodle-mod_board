@@ -304,7 +304,7 @@ class provider implements
                 'timecreated' => transform::datetime($note->timecreated),
             ];
 
-            $notearea = static::get_note_area($note);
+            $notearea = static::get_export_area($note);
 
             // Store the note content.
             writer::with_context($context)
@@ -320,12 +320,13 @@ class provider implements
     }
 
     /**
-     * Retrieve information about a specific note for privacy export.
+     * Retrieve information about a specific note or rating for privacy export.
      *
      * @param   stdClass    $note The note from which to compile the export data.
+     * @param   string      $exportarea The area being compiled for the export data.
      * @return  array       Further note export data.
      */
-    protected static function get_note_area(\stdClass $note) : Array {
+    protected static function get_export_area(\stdClass $note, string $exportarea = 'posts') : Array {
         $pathparts = [];
 
         $parts = [
@@ -333,11 +334,16 @@ class provider implements
             ];
 
         // Just need either heading, or content, or info for note 'title'.
-        $parts[] = static::get_note_title($note);
+        $notetitle = static::get_note_title($note);
+        $notetitle = str_replace('/', '', $notetitle);
+        // Remove URL extras from title, breaks the SAR export data.
+        $notetitlesplit = explode('?', $notetitle, 2);
+        $notetitle = $notetitlesplit[0];
+        $parts[] = format_string($notetitle);
 
         $notename = implode('-', $parts);
 
-        $pathparts[] = get_string('posts', 'mod_board');
+        $pathparts[] = get_string($exportarea, 'mod_board');
         $pathparts[] = $notename;
 
         return $pathparts;
@@ -410,13 +416,15 @@ class provider implements
             $ratingdata = (object) [
                 'rating given' => transform::yesno(1), // If exists, rating given.
                 'note id' => format_string($rating->id, true),
-                'notetitle' => format_string(static::get_note_title($rating), true),
+                'notetitle' => format_string(static::get_note_title($rating)),
                 'timecreated' => transform::datetime($rating->timecreated),
             ];
 
+            $ratingarea = static::get_export_area($rating, 'ratings');
+
             // Store the ratings content.
             writer::with_context($context)
-                ->export_data([get_string('ratings', 'mod_board'), $rating->id.'-'.$ratingdata->notetitle], $ratingdata);
+                ->export_data($ratingarea, $ratingdata);
 
         }
 
@@ -437,12 +445,12 @@ class provider implements
         // Just need either heading, or content, or info for note 'title'.
         if (empty($note->heading)) {
             if (!empty($note->content)) {
-                $notetitle = format_string(substr($note->content, 0, 20));
+                $notetitle = substr($note->content, 0, 20);
             } else {
-                $notetitle = format_string($note->info);
+                $notetitle = $note->info;
             }
         } else {
-            $notetitle = format_string($note->heading);
+            $notetitle = $note->heading;
         }
 
         return $notetitle;
