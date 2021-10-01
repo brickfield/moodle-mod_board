@@ -415,6 +415,7 @@ class board {
             $transaction = $DB->start_delegated_transaction();
             $notes = $DB->get_records('board_notes', array('columnid' => $id));
             foreach ($notes as $noteid => $note) {
+                $DB->delete_records('board_note_ratings', array('noteid' => $note->id));
                 static::delete_note_file($note->id);
             }
             $DB->delete_records('board_notes', array('columnid' => $id));
@@ -795,6 +796,7 @@ class board {
 
         if ($columnid && $boardid) {
 
+            $deleteratings = $DB->delete_records('board_note_ratings', array('noteid' => $note->id));
             static::delete_note_file($note->id);
 
             $transaction = $DB->start_delegated_transaction();
