@@ -68,5 +68,11 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2021052406, 'board');
     }
 
+    if ($oldversion < 2021052407) {
+        mod_board_remove_unattached_ratings();
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2021052407, 'board');
+    }
+
     return true;
 }
