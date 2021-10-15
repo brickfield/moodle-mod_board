@@ -415,6 +415,7 @@ class board {
             $transaction = $DB->start_delegated_transaction();
             $notes = $DB->get_records('board_notes', array('columnid' => $id));
             foreach ($notes as $noteid => $note) {
+                $DB->delete_records('board_note_ratings', array('noteid' => $note->id));
                 static::delete_note_file($note->id);
             }
             $DB->delete_records('board_notes', array('columnid' => $id));
@@ -795,6 +796,7 @@ class board {
 
         if ($columnid && $boardid) {
 
+            $deleteratings = $DB->delete_records('board_note_ratings', array('noteid' => $note->id));
             static::delete_note_file($note->id);
 
             $transaction = $DB->start_delegated_transaction();
@@ -1136,6 +1138,7 @@ class board {
 
         $iseditor = static::board_is_editor($boardid);
         $cm = static::coursemodule_for_board($board);
+        $context = static::context_for_board($boardid);
         $groupmode = groups_get_activity_groupmode($cm);
         $postbyoverdue = !empty($board->postby) && time() > $board->postby;
 

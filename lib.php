@@ -337,3 +337,26 @@ function mod_board_output_fragment_note_form($args) {
 
     return $form->render();
 }
+
+/**
+ * Deletes board note ratings database records where ratings are not
+ * attached to any existing notes.
+ *
+ * @return void
+ */
+function mod_board_remove_unattached_ratings() {
+    global $DB;
+    // Getting the ratings.
+    $sql = "SELECT r.id, n.id AS noteid
+              FROM {board_note_ratings} r
+         LEFT JOIN {board_notes} n ON r.noteid = n.id";
+    $recordset = $DB->get_recordset_sql($sql);
+    // Iterating.
+    foreach ($recordset as $record) {
+        if (!isset($record->noteid)) {
+            // If the noteid wasn't set, delete the record.
+            $DB->delete_records('board_note_ratings', ['id' => $record->id]);
+        }
+    }
+    $recordset->close();
+}
