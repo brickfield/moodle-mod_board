@@ -53,7 +53,7 @@ class note_form extends \moodleform {
         $options = ['maxlength' => $maxlen, 'cols' => 30, 'rows' => 3];
         $mform->addElement('textarea', 'content', get_string('form_body', 'mod_board'), $options);
         $mform->setType('content', PARAM_TEXT);
-        $mform->addRule('content', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
+        $mform->addRule('content', get_string('maximumchars', '', $maxlen), 'maxlength', $maxlen, 'client');
 
         $options = [
             0 => get_string('option_empty', 'mod_board'),
