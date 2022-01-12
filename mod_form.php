@@ -57,7 +57,7 @@ class mod_board_mod_form extends moodleform_mod {
         $mform->addHelpButton('background_color', 'background_color', 'mod_board');
 
         $filemanageroptions = array();
-        $filemanageroptions['accepted_types'] = array('.png', '.jpg', '.jpeg', '.bmp');
+        $filemanageroptions['accepted_types'] = array('.png', '.jpg', '.jpeg', '.bmp', '.svg');
         $filemanageroptions['maxbytes'] = 0;
         $filemanageroptions['maxfiles'] = 1;
         $filemanageroptions['subdirs'] = 0;

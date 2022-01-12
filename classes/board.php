@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die;
 class board {
 
     /** @var string String of accepted file types. */
-    const ACCEPTED_FILE_EXTENSIONS = 'jpg,jpeg,png,bmp,gif';
+    const ACCEPTED_FILE_EXTENSIONS = 'jpg,jpeg,png,bmp,gif,svg';
 
     /** @var int Minumum file size of 100 bytes. */
     const ACCEPTED_FILE_MIN_SIZE = 100;
