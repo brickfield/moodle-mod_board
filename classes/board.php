@@ -25,9 +25,6 @@ namespace mod_board;
  */
 class board {
 
-    /** @var string String of accepted file types. */
-    const ACCEPTED_FILE_EXTENSIONS = 'jpg,jpeg,png,bmp,gif';
-
     /** @var int Minumum file size of 100 bytes. */
     const ACCEPTED_FILE_MIN_SIZE = 100;
 
@@ -112,7 +109,7 @@ class board {
             'post_max_length' => $config->post_max_length,
             'history_refresh' => $config->history_refresh,
             'file' => [
-                'extensions' => explode(',', self::ACCEPTED_FILE_EXTENSIONS),
+                'extensions' => self::get_accepted_file_extensions(),
                 'size_min' => self::ACCEPTED_FILE_MIN_SIZE,
                 'size_max' => self::ACCEPTED_FILE_MAX_SIZE
             ],
@@ -125,6 +122,22 @@ class board {
 
         return $conf;
     }
+
+    /**
+     * Get the supported filetype extensions
+     *
+     * @return array of strings of supported file extensions.
+     */
+    public static function get_accepted_file_extensions() {
+        $config = get_config('mod_board');
+        if (isset($config->acceptedfiletypeforcontent)) {
+            $extensions = explode(',', $config->acceptedfiletypeforcontent);
+        } else {
+            $extensions = [];
+        }
+        return $extensions;
+    }
+
     /**
      * Retrieves a record of the selected board.
      *
@@ -1387,7 +1400,8 @@ class board {
      * @return array
      */
     public static function get_image_picker_options() {
-        $extensions = explode(',', self::ACCEPTED_FILE_EXTENSIONS);
+        $extensions = self::get_accepted_file_extensions();
+
         $extensions = array_map(function($extension) {
             return '.' . $extension;
         }, $extensions);

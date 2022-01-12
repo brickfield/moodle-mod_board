@@ -56,8 +56,14 @@ class mod_board_mod_form extends moodleform_mod {
         $mform->addRule('background_color', get_string('maximumchars', '', 9), 'maxlength', 9, 'client');
         $mform->addHelpButton('background_color', 'background_color', 'mod_board');
 
+        $extensions = board::get_accepted_file_extensions();
+
+        $extensions = array_map(function($extension) {
+            return '.' . $extension;
+        }, $extensions);
+
         $filemanageroptions = array();
-        $filemanageroptions['accepted_types'] = array('.png', '.jpg', '.jpeg', '.bmp');
+        $filemanageroptions['accepted_types'] = $extensions;
         $filemanageroptions['maxbytes'] = 0;
         $filemanageroptions['maxfiles'] = 1;
         $filemanageroptions['subdirs'] = 0;
