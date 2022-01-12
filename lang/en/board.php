@@ -106,6 +106,13 @@ $string['embed_width_desc'] = 'Width to use for the iframe when embedding the bo
 $string['embed_height'] = 'Embed height';
 $string['embed_height_desc'] = 'Height to use for the iframe when embedding the board within the course. This should be a valid CSS value, e.g. px, rem, %, etc...';
 
+$string['acceptedfiletypeforbackground'] = 'Accepted filetyps for background images.';
+$string['acceptedfiletypeforbackground_desc'] = 'Select the filetypes for background images to be supported.';
+
+$string['acceptedfiletypeforcontent'] = 'Accepted filetyps for content images.';
+$string['acceptedfiletypeforcontent_desc'] = 'Select the filetypes for content to be supported.';
+
+
 $string['export_board'] = 'Export CSV';
 $string['export_submissions'] = 'Export Submissions';
 $string['export_firstname'] = 'Firstname';
