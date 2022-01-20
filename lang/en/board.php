@@ -88,6 +88,13 @@ $string['history_refresh_desc'] = 'Timeout in seconds between automatic board re
 $string['column_colours'] = 'Column Colours';
 $string['column_colours_desc'] = 'The colours used at the top of each column. These are hex colors and should be placed once per line as 3 or 6 characters. If any of these values are not equal to a colour then the defaults will be used.';
 
+$string['acceptedfiletypeforbackground'] = 'Accepted filetyps for background images.';
+$string['acceptedfiletypeforbackground_desc'] = 'Select the filetypes for background images to be supported.';
+
+$string['acceptedfiletypeforcontent'] = 'Accepted filetyps for content images.';
+$string['acceptedfiletypeforcontent_desc'] = 'Select the filetypes for content to be supported.';
+
+
 $string['export_board'] = 'Export CSV';
 $string['export_submissions'] = 'Export Submissions';
 $string['export_firstname'] = 'Firstname';
@@ -173,3 +180,4 @@ $string['privacy:metadata:board_note_ratings'] = 'Information about the individu
 $string['privacy:metadata:board_note_ratings:noteid'] = 'The ID of the related post';
 $string['privacy:metadata:board_note_ratings:timecreated'] = 'The time when the post rating was created';
 $string['privacy:metadata:board_note_ratings:userid'] = 'The ID of the user who created the post rating';
+

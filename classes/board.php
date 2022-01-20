@@ -27,9 +27,6 @@ defined('MOODLE_INTERNAL') || die;
  */
 class board {
 
-    /** @var string String of accepted file types. */
-    const ACCEPTED_FILE_EXTENSIONS = 'jpg,jpeg,png,bmp,gif,svg';
-
     /** @var int Minumum file size of 100 bytes. */
     const ACCEPTED_FILE_MIN_SIZE = 100;
 
@@ -1192,7 +1189,12 @@ class board {
      * @return array
      */
     public static function get_image_picker_options() {
-        $extensions = explode(',', self::ACCEPTED_FILE_EXTENSIONS);
+        $config = get_config('mod_board');
+        $extensions = [];
+        if (isset($config->acceptedfiletypeforcontent)) {
+            $extensions = explode(',', $config->acceptedfiletypeforcontent);
+        }
+
         $extensions = array_map(function($extension) {
             return '.' . $extension;
         }, $extensions);
