@@ -69,6 +69,7 @@ if ($ADMIN->fulltree) {
             '.jpg'  => 'jpg',
             '.jpeg' => 'jpeg',
             '.png'  => 'png',
+            '.gif'  => 'gif',
             '.bmp'  => 'bmp',
             '.svg'  => 'svg',
         )
@@ -84,6 +85,7 @@ if ($ADMIN->fulltree) {
             '.jpg'  => 'jpg',
             '.jpeg' => 'jpeg',
             '.png'  => 'png',
+            '.gif'  => 'gif',
             '.bmp'  => 'bmp',
             '.svg'  => 'svg',
         )
