@@ -644,7 +644,7 @@ export default function(board, options, contextid) {
         if (!videoID || videoID[2] === undefined || videoID[2].length !== 11) {
             return null;
         }
-        return `https://youtube.com/embed/${videoID[2]}`;
+        return `https://www.youtube-nocookie.com/embed/${videoID[2]}`;
     };
 
     /**
