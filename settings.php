@@ -64,14 +64,14 @@ if ($ADMIN->fulltree) {
         'mod_board/acceptedfiletypeforbackground',
         get_string('acceptedfiletypeforbackground', 'mod_board'),
         get_string('acceptedfiletypeforbackground_desc', 'mod_board'),
-        array('.jpg' => 1, '.jpeg' => 1, '.png' => 1),
+        array('jpg' => 1, 'jpeg' => 1, 'png' => 1),
         array(
-            '.jpg'  => 'jpg',
-            '.jpeg' => 'jpeg',
-            '.png'  => 'png',
-            '.gif'  => 'gif',
-            '.bmp'  => 'bmp',
-            '.svg'  => 'svg',
+            'jpg'  => 'jpg',
+            'jpeg' => 'jpeg',
+            'png'  => 'png',
+            'gif'  => 'gif',
+            'bmp'  => 'bmp',
+            'svg'  => 'svg',
         )
     ));
 
@@ -80,14 +80,14 @@ if ($ADMIN->fulltree) {
         'mod_board/acceptedfiletypeforcontent',
         get_string('acceptedfiletypeforcontent', 'mod_board'),
         get_string('acceptedfiletypeforcontent_desc', 'mod_board'),
-        array('.jpg' => 1, '.jpeg' => 1, '.png' => 1),
+        array('jpg' => 1, 'jpeg' => 1, 'png' => 1),
         array(
-            '.jpg'  => 'jpg',
-            '.jpeg' => 'jpeg',
-            '.png'  => 'png',
-            '.gif'  => 'gif',
-            '.bmp'  => 'bmp',
-            '.svg'  => 'svg',
+            'jpg'  => 'jpg',
+            'jpeg' => 'jpeg',
+            'png'  => 'png',
+            'gif'  => 'gif',
+            'bmp'  => 'bmp',
+            'svg'  => 'svg',
         )
     ));
 

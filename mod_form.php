@@ -62,6 +62,10 @@ class mod_board_mod_form extends moodleform_mod {
             $extensions = explode(',', $config->acceptedfiletypeforbackground);
         }
 
+        $extensions = array_map(function($extension) {
+            return '.' . $extension;
+        }, $extensions);
+
         $filemanageroptions = array();
         $filemanageroptions['accepted_types'] = $extensions;
         $filemanageroptions['maxbytes'] = 0;
