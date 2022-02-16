@@ -59,4 +59,39 @@ if ($ADMIN->fulltree) {
         )
     );
 
+    // Accepted filetypes for background.
+    $settings->add(new admin_setting_configmulticheckbox(
+        'mod_board/acceptedfiletypeforbackground',
+        get_string('acceptedfiletypeforbackground', 'mod_board'),
+        get_string('acceptedfiletypeforbackground_desc', 'mod_board'),
+        array('jpg' => 1, 'jpeg' => 1, 'png' => 1, 'gif' => 1),
+        array(
+            'jpg'  => 'jpg',
+            'jpeg' => 'jpeg',
+            'png'  => 'png',
+            'gif'  => 'gif',
+            'bmp'  => 'bmp',
+            'svg'  => 'svg',
+        )
+    ));
+
+    // Accepted filetypes for content.
+    $settings->add(new admin_setting_configmulticheckbox(
+        'mod_board/acceptedfiletypeforcontent',
+        get_string('acceptedfiletypeforcontent', 'mod_board'),
+        get_string('acceptedfiletypeforcontent_desc', 'mod_board'),
+        array('jpg' => 1, 'jpeg' => 1, 'png' => 1, 'gif' => 1),
+        array(
+            'jpg'  => 'jpg',
+            'jpeg' => 'jpeg',
+            'png'  => 'png',
+            'gif'  => 'gif',
+            'bmp'  => 'bmp',
+            'svg'  => 'svg',
+        )
+    ));
+
+
+
+
 }

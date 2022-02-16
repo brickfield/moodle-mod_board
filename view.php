@@ -55,6 +55,11 @@ $pageurl = new moodle_url('/mod/board/view.php', array('id' => $cm->id));
 $PAGE->set_url($pageurl);
 
 $config = get_config('mod_board');
+$extensions = [];
+if (isset($config->acceptedfiletypeforcontent)) {
+    $extensions = explode(',', $config->acceptedfiletypeforcontent);
+}
+
 $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $board, 'options' => array(
     'isEditor' => board::board_is_editor($board->id),
     'usersCanEdit' => board::board_users_can_edit($board->id),
@@ -66,7 +71,7 @@ $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $b
     'post_max_length' => $config->post_max_length,
     'history_refresh' => $config->history_refresh,
     'file' => array(
-        'extensions' => explode(',', board::ACCEPTED_FILE_EXTENSIONS),
+        'extensions' => $extensions,
         'size_min' => board::ACCEPTED_FILE_MIN_SIZE,
         'size_max' => board::ACCEPTED_FILE_MAX_SIZE
     ),
