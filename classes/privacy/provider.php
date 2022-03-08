@@ -35,8 +35,6 @@ use \core_privacy\local\metadata\collection;
 use \core_privacy\local\request\transform;
 use tool_dataprivacy\context_instance;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Implementation of the privacy subsystem plugin provider for the Brickfield board module.
  *
@@ -52,9 +50,7 @@ class provider implements
     \core_privacy\local\request\plugin\provider,
 
     // This plugin is capable of determining which users have data within it.
-    \core_privacy\local\request\core_userlist_provider
-
-{
+    \core_privacy\local\request\core_userlist_provider {
 
     /**
      * Returns meta data about this system.

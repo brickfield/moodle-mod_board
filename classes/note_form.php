@@ -34,7 +34,7 @@ class note_form extends \moodleform {
      * Definition of the form elements.
      */
     public function definition() {
-        // TODO media select style - media_selection
+        // TODO media select style - media_selection.
         $config = get_config('mod_board');
 
         $mform = $this->_form;

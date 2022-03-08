@@ -11,6 +11,11 @@ New features / improvements:
 Big fixes:
 
 * Fixed error with group context.
+* Fixed manager role default access to view and manage board instances.
+
+***Please note, if upgrading, that site administrators will need to RESET or update their manager role capabilities, ensuring that all Board plugin related capabilities are now allowed.***
+
+The [Moodle Docs page for resetting roles is here](http://docs.moodle.org/en/Manage_roles#Reset_role_to_defaults).
 
 ##### 1.39.05 (Build 2021092101)
 New features / improvements:

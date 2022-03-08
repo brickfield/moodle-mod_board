@@ -16,7 +16,6 @@
 /**
  * A javascript module to handle the board.
  *
- * @package    mod_board
  * @author     Karen Holland <karen@brickfieldlabs.ie>
  * @copyrigt   2021 Brickfield Education Labs <https://www.brickfield.ie/>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -35,11 +34,10 @@ import Fragment from "core/fragment";
 /**
  * Execute a ajax call to a mod_board ajax service.
  *
- * @method _serviceCall
- * @param method
- * @param args
- * @param callback
- * @param failcallback
+ * @param {string} method
+ * @param {array} args
+ * @param {method} callback
+ * @param {method} failcallback
  * @private
  */
 const _serviceCall = function(method, args, callback, failcallback) {
@@ -62,9 +60,8 @@ const _serviceCall = function(method, args, callback, failcallback) {
  * Indicates if this is a keycode we want to listend to for
  * aria purposes.
  *
- * @method isAriaTriggerKey
- * @param key
  * @returns {boolean}
+ * @param {number} key
  */
 const isAriaTriggerKey = function(key) {
     return key == 13 || key == 32;
@@ -73,8 +70,7 @@ const isAriaTriggerKey = function(key) {
 /**
  * Encodes text into html entities.
  *
- * @method encodeText
- * @param rawText
+ * @param {string} rawText
  * @returns {*|jQuery}
  */
 const encodeText = function(rawText) {
@@ -84,8 +80,7 @@ const encodeText = function(rawText) {
 /**
  * Decodes text from html entities.
  *
- * @method decodeText
- * @param encodedText
+ * @param {string} encodedText
  * @returns {*|jQuery}
  */
 const decodeText = function(encodedText) {
@@ -95,9 +90,8 @@ const decodeText = function(encodedText) {
 /**
  * Handler for keypress and click actions.
  *
- * $method handleAction
- * @param elem
- * @param callback
+ * @param {object} elem
+ * @param {function} callback
  * @returns {*}
  */
 const handleAction = function(elem, callback) {
@@ -117,10 +111,9 @@ const handleAction = function(elem, callback) {
 /**
  * Setting up element edibility.
  *
- * @method handleEditableAction
- * @param elem
- * @param callback
- * @param callBeforeOnKeyEditing
+ * @param {object} elem
+ * @param {function} callback
+ * @param {function} callBeforeOnKeyEditing
  * @returns {*}
  */
 const handleEditableAction = function(elem, callback, callBeforeOnKeyEditing) {
@@ -152,9 +145,9 @@ const handleEditableAction = function(elem, callback, callBeforeOnKeyEditing) {
 /**
  * The default function of the module, which does the setup of the page.
  *
- * @param board
- * @param options
- * @param contextid
+ * @param {object} board
+ * @param {object} options
+ * @param {number} contextid
  */
 export default function(board, options, contextid) {
     // An array of strings to load as a batch later.
@@ -218,14 +211,14 @@ export default function(board, options, contextid) {
         ratingenabled = options.ratingenabled,
         sortby = options.sortby || SORTBY_DATE,
         editModal = null;
+
     /**
-     * Helper method to make calles to mod_board external services.
+     * Helper method to make calls to mod_board external services.
      *
-     * @method serviceCall
-     * @param method
-     * @param args
-     * @param callback
-     * @param failcallback
+     * @param {string} method
+     * @param {array} args
+     * @param {function} callback
+     * @param {function} failcallback
      */
     var serviceCall = function(method, args, callback, failcallback) {
         if (method !== 'board_history') {
@@ -242,7 +235,6 @@ export default function(board, options, contextid) {
     /**
      * Returns the jquery element of a given note identifier.
      *
-     * @method getNote
      * @param {number} ident
      * @returns {jQuery<HTMLElement>}
      */
@@ -254,7 +246,7 @@ export default function(board, options, contextid) {
      * Returns the jquery element of the note text for the given note element.
      *
      * @method getNoteTextForNote
-     * @param note
+     * @param {object} note
      * @returns {*|jQuery}
      */
     var getNoteTextForNote = function(note) {
@@ -265,7 +257,7 @@ export default function(board, options, contextid) {
      * Returns the jquery element of the note heading for the given note element.
      *
      * @method getNoteHeadingForNote
-     * @param note
+     * @param {object} note
      * @returns {*|jQuery}
      */
     var getNoteHeadingForNote = function(note) {
@@ -276,7 +268,7 @@ export default function(board, options, contextid) {
      * Returns the jquery element of the note border for the given note element.
      *
      * @method getNoteBorderForNote
-     * @param note
+     * @param {object} note
      * @returns {*|jQuery}
      */
     var getNoteBorderForNote = function(note) {
@@ -287,7 +279,7 @@ export default function(board, options, contextid) {
      * Gets a jquery node for the attachments of a given note.
      *
      * @method getNoteAttachmentsForNote
-     * @param note
+     * @param {object} note
      * @returns {*|jQuery}
      */
     var getNoteAttachmentsForNote = function(note) {
@@ -298,7 +290,7 @@ export default function(board, options, contextid) {
      * Creates text identifier for a given node.
      *
      * @method textIdentifierForNote
-     * @param note
+     * @param {object} note
      * @returns {null|*|jQuery}
      */
     var textIdentifierForNote = function(note) {
@@ -322,7 +314,7 @@ export default function(board, options, contextid) {
      * Update the Aria info for a given note id.
      *
      * @method updateNoteAria
-     * @param noteId
+     * @param {number} noteId
      */
     var updateNoteAria = function(noteId) {
         var note = getNote(noteId),
@@ -344,7 +336,7 @@ export default function(board, options, contextid) {
      * Update the Aria information for a given column id.
      *
      * @method updateColumnAria
-     * @param columnId
+     * @param {number} columnId
      */
     var updateColumnAria = function(columnId) {
         var column = $('.board_column[data-ident=' + columnId + ']'),
@@ -398,7 +390,7 @@ export default function(board, options, contextid) {
      * Start the editing of a particular note, by identifier.
      *
      * @method startNoteEdit
-     * @param ident
+     * @param {number} ident
      */
     var startNoteEdit = function(ident) {
 
@@ -430,7 +422,7 @@ export default function(board, options, contextid) {
      * Delete a given note, by identifier.
      *
      * @method deleteNote
-     * @param ident
+     * @param {number} ident
      */
     var deleteNote = function(ident) {
         Notification.confirm(
@@ -479,7 +471,7 @@ export default function(board, options, contextid) {
      * Rate (star) a give note, by identifier.
      *
      * @method rateNote
-     * @param ident
+     * @param {number} ident
      */
     var rateNote = function(ident) {
         if (!ratingenabled) {
@@ -529,7 +521,7 @@ export default function(board, options, contextid) {
      * Update the attachment information of a note.
      *
      * @method attachmentTypeChanged
-     * @param note
+     * @param {object} note
      */
     var attachmentTypeChanged = function(note) {
         var noteAttachment = getNoteAttachmentsForNote(note),
@@ -565,8 +557,8 @@ export default function(board, options, contextid) {
      * Set the attachment of a note.
      *
      * @method setAttachment
-     * @param note
-     * @param attachment
+     * @param {object} note
+     * @param {object} attachment
      */
     var setAttachment = function(note, attachment) {
         var noteAttachment = getNoteAttachmentsForNote(note);
@@ -591,7 +583,7 @@ export default function(board, options, contextid) {
      * Returns an object with various information about a note's attachment.
      *
      * @method attachmentDataForNote
-     * @param note
+     * @param {object} note
      * @returns {{filename: null, filecontents: null, type: number, url: null, info: null}}
      */
     var attachmentDataForNote = function(note) {
@@ -619,7 +611,7 @@ export default function(board, options, contextid) {
      * Get the string type of a attachment type number.
      *
      * @method attachmentTypeToString
-     * @param type
+     * @param {number} type
      * @returns {string|null}
      */
     var attachmentTypeToString = function(type) {
@@ -638,7 +630,7 @@ export default function(board, options, contextid) {
      * @returns {string | null} The youtube embed URL or null.
      */
     const getEmbedUrl = (url) => {
-        // Thanks for the regex from: https://gist.github.com/rodrigoborgesdeoliveira/987683cfbfcc8d800192da1e73adc486
+        // Thanks for the regex from: https://gist.github.com/rodrigoborgesdeoliveira/987683cfbfcc8d800192da1e73adc486.
         let regex = /(\/|%3D|v=)([0-9A-z-_]{11})([%#?&]|$)/;
         let videoID = url.match(regex);
         if (!videoID || videoID[2] === undefined || videoID[2].length !== 11) {
@@ -651,8 +643,8 @@ export default function(board, options, contextid) {
      * Display the attachment preview for a note.
      *
      * @method previewAttachment
-     * @param note
-     * @param attachment
+     * @param {object} note
+     * @param {object} attachment
      */
     var previewAttachment = function(note, attachment) {
         var elem = note.find('.mod_board_preview');
@@ -715,14 +707,14 @@ export default function(board, options, contextid) {
      * Add a new note with the given information.
      *
      * @method addNote
-     * @param columnid
-     * @param ident
-     * @param heading
-     * @param content
-     * @param attachment
-     * @param owner
-     * @param sortorder
-     * @param rating
+     * @param {number} columnid
+     * @param {number} ident
+     * @param {string} heading
+     * @param {string} content
+     * @param {object} attachment
+     * @param {object} owner
+     * @param {number} sortorder
+     * @param {string} rating
      */
     var addNote = function(columnid, ident, heading, content, attachment, owner, sortorder, rating) {
         var ismynote = owner.id == userId || !ident;
@@ -836,9 +828,10 @@ export default function(board, options, contextid) {
      * Add a new column.
      *
      * @method addColumn
-     * @param ident
-     * @param name
-     * @param notes
+     * @param {object} ident
+     * @param {string} name
+     * @param {array} notes
+     * @param {string} colour
      */
     var addColumn = function (ident, name, notes, colour) {
         let headerStyle = `style="border-top: 10px solid #${colour}"`;
@@ -1008,9 +1001,9 @@ export default function(board, options, contextid) {
      * Update a note with the provided information.
      *
      * @method updateNote
-     * @param note
-     * @param heading
-     * @param data
+     * @param {object} note
+     * @param {string} heading
+     * @param {object} data
      */
     var updateNote = function(note, heading, data) {
         var noteHeading = getNoteHeadingForNote(note);
@@ -1121,7 +1114,7 @@ export default function(board, options, contextid) {
      * Trigger a board update.
      *
      * @method updateBoard
-     * @param instant
+     * @param {boolean} instant
      */
     var updateBoard = function(instant) {
         if (instant) {
@@ -1148,8 +1141,8 @@ export default function(board, options, contextid) {
      * Sort a set of notes.
      *
      * @sortNotes
-     * @param content
-     * @param toggle
+     * @param {string} content
+     * @param {boolean} toggle
      */
     var sortNotes = function(content, toggle) {
         var sortCol = $(content).parent().find('.mod_board_column_sort'),
@@ -1295,8 +1288,8 @@ export default function(board, options, contextid) {
     /**
      * Get the body fragment for the modal form.
      *
-     * @param noteid
-     * @param columnid
+     * @param {number} noteid
+     * @param {number} columnid
      * @returns {Deferred|*}
      */
     var getBody = function(noteid, columnid) {
@@ -1308,8 +1301,8 @@ export default function(board, options, contextid) {
     /**
      * Setup the aria labels for the modal.
      *
-     * @param note
-     * @param modal
+     * @param {object} note
+     * @param {object} modal
      */
     var updateModalAria = function(note, modal) {
         let columnIdentifier = note.closest('.board_column').find('.mod_board_column_name').text(),
@@ -1364,7 +1357,7 @@ export default function(board, options, contextid) {
     /**
      * Displays the modal form to edit a note.
      *
-     * @param note
+     * @param {object} note
      */
     var showModalForm = function(note) {
         let noteId = 0,

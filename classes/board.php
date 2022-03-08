@@ -16,8 +16,6 @@
 
 namespace mod_board;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * The main board class functions.
  * @package     mod_board
