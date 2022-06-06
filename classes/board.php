@@ -649,6 +649,13 @@ class board {
             $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
             $transaction->allow_commit();
 
+            $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+            $board = $DB->get_record('board', array('id' => $boardid), '*', MUST_EXIST);
+            $completion = new \completion_info($course);
+            if ($completion->is_enabled($cm) && $board->completionnotes) {
+                $completion->update_state($cm);
+            }
+
             static::board_add_note_log($boardid, $groupid, $heading, $content, $attachment, $columnid, $noteid);
 
             $note = static::get_note($noteid);
