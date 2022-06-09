@@ -27,6 +27,13 @@ use mod_board\board;
 defined('MOODLE_INTERNAL') || die;
 
 if ($ADMIN->fulltree) {
+    $settings->add(new admin_setting_configcheckbox(
+        'mod_board/allowyoutube',
+        get_string('allowyoutube', 'mod_board'),
+        get_string('allowyoutube_desc', 'mod_board'),
+        '1'
+    ));
+
     $settings->add(new admin_setting_description('mod_board/logo', '',
         html_writer::img($OUTPUT->image_url('brickfield-logo-small', 'mod_board'), 'logo',
             ['style' => 'display: block; margin: -50px auto -30px auto; float: right;'])));
