@@ -55,17 +55,26 @@ class note_form extends \moodleform {
         $mform->setType('content', PARAM_TEXT);
         $mform->addRule('content', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
 
-        $options = [
-            0 => get_string('option_empty', 'mod_board'),
-            1 => get_string('option_youtube', 'mod_board'),
-            2 => get_string('option_image', 'mod_board'),
-            3 => get_string('option_link', 'mod_board'),
-        ];
-        $attr = ['class' => 'mod_board_type'];
-        $mform->addElement('select', 'mediatype', get_string('form_mediatype', 'mod_board'), $options, $attr);
-
         $allowyoutube = false;
         $allowyoutube = $config->allowyoutube;
+
+        if ($allowyoutube) {
+            $options = [
+                0 => get_string('option_empty', 'mod_board'),
+                1 => get_string('option_youtube', 'mod_board'),
+                2 => get_string('option_image', 'mod_board'),
+                3 => get_string('option_link', 'mod_board'),
+            ];
+        } else {
+            $options = [
+                0 => get_string('option_empty', 'mod_board'),
+                2 => get_string('option_image', 'mod_board'),
+                3 => get_string('option_link', 'mod_board'),
+            ];
+        }
+
+        $attr = ['class' => 'mod_board_type'];
+        $mform->addElement('select', 'mediatype', get_string('form_mediatype', 'mod_board'), $options, $attr);
 
         $html = '<div class="mod_board_note_buttons">
                     <div class="mod_board_attachment_button link_button fa fa-link" role="button" tabindex="0"></div>
