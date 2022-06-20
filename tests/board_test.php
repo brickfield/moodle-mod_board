@@ -176,7 +176,7 @@ class board_test extends \advanced_testcase {
         $DB->insert_record('board_history', $record);
         $record = $DB->get_record('board_history', array('action' => 'action'));
 
-        $result = board::board_history($board->id, 1);
+        $result = board::board_history($board->id, 0, 1);
         $this->assertEquals($result[$record->id]->boardid, $board->id);
     }
 
@@ -242,7 +242,7 @@ class board_test extends \advanced_testcase {
             'filecontents' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABpAAAAQaCAIAhEUgAABpAAAAQaCAIAAADL9awBAAAACXBIWXMAA'
         );
 
-        $note = board::board_add_note($column->id, 'heading', 'content', $attachment);
+        $note = board::board_add_note($column->id, 2, 'heading', 'content', $attachment);
         $result = board::get_note_file($note['note']->id);
         $this->assertEmpty($result);
     }
@@ -279,7 +279,7 @@ class board_test extends \advanced_testcase {
             'info' => '',
             'url' => '',
         ];
-        $result = board::board_add_note($column->id, 'Test heading', 'Test content', $attachment);
+        $result = board::board_add_note($column->id, 2, 'Test heading', 'Test content', $attachment);
 
         $this->assertIsArray($result);
     }
@@ -296,7 +296,7 @@ class board_test extends \advanced_testcase {
             'info' => '',
             'url' => '',
         ];
-        $result = board::board_update_note($note->id, 'update heading', 'update content', $attachment);
+        $result = board::board_update_note($note->id, 2, 'update heading', 'update content', $attachment);
 
         $this->assertIsArray($result);
     }
@@ -322,7 +322,7 @@ class board_test extends \advanced_testcase {
         $column = self::add_column($board->id);
         $note = self::add_note($column->id);
         $column2 = self::add_column($board->id, 'New column');
-        $result = board::board_move_note($note->id, $column2->id, 0);
+        $result = board::board_move_note($note->id, 0, $column2->id, 0);
 
         $this->assertIsArray($result);
         $this->assertTrue($result['status']);
@@ -418,7 +418,7 @@ class board_test extends \advanced_testcase {
 
         $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
         $this->setUser($student);
-        $result = board::board_add_note($column->id, 'Test heading', 'Test content', $attachment);
+        $result = board::board_add_note($column->id, $student->id, 'Test heading', 'Test content', $attachment);
 
         $cm = get_coursemodule_from_instance('board', $board->id);
         // Make sure we're using a cm_info object.
@@ -427,7 +427,7 @@ class board_test extends \advanced_testcase {
 
         $this->assertEquals(COMPLETION_INCOMPLETE, $customcompletion->get_state('completionnotes'));
 
-        $result = board::board_add_note($column->id, 'Test heading 2', 'Test content 2', $attachment);
+        $result = board::board_add_note($column->id, $student->id, 'Test heading 2', 'Test content 2', $attachment);
         $this->assertEquals(COMPLETION_COMPLETE, $customcompletion->get_state('completionnotes'));
     }
 

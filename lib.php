@@ -250,7 +250,7 @@ function mod_board_pluginfile($course, $cm, $context, $filearea, $args, $forcedo
         $fullpath = '/' . $context->id . '/mod_board/images/' . $relativepath;
 
         $fs = get_file_storage();
-        if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+        if (!$file = $fs->get_file_by_hash(sha1($fullpath)) || $file->is_directory()) {
             return false;
         }
 
@@ -261,7 +261,7 @@ function mod_board_pluginfile($course, $cm, $context, $filearea, $args, $forcedo
         $fullpath = '/' . $context->id . '/mod_board/background/' . $relativepath;
 
         $fs = get_file_storage();
-        if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+        if (!$file = $fs->get_file_by_hash(sha1($fullpath)) || $file->is_directory()) {
             return false;
         }
 
@@ -284,6 +284,7 @@ function mod_board_output_fragment_note_form($args) {
     $args = (object)$args;
     $noteid = clean_param(($args->noteid ?? 0), PARAM_INT);
     $columnid = clean_param(($args->columnid ?? 0), PARAM_INT);
+    $ownerid = clean_param(($args->ownerid ?? 0), PARAM_INT);
 
     if (empty($columnid)) {
         throw new \coding_exception('invalidformrequest');
@@ -293,7 +294,8 @@ function mod_board_output_fragment_note_form($args) {
     $context = board::context_for_board($column->boardid);
 
     $formdata = [
-        'columnid' => $columnid
+        'columnid' => $columnid,
+        'ownerid' => $ownerid,
     ];
 
     if ($noteid) {

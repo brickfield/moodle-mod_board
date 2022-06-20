@@ -204,7 +204,8 @@ export default function(board, options, contextid) {
         lastHistoryId = null,
         isEditor = options.isEditor || false,
         usersCanEdit = options.usersCanEdit,
-        userId = options.userId || -1,
+        userId = parseInt(options.userId) || -1,
+        ownerId = parseInt(options.ownerId),
         mediaSelection = options.mediaselection || MEDIA_SELECTION_BUTTONS,
         editingNote = 0,
         isReadOnlyBoard = options.readonly || false,
@@ -1037,7 +1038,7 @@ export default function(board, options, contextid) {
      * @method processBoardHistory
      */
     var processBoardHistory = function() {
-        serviceCall('board_history', {id: board.id, since: lastHistoryId}, function(boardhistory) {
+        serviceCall('board_history', {id: board.id, ownerid: ownerId, since: lastHistoryId}, function(boardhistory) {
             for (var index in boardhistory) {
                 var item = boardhistory[index];
                 if (item.boardid != board.id) {
@@ -1223,6 +1224,7 @@ export default function(board, options, contextid) {
                 let payload = {
                     id: noteid,
                     columnid: columnid,
+                    ownerid: ownerId,
                     sortorder: sortorder
                 };
                 updateSortOrders(fromColumnID, payload.columnid, payload.id, payload.sortorder);
@@ -1292,11 +1294,12 @@ export default function(board, options, contextid) {
      *
      * @param {number} noteid
      * @param {number} columnid
+     * @param {number} ownerId
      * @returns {Deferred|*}
      */
-    var getBody = function(noteid, columnid) {
+    var getBody = function(noteid, columnid, ownerId) {
         // Get the content of the modal.
-        var params = {noteid: noteid, columnid: columnid};
+        var params = {noteid: noteid, columnid: columnid, ownerid: ownerId};
         return Fragment.loadFragment('mod_board', 'note_form', contextid, params);
     };
 
@@ -1378,7 +1381,7 @@ export default function(board, options, contextid) {
         ModalFactory.create({
             type: ModalFactory.types.SAVE_CANCEL,
             title: title,
-            body: getBody(noteId, columnId),
+            body: getBody(noteId, columnId, ownerId),
             large: true,
             removeOnClose: true
         }).then(function(modal) {
@@ -1551,7 +1554,7 @@ export default function(board, options, contextid) {
      * @method init
      */
     var init = function() {
-        serviceCall('get_board', {id: board.id}, function(columns) {
+        serviceCall('get_board', {id: board.id, ownerid: ownerId}, function(columns) {
             // Init
             if (columns) {
                 for (var index in columns) {
