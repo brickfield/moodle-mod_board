@@ -35,7 +35,6 @@ $capabilities = array(
             'manager' => CAP_ALLOW,
         )
     ),
-
     'mod/board:addinstance' => array(
         'riskbitmask' => RISK_XSS,
 
@@ -48,7 +47,6 @@ $capabilities = array(
         ),
         'clonepermissionsfrom' => 'moodle/course:manageactivities'
     ),
-
     'mod/board:manageboard' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_MODULE,
@@ -59,4 +57,3 @@ $capabilities = array(
         )
     ),
 );
-

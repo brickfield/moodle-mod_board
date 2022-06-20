@@ -43,6 +43,8 @@ class note_form extends \moodleform {
         $mform->setType('noteid', PARAM_INT);
         $mform->addElement('hidden', 'columnid');
         $mform->setType('columnid', PARAM_INT);
+        $mform->addElement('hidden', 'ownerid');
+        $mform->setType('ownerid', PARAM_INT);
 
         $maxlen = 100;
         $mform->addElement('text', 'heading', get_string('form_title', 'mod_board'), ['maxlength' => $maxlen]);
