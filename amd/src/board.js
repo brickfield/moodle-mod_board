@@ -169,6 +169,7 @@ export default function(board, options, contextid) {
         note_changed_title: '',
         note_changed_text: '',
         note_deleted_text: '',
+        rate_note_title: '',
         rate_note_text: '',
         Ok: '',
         delete: '',
@@ -499,8 +500,8 @@ export default function(board, options, contextid) {
         serviceCall('can_rate_note', {id: ident}, function(canrate) {
             if (canrate) {
                 Notification.confirm(
+                    strings.remove_note_title,
                     strings.rate_note_text, // Are you sure?
-                    null,
                     strings.Ok,
                     strings.Cancel,
                     function() {
