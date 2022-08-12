@@ -256,3 +256,12 @@
 .delete_note {
     padding: 2px 8px 0;
 }
+
+/* Adjust the flex-fill div to 100% width not using normal view link. */
+.modtype_board div.flex-fill {
+    width: 100%;
+}
+
+iframe.mod_board-iframe {
+    overflow-x: auto;
+}

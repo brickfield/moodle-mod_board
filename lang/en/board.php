@@ -87,6 +87,10 @@ $string['history_refresh'] = 'Board refresh timer';
 $string['history_refresh_desc'] = 'Timeout in seconds between automatic board refreshes. If set to 0 or empty then the board will only refresh during board actions (add/update/etc)';
 $string['column_colours'] = 'Column Colours';
 $string['column_colours_desc'] = 'The colours used at the top of each column. These are hex colors and should be placed once per line as 3 or 6 characters. If any of these values are not equal to a colour then the defaults will be used.';
+$string['embed_width'] = 'Embed width';
+$string['embed_width_desc'] = 'Width to use for the iframe when embedding the board within the course. This should be a valid CSS value, e.g. px, rem, %, etc...';
+$string['embed_height'] = 'Embed height';
+$string['embed_height_desc'] = 'Height to use for the iframe when embedding the board within the course. This should be a valid CSS value, e.g. px, rem, %, etc...';
 
 $string['export_board'] = 'Export CSV';
 $string['export_submissions'] = 'Export Submissions';
@@ -152,6 +156,7 @@ $string['postbydate'] = 'Post by date';
 $string['boardsettings'] = 'Board settings';
 $string['postbyenabled'] = 'Limit students posting by date';
 $string['userscanedit'] = 'Allow all users to edit the placement of their own posts.';
+$string['embedboard'] = 'Embed the board into the course page';
 
 $string['invalid_youtube_url'] = 'Invalid YouTube URL';
 
