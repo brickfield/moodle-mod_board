@@ -72,5 +72,20 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2021052407, 'board');
     }
 
+    if ($oldversion < 2021052408) {
+
+        // Define field enableblanktarget to be added to board.
+        $table = new xmldb_table('board');
+        $field = new xmldb_field('enableblanktarget', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'singleusermode');
+
+        // Conditionally launch add field enableblanktarget.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2021052408, 'board');
+    }
+
     return true;
 }

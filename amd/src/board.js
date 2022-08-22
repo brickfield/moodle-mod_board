@@ -210,7 +210,8 @@ export default function(board, options, contextid) {
         isReadOnlyBoard = options.readonly || false,
         ratingenabled = options.ratingenabled,
         sortby = options.sortby || SORTBY_DATE,
-        editModal = null;
+        editModal = null,
+        enableblanktarget = (parseInt(options.enableblanktarget) === 1);
 
     /**
      * Helper method to make calls to mod_board external services.
@@ -667,6 +668,7 @@ export default function(board, options, contextid) {
             elem.addClass('wrapper_image');
             elem.show();
         } else if (attachment.url) {
+            const blanktarget = enableblanktarget ? ' target="_blank"' : '';
             switch (parseInt(attachment.type)) {
                 case ATTACHMENT_VIDEO: { // Youtube
                     let url = getEmbedUrl(attachment.url);
@@ -688,7 +690,7 @@ export default function(board, options, contextid) {
                     elem.show();
                 break;
                 case ATTACHMENT_LINK: // Url
-                    elem.html('<a href="' + attachment.url + '" class="mod_board_preview_element" target="_blank">' +
+                    elem.html('<a href="' + attachment.url + '" class="mod_board_preview_element"' + blanktarget + '>' +
                              (attachment.info || attachment.url) + '</a>');
                     elem.addClass('wrapper_url');
                     elem.show();

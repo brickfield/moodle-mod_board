@@ -73,7 +73,8 @@ $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $b
     'ratingenabled' => board::board_rating_enabled($board->id),
     'hideheaders' => board::board_hide_headers($board->id),
     'sortby' => $board->sortby,
-    'colours' => board::get_column_colours()
+    'colours' => board::get_column_colours(),
+    'enableblanktarget' => $board->enableblanktarget
 ), 'contextid' => $context->id));
 
 $PAGE->set_title(format_string($board->name));
@@ -83,6 +84,9 @@ $PAGE->set_activity_record($board);
 echo $OUTPUT->header();
 
 echo $OUTPUT->heading(format_string($board->name));
+if ($board->enableblanktarget) {
+    echo html_writer::tag('div', get_string('blanktargetenabled', 'mod_board'), ['class' => 'small']);
+}
 
 if (trim(strip_tags($board->intro))) {
     echo $OUTPUT->box_start('mod_introbox', 'pageintro');

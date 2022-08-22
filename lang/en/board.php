@@ -34,6 +34,9 @@ $string['board:manageboard'] = 'Manage columns and manage all posts.';
 $string['pluginadministration'] = 'Board module administration';
 $string['hideheaders'] = 'Hide column headers from students';
 
+$string['enableblanktarget'] = 'Enable blank target';
+$string['enableblanktarget_help'] = 'When enabled all links will open in a new tab/window.';
+$string['blanktargetenabled'] = 'This board has been configured to launch all its URL / web links in a new window or tab.';
 $string['default_column_heading'] = 'Heading';
 $string['post_button_text'] = 'Post';
 $string['cancel_button_text'] = 'Cancel';

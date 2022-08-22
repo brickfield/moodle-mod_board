@@ -92,6 +92,9 @@ class mod_board_mod_form extends moodleform_mod {
 
         $mform->addElement('advcheckbox', 'userscanedit', get_string('userscanedit', 'mod_board'));
 
+        $mform->addElement('advcheckbox', 'enableblanktarget', get_string('enableblanktarget', 'mod_board'));
+        $mform->addHelpButton('enableblanktarget', 'enableblanktarget', 'mod_board');
+
         $this->standard_coursemodule_elements();
 
         $this->add_action_buttons();
