@@ -92,6 +92,9 @@ class mod_board_mod_form extends moodleform_mod {
 
         $mform->addElement('advcheckbox', 'userscanedit', get_string('userscanedit', 'mod_board'));
 
+        // Embed board on the course, rather then give a link to it.
+        $mform->addElement('advcheckbox', 'embed', get_string('embedboard', 'mod_board'));
+
         $this->standard_coursemodule_elements();
 
         $this->add_action_buttons();

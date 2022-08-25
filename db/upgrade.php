@@ -74,5 +74,21 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2021052407, 'board');
     }
 
+    if ($oldversion < 2021052408) {
+
+        // Define field embed to be added to board.
+        $table = new xmldb_table('board');
+        $field = new xmldb_field('embed', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'userscanedit');
+
+        // Conditionally launch add field embed.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2021052408, 'board');
+
+    }
+
     return true;
 }

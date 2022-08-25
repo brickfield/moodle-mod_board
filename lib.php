@@ -360,3 +360,54 @@ function mod_board_remove_unattached_ratings() {
     }
     $recordset->close();
 }
+
+/**
+ * Dynamically change the activity to not show a link if we want to embed it.
+ * This is called via a automatic callback if this method exists.
+ * @param cm_info $cm
+ * @return void
+ */
+function board_cm_info_dynamic(cm_info $cm) {
+
+    // Look up the board based on the course module.
+    $board = board::get_board($cm->instance);
+
+    // If we are embedding the board, turn off the view link.
+    if ($board->embed) {
+        $cm->set_no_view_link();
+    }
+
+}
+
+/**
+ * This method overrides the content returned if we want to embed the board.
+ * However it only supports returning a cached_cm_info() object, so can require a purge of caches
+ * if anything in the content (such as the width and height variables) changes.
+ * @param stdClass $cm
+ * @return cached_cm_info|void
+ * @throws dml_exception
+ * @throws moodle_exception
+ */
+function board_get_coursemodule_info(stdClass $cm) {
+
+    $board = board::get_board($cm->instance);
+    if (!$board->embed) {
+        return;
+    }
+
+    $url = new moodle_url('/mod/board/view.php', [
+        'id' => $cm->id,
+        'embed' => 1
+    ]);
+
+    // Get the height and width to use.
+    $width = get_config('mod_board', 'embed_width');
+    $height = get_config('mod_board', 'embed_height');
+
+    $info = new cached_cm_info();
+    $info->name = $board->name;
+    $info->content = '<iframe src="' . $url->out() . '" style="width:' . $width . ';height:' . $height . ';" class="mod_board-iframe"></iframe>';
+
+    return $info;
+
+}

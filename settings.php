@@ -59,4 +59,10 @@ if ($ADMIN->fulltree) {
         )
     );
 
+    $settings->add(new admin_setting_configtext('mod_board/embed_width', get_string('embed_width', 'mod_board'),
+                       get_string('embed_width_desc', 'mod_board'), '99%', PARAM_TEXT));
+
+    $settings->add(new admin_setting_configtext('mod_board/embed_height', get_string('embed_height', 'mod_board'),
+                       get_string('embed_height_desc', 'mod_board'), '500px', PARAM_TEXT));
+
 }
