@@ -33,6 +33,8 @@ $string['board:view'] = 'View board content and manage own posts.';
 $string['board:manageboard'] = 'Manage columns and manage all posts.';
 $string['pluginadministration'] = 'Board module administration';
 $string['hideheaders'] = 'Hide column headers from students';
+$string['completionnotesgroup'] = 'Require notes';
+$string['completionnotes'] = 'Require students this number of notes to complete the activity';
 
 $string['enableblanktarget'] = 'Enable blank target';
 $string['enableblanktarget_help'] = 'When enabled all links will open in a new tab/window.';

@@ -87,5 +87,20 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2021052408, 'board');
     }
 
+    if ($oldversion < 2021052409) {
+
+        // Define field completionnotes to be added to board.
+        $table = new xmldb_table('board');
+        $field = new xmldb_field('completionnotes', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'userscanedit');
+
+        // Conditionally launch add field completionnotes.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2021052409, 'board');
+    }
+
     return true;
 }

@@ -396,6 +396,38 @@ class board_test extends \advanced_testcase {
     }
 
     /**
+     * Test updating activity completion when submitting 2 notes.
+     */
+    public function test_board_completion() {
+        global $CFG;
+
+        $CFG->enablecompletion = 1;
+        $this->resetAfterTest();
+
+        $this->setAdminUser();
+        $course = $this->getDataGenerator()->create_course();
+        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id, 'completionnotes' => 2]);
+        $column = self::add_column($board->id);
+        $attachment = [
+            'type' => 0,
+            'info' => '',
+            'url' => '',
+        ];
+
+        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $this->setUser($student);
+        $result = board::board_add_note($column->id, 'Test heading', 'Test content', $attachment);
+
+        $cm = get_coursemodule_from_instance('board', $board->id);
+        $result = board_get_completion_state($course, $cm, $student->id, false);
+        $this->assertEquals(COMPLETION_INCOMPLETE, $result);
+
+        $result = board::board_add_note($column->id, 'Test heading 2', 'Test content 2', $attachment);
+        $result = board_get_completion_state($course, $cm, $student->id, false);
+        $this->assertEquals(COMPLETION_COMPLETE, $result);
+    }
+
+    /**
      * Add board helper function.
      * @param int $courseid
      * @return false|mixed|\stdClass

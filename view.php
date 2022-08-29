@@ -51,6 +51,10 @@ require_course_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/board:view', $context);
 
+// Update 'viewed' state if required by completion system
+$completion = new completion_info($course);
+$completion->set_module_viewed($cm);
+
 $pageurl = new moodle_url('/mod/board/view.php', array('id' => $cm->id));
 $PAGE->set_url($pageurl);
 

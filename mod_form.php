@@ -115,6 +115,8 @@ class mod_board_mod_form extends moodleform_mod {
         $defaultvalues['background_image'] = $draftitemid;
 
         $defaultvalues['postbyenabled'] = !empty($defaultvalues['postby']);
+
+        $defaultvalues['completionnotesenabled'] = !empty($defaultvalues['completionnotes']) ? 1 : 0;
     }
 
     /**
@@ -132,5 +134,51 @@ class mod_board_mod_form extends moodleform_mod {
 
         return $errors;
     }
-}
 
+    /**
+     * Add custom completion rules.
+     *
+     * @return array Array of string IDs of added items, empty array if none
+     */
+    public function add_completion_rules() {
+        $mform =& $this->_form;
+
+        $group = [];
+        $group[] =& $mform->createElement('checkbox', 'completionnotesenabled', '', get_string('completionnotes', 'mod_board'));
+        $group[] =& $mform->createElement('text', 'completionnotes', '', ['size' => 3]);
+        $mform->setType('completionnotes', PARAM_INT);
+        $mform->addGroup($group, 'completionnotesgroup', get_string('completionnotesgroup', 'mod_board'), [' '], false);
+        $mform->disabledIf('completionnotes', 'completionnotesenabled', 'notchecked');
+
+        return ['completionnotesgroup'];
+    }
+
+    /**
+     * Determines if completion is enabled for this module.
+     *
+     * @param array $data
+     * @return bool
+     */
+    public function completion_rule_enabled($data) {
+        return (!empty($data['completionnotesenabled']) && $data['completionnotes'] != 0);
+    }
+
+    /**
+     * Allows module to modify the data returned by form get_data().
+     * This method is also called in the bulk activity completion form.
+     *
+     * Only available on moodleform_mod.
+     *
+     * @param stdClass $data the form data to be modified.
+     */
+    public function data_postprocessing($data) {
+        parent::data_postprocessing($data);
+        // Turn off completion settings if the checkboxes aren't ticked.
+        if (!empty($data->completionunlocked)) {
+            $autocompletion = !empty($data->completion) && $data->completion == COMPLETION_TRACKING_AUTOMATIC;
+            if (empty($data->completionnotesenabled) || !$autocompletion) {
+                $data->completionnotes = 0;
+            }
+        }
+    }
+}
