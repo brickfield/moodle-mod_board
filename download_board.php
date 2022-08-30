@@ -46,14 +46,17 @@ header("Expires: 0");
 
 $fp = fopen('php://output', 'w');
 $boarddata = board::board_get($board->id);
+$hasrating = board::board_rating_enabled($board->id);
 
 $maxnotes = 0;
 $line = [];
 foreach ($boarddata as $index => $column) {
     $countnotes = count($column->notes);
     $maxnotes = $countnotes > $maxnotes ? $countnotes : $maxnotes;
-
     array_push($line, $column->name);
+    if ($hasrating) {
+        array_push($line, get_string('ratings', 'board'));
+    }
 }
 fputcsv($fp, $line);
 
@@ -63,6 +66,9 @@ while ($noterow < $maxnotes) {
     foreach ($boarddata as $index => $column) {
         $notes = array_values($column->notes);
         array_push($line, isset($notes[$noterow]) ? board::get_export_note($notes[$noterow]) : '');
+        if ($hasrating) {
+            array_push($line, isset($notes[$noterow]) ? $notes[$noterow]->rating : '');
+        }
     }
     $noterow++;
     fputcsv($fp, $line);
