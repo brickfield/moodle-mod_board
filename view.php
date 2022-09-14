@@ -28,6 +28,8 @@ use mod_board\board;
 
 $id      = optional_param('id', 0, PARAM_INT); // Course Module ID.
 $b       = optional_param('b', 0, PARAM_INT);  // Board instance ID.
+$group = optional_param('group', 0, PARAM_INT);  // Group ID.
+$ownerid = optional_param('ownerid', 0, PARAM_INT);  // Board owner ID.
 
 if ($b) {
     if (!$board = $DB->get_record('board', array('id' => $b))) {
@@ -50,20 +52,35 @@ $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST)
 require_course_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/board:view', $context);
+$config = get_config('mod_board');
 
-// Update 'viewed' state if required by completion system
+// Update 'viewed' state if required by completion system.
 $completion = new completion_info($course);
 $completion->set_module_viewed($cm);
 
 $pageurl = new moodle_url('/mod/board/view.php', array('id' => $cm->id));
 $PAGE->set_url($pageurl);
 
-$config = get_config('mod_board');
+$PAGE->set_title(format_string($board->name));
+$PAGE->set_heading($course->fullname);
+$PAGE->set_activity_record($board);
+
+if ($ownerid && !board::can_view_user($board->id, $ownerid)) {
+    echo $OUTPUT->header();
+    echo $OUTPUT->heading(get_string('nopermission', 'mod_board'));
+    echo $OUTPUT->footer();
+    die();
+}
+if (!$ownerid) {
+    $ownerid = $USER->id;
+}
+
 $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $board, 'options' => array(
     'isEditor' => board::board_is_editor($board->id),
     'usersCanEdit' => board::board_users_can_edit($board->id),
     'userId' => $USER->id,
-    'readonly' => board::board_readonly($board->id),
+    'ownerId' => $ownerid,
+    'readonly' => (board::board_readonly($board->id) || !board::can_post($board->id, $USER->id, $ownerid)),
     'columnicon' => $config->new_column_icon,
     'noteicon' => $config->new_note_icon,
     'mediaselection' => $config->media_selection,
@@ -80,10 +97,6 @@ $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $b
     'colours' => board::get_column_colours(),
     'enableblanktarget' => $board->enableblanktarget
 ), 'contextid' => $context->id));
-
-$PAGE->set_title(format_string($board->name));
-$PAGE->set_heading($course->fullname);
-$PAGE->set_activity_record($board);
 
 echo $OUTPUT->header();
 
@@ -102,21 +115,44 @@ echo $OUTPUT->box_start('mod_introbox', 'group_menu');
 echo groups_print_activity_menu($cm, $pageurl, true);
 echo $OUTPUT->box_end();
 
+if ($board->singleusermode == board::SINGLEUSER_PUBLIC ||
+    (has_capability('mod/board:manageboard', $context) && $board->singleusermode == board::SINGLEUSER_PRIVATE)) {
+    $users = board::get_users_for_board($board->id, $group);
+    if (count($users) == 0) {
+        echo $OUTPUT->box_start('mod_introbox', 'pageintro');
+        echo $OUTPUT->notification(get_string('nousers', 'mod_board'));
+        echo $OUTPUT->box_end();
+    } else {
+        $select = new single_select($pageurl, 'ownerid', $users, $ownerid);
+        $select->label = get_string('selectuser', 'mod_board');
+        echo html_writer::tag('div', $OUTPUT->render($select));
+    }
+}
 
 $extrabackground = '';
 if (!empty($board->background_color)) {
     $color = '#' . str_replace('#', '', $board->background_color);
     $extrabackground = "background-color: {$color};";
 }
-$fs = get_file_storage();
-$files = $fs->get_area_files($context->id, 'mod_board', 'background', 0, '', false);
-if (count($files)) {
-    $file = reset($files);
-    $url = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(),
-            $file->get_itemid(), $file->get_filepath(), $file->get_filename())->get_path();
-    $extrabackground = "background:url({$url}) no-repeat center center; -webkit-background-size: cover;
-    -moz-background-size: cover; -o-background-size: cover; background-size: cover;";
+
+if (($board->singleusermode == board::SINGLEUSER_PUBLIC || $board->singleusermode == board::SINGLEUSER_PRIVATE) &&
+    ($ownerid == $USER->id && !is_enrolled(context_course::instance($course->id), $USER->id, '', true))) {
+
+    echo $OUTPUT->box_start('mod_introbox', 'pageintro');
+    echo $OUTPUT->notification(get_string('selectuserplease', 'mod_board'));
+    echo $OUTPUT->box_end();
+} else {
+
+    $fs = get_file_storage();
+    $files = $fs->get_area_files($context->id, 'mod_board', 'background', 0, '', false);
+    if (count($files)) {
+        $file = reset($files);
+        $url = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(),
+                $file->get_itemid(), $file->get_filepath(), $file->get_filename())->get_path();
+        $extrabackground = "background:url({$url}) no-repeat center center; -webkit-background-size: cover;
+        -moz-background-size: cover; -o-background-size: cover; background-size: cover;";
+    }
+    echo '<div class="mod_board" style="' . $extrabackground . '"></div>';
 }
-echo '<div class="mod_board" style="' . $extrabackground . '"></div>';
 
 echo $OUTPUT->footer();

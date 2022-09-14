@@ -86,6 +86,24 @@ class mod_board_mod_form extends moodleform_mod {
         );
         $mform->setType('sortby', PARAM_INT);
 
+        $boardhasnotes = (!empty($this->_cm) && board::board_has_notes($this->_cm->instance));
+        if ($boardhasnotes) {
+            $mform->addElement('html', '<div class="alert alert-info">'.get_string('boardhasnotes', 'mod_board').'</div>');
+        }
+        $mform->addElement('select', 'singleusermode', get_string('singleusermode', 'mod_board'),
+           array(
+                board::SORTBYNONE => get_string('singleusermodenone', 'mod_board'),
+                board::SORTBYDATE => get_string('singleusermodeprivate', 'mod_board'),
+                board::SORTBYRATING => get_string('singleusermodepublic', 'mod_board')
+            )
+        );
+        $mform->setType('singleusermode', PARAM_INT);
+        if ($boardhasnotes) {
+            $mform->addElement('hidden', 'hasnotes', $boardhasnotes);
+            $mform->setType('hasnotes', PARAM_BOOL);
+            $mform->disabledIf('singleusermode', 'hasnotes', 'gt', 0);
+        }
+
         $mform->addElement('checkbox', 'postbyenabled', get_string('postbyenabled', 'mod_board'));
         $mform->addElement('date_time_selector', 'postby', get_string('postbydate', 'mod_board'));
         $mform->hideIf('postby', 'postbyenabled', 'notchecked');

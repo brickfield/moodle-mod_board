@@ -2,6 +2,11 @@ Release Notes
 
 _NOTE - This release will work on Moodle 3.9, Moodle 3.10, and Moodle 3.11._
 
+##### 1.39.07 (Build 2022072700)
+
+* Added a single user mode
+* In single user mode a teacher can post on your board
+
 ##### 1.39.06 (Build 2021101501)
 New features / improvements:
 

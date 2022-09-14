@@ -102,5 +102,37 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2021052409, 'board');
     }
 
+    if ($oldversion < 2021052410) {
+
+        // Define field singleusermode to be added to board.
+        $table = new xmldb_table('board');
+        $field = new xmldb_field('singleusermode', XMLDB_TYPE_INTEGER, '4', null, null, null, '0', 'userscanedit');
+
+        // Conditionally launch add field singleusermode.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field ownerid to be added to board_history.
+        $table = new xmldb_table('board_history');
+        $field = new xmldb_field('ownerid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'groupid');
+
+        // Conditionally launch add field ownerid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field owner to be added to board_notes.
+        $table = new xmldb_table('board_notes');
+        $field = new xmldb_field('ownerid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'columnid');
+
+        // Conditionally launch add field owner.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2021052410, 'board');
+    }
+
     return true;
 }
