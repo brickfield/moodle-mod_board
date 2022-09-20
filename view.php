@@ -100,15 +100,8 @@ $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $b
 
 echo $OUTPUT->header();
 
-echo $OUTPUT->heading(format_string($board->name));
 if ($board->enableblanktarget) {
     echo html_writer::tag('div', get_string('blanktargetenabled', 'mod_board'), ['class' => 'small']);
-}
-
-if (trim(strip_tags($board->intro))) {
-    echo $OUTPUT->box_start('mod_introbox', 'pageintro');
-    echo format_module_intro('board', $board, $cm->id);
-    echo $OUTPUT->box_end();
 }
 
 echo $OUTPUT->box_start('mod_introbox', 'group_menu');
