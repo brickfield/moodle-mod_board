@@ -22,13 +22,13 @@
  */
 
 import $ from "jquery";
-import "jqueryui";
 import {get_strings as getStrings, get_string as getString} from "core/str";
 import Ajax from "core/ajax";
 import ModalFactory from "core/modal_factory";
 import ModalEvents from "core/modal_events";
 import Notification from "core/notification";
 import "mod_board/jquery.editable.amd";
+import "mod_board/jquery.sortable.amd";
 import Fragment from "core/fragment";
 
 /**
@@ -177,6 +177,7 @@ export default function(board, options, contextid) {
         aria_newpost: '',
         aria_deletecolumn: '',
         aria_deletepost: '',
+        aria_movepost: '',
         aria_addmedia: '',
         aria_addmedianew: '',
         aria_deleteattachment: '',
@@ -327,6 +328,10 @@ export default function(board, options, contextid) {
                 deleteNoteString = strings.aria_deletepost.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
 
             note.find('.delete_note').attr('aria-label', deleteNoteString).attr('title', deleteNoteString);
+
+            var moveNoteString = strings.aria_movepost.replace('{post}', noteIdentifier);
+
+            note.find('.move_note').attr('aria-label', moveNoteString).attr('title', moveNoteString);
             note.find('.mod_board_rating').attr('aria-label', strings.aria_ratepost.replace('{column}',
                 columnIdentifier).replace('{post}', noteIdentifier));
             note.find('.note_ariatext').html(noteIdentifier);
@@ -798,6 +803,10 @@ export default function(board, options, contextid) {
                 handleEditableAction(noteHeading, beginEdit);
                 handleEditableAction(noteBorder, beginEdit);
 
+                var moveElement = $('<div class="mod_board_move fa fa-arrows move_note" role="button" tabindex="0"></div>');
+                moveElement.attr('data-drag-type', 'move');
+                notecontent.append(moveElement);
+
                 setAttachment(note, attachment);
             } else {
                 previewAttachment(note, attachment);
@@ -1207,9 +1216,11 @@ export default function(board, options, contextid) {
      */
     var updateSortable = function() {
         let fromColumnID;
+
         $(".board_column_content").sortable({
             connectWith: ".board_column_content",
             cancel: ".mod_board_nosort",
+            handle: ".move_note",
             start: function(_, ui) {
                 fromColumnID = $(ui.item).closest('.board_column').data('ident');
             },

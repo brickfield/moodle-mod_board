@@ -131,6 +131,7 @@ $string['aria_newcolumn'] = 'Add new column';
 $string['aria_newpost'] = 'Add new post to column {column}';
 $string['aria_deletecolumn'] = 'Delete column {column}';
 $string['aria_deletepost'] = 'Delete post {post} from column {column}';
+$string['aria_movepost'] = 'Move post {post}';
 $string['aria_addmedia'] = 'Add {type} for post {post} from column {column}';
 $string['aria_addmedianew'] = 'Add {type} for new post from column {column}';
 $string['aria_deleteattachment'] = 'Delete attachment for post {post} from column {column}';

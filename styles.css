@@ -253,6 +253,7 @@
     cursor: pointer;
 }
 
-.delete_note {
+.mod_board .delete_note,
+.mod_board .move_note {
     padding: 2px 8px 0;
 }

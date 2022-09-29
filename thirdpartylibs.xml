@@ -7,4 +7,11 @@
         <license>GPL</license>
         <licenseversion>2</licenseversion>
     </library>
+    <library>
+        <location>amd/src/jquery.sortable.amd.js</location>
+        <name>jQuery UI - Sortable Only</name>
+        <version>1.13.2 Custom</version>
+        <license>GPL</license>
+        <licenseversion>2</licenseversion>
+    </library>
 </libraries>
