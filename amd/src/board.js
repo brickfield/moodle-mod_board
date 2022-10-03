@@ -105,6 +105,7 @@ const handleAction = function(elem, callback) {
         }
 
         callback();
+        e.preventDefault();
     });
 };
 
@@ -178,6 +179,8 @@ export default function(board, options, contextid) {
         aria_newpost: '',
         aria_deletecolumn: '',
         aria_deletepost: '',
+        aria_movepost: '',
+        aria_editpost: '',
         aria_addmedia: '',
         aria_addmedianew: '',
         aria_deleteattachment: '',
@@ -257,6 +260,18 @@ export default function(board, options, contextid) {
     };
 
     /**
+     * Returns the jquery element of the preview for the given note element.
+     *
+     * @method getNotePreviewForNote
+     * @param {object} note
+     * @returns {*|jQuery}
+     */
+    var getNotePreviewForNote = (note) => {
+        return $(note).find(".mod_board_preview");
+    };
+
+
+    /**
      * Returns the jquery element of the note heading for the given note element.
      *
      * @method getNoteHeadingForNote
@@ -328,6 +343,13 @@ export default function(board, options, contextid) {
                 deleteNoteString = strings.aria_deletepost.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
 
             note.find('.delete_note').attr('aria-label', deleteNoteString).attr('title', deleteNoteString);
+
+            var moveNoteString = strings.aria_movepost.replace('{post}', noteIdentifier);
+            note.find('.move_note').attr('aria-label', moveNoteString).attr('title', moveNoteString);
+
+            var editNoteString = strings.aria_editpost.replace('{post}', noteIdentifier);
+            note.find('.edit_note').attr('aria-label', editNoteString).attr('title', editNoteString);
+
             note.find('.mod_board_rating').attr('aria-label', strings.aria_ratepost.replace('{column}',
                 columnIdentifier).replace('{post}', noteIdentifier));
             note.find('.note_ariatext').html(noteIdentifier);
@@ -679,8 +701,9 @@ export default function(board, options, contextid) {
                     } else {
                         elem.html('<iframe src="' + url +
                             '" class="mod_board_preview_element" frameborder="0" allow="accelerometer; autoplay; clipboard-write;' +
-                            'encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>');
-                        elem.addClass('wrapper_youtube');
+                            'encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><a href="#" ' +
+                            'class="stretched-link" aria-hidden="true"></a>');
+                        elem.addClass('wrapper_youtube').addClass('position-relative');
                     }
                     elem.show();
                 }
@@ -756,6 +779,7 @@ export default function(board, options, contextid) {
         }
 
         var notecontent = $('<div class="mod_board_note_content"></div>'),
+            notecontrols = $('<div class="mod_board_note_controls"></div>'),
             noteHeading = $('<div class="mod_board_note_heading" tabindex="0">' + (heading ? heading : '') + '</div>'),
             noteBorder = $('<div class="mod_board_note_border"></div>'),
             noteText = $('<div class="mod_board_note_text" tabindex="0">' + (content ? content : '') + '</div>'),
@@ -784,7 +808,7 @@ export default function(board, options, contextid) {
                 handleAction(rateElement, () => {
                     rateNote(ident);
                 });
-                notecontent.append(rateElement);
+                notecontrols.append(rateElement);
             }
 
             if (iseditable) {
@@ -793,16 +817,25 @@ export default function(board, options, contextid) {
                     deleteNote(ident);
                 });
 
-                notecontent.append(removeElement);
+                notecontrols.append(removeElement);
 
-                handleEditableAction(noteText, beginEdit);
-                handleEditableAction(noteHeading, beginEdit);
-                handleEditableAction(noteBorder, beginEdit);
+                var moveElement = $('<div class="mod_board_move fa fa-arrows move_note" role="button" tabindex="0"></div>');
+                notecontrols.append(moveElement);
+
+                var editElement = $('<div class="mod_board_move fa fa-pencil edit_note" role="button" tabindex="0"></div>');
+                notecontrols.append(editElement);
+                handleAction(editElement, () => {
+                    beginEdit();
+                });
 
                 setAttachment(note, attachment);
             } else {
                 previewAttachment(note, attachment);
             }
+
+            note.append(notecontrols);
+
+            handleAction(notecontent, () => fullScreenNote(notecontent));
 
             if (!noteHeading.html()) {
                 noteHeading.hide();
@@ -1211,6 +1244,7 @@ export default function(board, options, contextid) {
         $(".board_column_content").sortable({
             connectWith: ".board_column_content",
             cancel: ".mod_board_nosort",
+            handle: ".move_note",
             start: function(_, ui) {
                 fromColumnID = $(ui.item).closest('.board_column').data('ident');
             },
@@ -1544,9 +1578,34 @@ export default function(board, options, contextid) {
                 modal.show();
 
                 return modal;
-            });
+            }).catch(Notification.exception);
             return modal;
-        });
+        }).catch(Notification.exception);
+    };
+
+
+    var fullScreenNote = (notecontent) => {
+        const heading = getNoteHeadingForNote(notecontent).html();
+        const modalBody = $(document.createElement('div'));
+        modalBody.addClass('mod_board_note_content');
+        const text = getNoteTextForNote(notecontent);
+        if (text) {
+            modalBody.append(text.clone());
+        }
+        const preview = getNotePreviewForNote(notecontent);
+        if (preview) {
+            modalBody.append(preview.clone());
+        }
+
+        ModalFactory.create({
+            type: ModalFactory.types.CANCEL,
+            title: heading,
+            body: modalBody,
+        }).then(function(modal) {
+            modal.setLarge();
+            modal.show();
+            return modal;
+        }, this).catch(Notification.exception);
     };
 
     /**
