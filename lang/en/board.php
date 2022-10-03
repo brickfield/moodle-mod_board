@@ -77,6 +77,8 @@ $string['modal_title_new'] = 'New post for column {column}';
 $string['modal_title_edit'] = 'Edit post for column {column}';
 $string['posts'] = 'Posts';
 
+$string['allowyoutube'] = 'Allow youtube';
+$string['allowyoutube_desc'] = 'If activated a button to add an embeded Youtube Video is supported.';
 $string['new_column_icon'] = 'New column icon';
 $string['new_column_icon_desc'] = 'Icon displayed on the new button for columns.';
 $string['new_note_icon'] = 'New post icon';
