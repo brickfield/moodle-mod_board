@@ -112,7 +112,7 @@
     opacity: 0.8;
 }
 
-.mod_board .mod_board_note_content {
+.mod_board .board_note {
     margin: 4px 4px 8px;
     position: relative;
     padding: 8px;
@@ -168,22 +168,22 @@
     margin-top: 0;
 }
 
-.mod_board .mod_board_note_content .mod_board_preview .mod_board_preview_element {
+.mod_board_note_content .mod_board_preview .mod_board_preview_element {
     width: 100%;
 }
-.mod_board .mod_board_note_content .mod_board_preview.wrapper_image .mod_board_preview_element {
+.mod_board_note_content .mod_board_preview.wrapper_image .mod_board_preview_element {
     max-width: 100%;
     margin: auto;
     display: block;
     width: auto;
 }
-.mod_board .mod_board_note_content .mod_board_preview.wrapper_youtube {
+.mod_board_note_content .mod_board_preview.wrapper_youtube {
     padding-top: 0;
     position: relative;
     padding-bottom: 56.25%;
     height: 0;
 }
-.mod_board .mod_board_note_content .mod_board_preview iframe.mod_board_preview_element {
+.mod_board_note_content .mod_board_preview iframe.mod_board_preview_element {
     position: absolute;
     top: 0;
     left: 0;
@@ -253,6 +253,12 @@
     cursor: pointer;
 }
 
-.delete_note {
+.mod_board .delete_note,
+.mod_board .move_note,
+.mod_board .edit_note {
     padding: 2px 8px 0;
+}
+
+.path-mod-board .modal-content .stretched-link::after {
+    content: unset;
 }
