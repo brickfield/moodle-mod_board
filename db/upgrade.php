@@ -134,5 +134,27 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2021110101, 'board');
     }
 
+    if ($oldversion < 2021110102) {
+
+        // Define field locked to be added to board_columns.
+        $table = new xmldb_table('board_columns');
+        $field = new xmldb_field('locked', XMLDB_TYPE_INTEGER, '4', null, null, null, null, 'name');
+
+        // Conditionally launch add field locked.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('sortorder', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'name');
+
+        // Conditionally launch add field sortorder.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2021110102, 'board');
+    }
+
     return true;
 }

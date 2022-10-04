@@ -20,25 +20,34 @@
     border-radius: 0.5em;
 }
 
-.mod_board .board_column.board_column_empty {
+.mod_board .board_column_empty {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    order: 1;
+    margin: 12px 4px;
     flex-basis: 60px;
     min-width: 60px;
     max-width: 60px;
 }
 
 .mod_board .board_column_header {
+    display: flex;
+    align-items: flex-start;
     margin: 10px 5px 0 5px;
     padding: 10px;
     font-size: 1.1em;
     font-weight: 800;
     position: relative;
 }
+.mod_board .board_column_header .icon {
+    margin-top: 5px;
+}
 
 .board_column_header .mod_board_column_name {
-    float: left;
     overflow: hidden;
     text-overflow: ellipsis;
-    width: calc(100% - 20px);
+    flex: 1 1 auto;
 }
 
 .board_column_header .mod_board_column_sort {
@@ -88,10 +97,6 @@
 }
 
 .mod_board .board_column_header .mod_board_remove {
-    position: absolute;
-    top: 3px;
-    right: 5px;
-    color: #333;
     cursor: pointer;
 }
 

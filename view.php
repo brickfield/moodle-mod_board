@@ -152,7 +152,8 @@ if (($board->singleusermode == board::SINGLEUSER_PUBLIC || $board->singleusermod
         $extrabackground = "background:url({$url}) no-repeat center center; -webkit-background-size: cover;
         -moz-background-size: cover; -o-background-size: cover; background-size: cover;";
     }
-    echo '<div class="mod_board" style="' . $extrabackground . '"></div>';
+    echo '<div class="mod_board_wrapper class="d-flex">
+        <div class="mod_board flex-fill" style="' . $extrabackground . '"></div></div>';
 }
 
 echo $OUTPUT->footer();
