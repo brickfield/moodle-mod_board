@@ -183,6 +183,7 @@ export default function(board, options, contextid) {
         aria_addmedia: '',
         aria_addmedianew: '',
         aria_deleteattachment: '',
+        aria_lockcolumn: '',
         aria_postedit: '',
         aria_canceledit: '',
         aria_postnew: '',
@@ -366,9 +367,11 @@ export default function(board, options, contextid) {
         var column = $('.board_column[data-ident=' + columnId + ']'),
             columnIdentifier = column.find('.mod_board_column_name').text(),
             newNoteString = strings.aria_newpost.replace('{column}', columnIdentifier),
-            deleteColumnString = strings.aria_deletecolumn.replace('{column}', columnIdentifier);
+            deleteColumnString = strings.aria_deletecolumn.replace('{column}', columnIdentifier),
+            lockColumnString = strings.aria_lockcolumn.replace('{column}', columnIdentifier);
         column.find('.newnote').attr('aria-label', newNoteString).attr('title', newNoteString);
         column.find('.delete_column').attr('aria-label', deleteColumnString).attr('title', deleteColumnString);
+        column.find('.lock_column').attr('aria-label', lockColumnString).attr('title', lockColumnString);
 
         column.find(".board_note").each(function(index, note) {
             updateNoteAria($(note).data('ident'));
@@ -811,7 +814,7 @@ export default function(board, options, contextid) {
             }
 
             if (iseditable) {
-                var removeElement = $('<div class="mod_board_remove fa fa-remove delete_note" role="button" tabindex="0"></div>');
+                var removeElement = $('<div class="fa fa-remove delete_note" role="button" tabindex="0"></div>');
                 handleAction(removeElement, () => {
                     deleteNote(ident);
                 });
@@ -866,14 +869,16 @@ export default function(board, options, contextid) {
      * @method addColumn
      * @param {object} ident
      * @param {string} name
+     * @param {bool} locked
      * @param {array} notes
      * @param {string} colour
      */
-    var addColumn = function (ident, name, notes, colour) {
+    var addColumn = function(ident, name, locked, notes, colour) {
         let headerStyle = `style="border-top: 10px solid #${colour}"`;
         var iseditable = isEditor,
             nameCache = null,
-            column = $(`<div class="board_column board_column_hasdata" ${headerStyle} data-ident="${ident}"></div>`),
+            column = $(`<div class="board_column board_column_hasdata" data-locked="${locked}"\
+                 ${headerStyle} data-ident="${ident}"></div>`),
             columnHeader = $('<div class="board_column_header"></div>'),
             columnSort = $('<div class="mod_board_column_sort fa"></div>'),
             columnName = $('<div class="mod_board_column_name" tabindex="0" aria-level="3" role="heading">' + name + '</div>'),
@@ -895,8 +900,34 @@ export default function(board, options, contextid) {
 
         if (iseditable) {
             column.addClass('mod_board_editablecolumn');
+            const lockIcon = locked ? 'fa-lock' : 'fa-unlock';
+            const lockElement = $(`<div class="icon fa ${lockIcon} lock_column" role="button" tabindex="0"></div>`);
 
-            var removeElement = $('<div class="mod_board_remove fa fa-remove delete_column" role="button" tabindex="0"></div>');
+            handleAction(lockElement, () => {
+                const lockColumn = column.attr('data-locked') !== 'true';
+                serviceCall('lock_column', {id: ident, status: lockColumn}, function(result) {
+                    if (result.status) {
+                        if (lockColumn) {
+                            lockElement.removeClass('fa-unlock').addClass('fa-lock');
+                            column.attr('data-locked', 'true');
+                            column.find('.board_button.newnote').addClass('d-none');
+                        } else {
+                            lockElement.removeClass('fa-lock').addClass('fa-unlock');
+                            column.attr('data-locked', 'false');
+                            column.find('.board_button.newnote').removeClass('d-none');
+
+                        }
+                        lastHistoryId = result.historyid;
+                        updateSortable();
+                    }
+                });
+            });
+            columnHeader.append(lockElement);
+
+            columnHeader.addClass('icon-size-3');
+            const moveElement = $('<div class="icon fa fa-arrows mod_column_move" role="button" tabindex="0"></div>');
+            columnHeader.append(moveElement);
+            var removeElement = $('<div class="icon fa fa-remove delete_column" role="button" tabindex="0"></div>');
             handleAction(removeElement, () => {
                 Notification.confirm(
                     strings.remove_column_title, // Are you sure?
@@ -952,9 +983,12 @@ export default function(board, options, contextid) {
         }
 
         if (!isReadOnlyBoard) {
-            columnNewContent.append('<div class="board_button newnote" role="button" tabindex="0">' +
+            const newNoteButton = $('<div class="board_button newnote" role="button" tabindex="0">' +
             '<div class="button_content"><span class="fa ' + options.noteicon + '"></span></div></div>');
-
+            columnNewContent.append(newNoteButton);
+            if (column.attr('data-locked') === 'true') {
+                newNoteButton.addClass('d-none');
+            }
             handleAction(columnNewContent.find('.newnote'), function() {
                 addNote(ident, 0, null, null, null, {id: userId}, 0, 0);
             });
@@ -980,6 +1014,9 @@ export default function(board, options, contextid) {
         if (isEditor || usersCanEdit == 1) {
             updateSortable();
         }
+        if (isEditor) {
+            columnSorting();
+        }
     };
 
     /**
@@ -997,7 +1034,7 @@ export default function(board, options, contextid) {
      * @method addNewColumnButton
      */
     var addNewColumnButton = function() {
-        var column = $('<div class="board_column board_column_empty"></div>'),
+        var column = $('<div class="board_column_empty"></div>'),
             newBusy = false;
         column.append('<div class="board_button newcolumn" role="button" tabindex="0" aria-label="' +
             strings.aria_newcolumn + '" title="' + strings.aria_newcolumn + '"><div class="button_content"><span class="fa '
@@ -1010,7 +1047,7 @@ export default function(board, options, contextid) {
             newBusy = true;
 
             serviceCall('add_column', {boardid: board.id, name: strings.default_column_heading}, function(result) {
-                addColumn(result.id, strings.default_column_heading, {}, selectHeadingColour());
+                addColumn(result.id, strings.default_column_heading, false, {}, selectHeadingColour());
                 lastHistoryId = result.historyid;
                 newBusy = false;
             }, function() {
@@ -1122,10 +1159,24 @@ export default function(board, options, contextid) {
                     note.remove();
 
                 } else if (item.action == 'add_column') {
-                    addColumn(data.id, data.name, {}, selectHeadingColour());
+                    addColumn(data.id, data.name, false, {}, selectHeadingColour());
+                } else if (item.action == 'move_column') {
+                    const board = $('.mod_board');
+                    data.sortorder.forEach(column => {
+                        const columnElement = board.find(`.board_column[data-ident='${column}']`);
+                        columnElement.detach().appendTo(board);
+                    });
                 } else if (item.action == 'update_column') {
                     $(".board_column[data-ident='" + data.id + "'] .mod_board_column_name").html(data.name);
                     updateColumnAria(data.id);
+                } else if (item.action == 'lock_column') {
+                    $(".board_column[data-ident='" + data.id + "']").attr("data-locked", data.locked);
+                    if (data.locked) {
+                        $(".board_column[data-ident='" + data.id + "']").find('.board_button.newnote').addClass('d-none');
+                    } else {
+                        $(".board_column[data-ident='" + data.id + "']").find('.board_button.newnote').removeClass('d-none');
+                    }
+                    updateSortable();
                 } else if (item.action == 'delete_column') {
                     var column = $(".board_column[data-ident='" + data.id + "']");
                     if (editingNote && column.find('.board_note[data-ident="' + editingNote + '"]').length) {
@@ -1240,9 +1291,8 @@ export default function(board, options, contextid) {
      */
     var updateSortable = function() {
         let fromColumnID;
-
-        $(".board_column_content").sortable({
-            connectWith: ".board_column_content",
+        $(".board_column[data-locked='false'] .board_column_content").sortable({
+            connectWith: ".board_column[data-locked='false'] .board_column_content",
             cancel: ".mod_board_nosort",
             handle: ".move_note",
             start: function(_, ui) {
@@ -1272,6 +1322,33 @@ export default function(board, options, contextid) {
                         elem.sortable('cancel');
                     }
                 });
+            }
+        });
+    };
+
+    /**
+     * Enable column sorting
+     */
+    const columnSorting = () => {
+        let movingColumnId;
+        $(".mod_board").sortable({
+            connectWith: ".mod_board",
+            axis: "x",
+            containment: ".mod_board_wrapper",
+            cancel: ".mod_board_nosort",
+            handle: ".mod_column_move",
+            start: function(_, ui) {
+                movingColumnId = $(ui.item).closest('.board_column').data('ident');
+            },
+            stop: function(_, ui) {
+                let column = $(ui.item);
+                let columns = $(".mod_board").find('.board_column');
+                let sortorder = columns.index(column);
+                let payload = {
+                    id: movingColumnId,
+                    sortorder: sortorder
+                };
+                serviceCall('move_column', payload);
             }
         });
     };
@@ -1621,8 +1698,9 @@ export default function(board, options, contextid) {
                     addColumn(
                         columns[index].id,
                         columns[index].name,
+                        columns[index].locked,
                         columns[index].notes || {},
-                        options.colours[index % options.colours.length]
+                        options.colours[columns[index].id % options.colours.length]
                     );
                 }
             }
@@ -1635,6 +1713,7 @@ export default function(board, options, contextid) {
 
             if (isEditor) {
                 updateSortable();
+                columnSorting();
             }
 
             updateBoard();

@@ -274,7 +274,7 @@ class board {
         $groupid = groups_get_activity_group(static::coursemodule_for_board(static::get_board($boardid)), true) ?: null;
         $hideheaders = static::board_hide_headers($boardid);
 
-        $columns = $DB->get_records('board_columns', array('boardid' => $boardid), 'id', 'id, name');
+        $columns = $DB->get_records('board_columns', array('boardid' => $boardid), 'sortorder, id', 'id, name, locked');
         $columnindex = 0;
 
         if ($board->singleusermode == static::SINGLEUSER_PRIVATE) {
@@ -290,6 +290,9 @@ class board {
         }
 
         foreach ($columns as $columnid => $column) {
+            if ($column->locked === null) {
+                $column->locked = false;
+            }
             if ($hideheaders) {
                 $column->name = ++$columnindex;
             }
@@ -366,7 +369,10 @@ class board {
 
         $transaction = $DB->start_delegated_transaction();
 
-        $columnid = $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $name));
+        $maxsortorder = $DB->get_field('board_columns', 'MAX(sortorder)', ['boardid' => $boardid]);
+
+        $columnid = $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $name,
+            'sortorder' => $maxsortorder + 1));
         $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'add_column',
             'ownerid' => 0, 'userid' => $USER->id, 'content' => json_encode(array('id' => $columnid, 'name' => $name)),
             'timecreated' => time()));
@@ -482,6 +488,26 @@ class board {
 
         static::clear_history();
         return array('status' => $delete, 'historyid' => $historyid);
+    }
+
+    /**
+     * Locks a columns
+     *
+     * @param int $id
+     * @param bool $locked True to lock the column, false to unlock it.
+     * @return array
+     */
+    public static function board_lock_column(int $id, bool $locked): array {
+        global $DB, $USER;
+
+        static::require_capability_for_column($id);
+        $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $id));
+
+        $result = $DB->set_field('board_columns', 'locked', $locked, ['id' => $id]);
+        $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'lock_column',
+                                        'content' => json_encode(array('id' => $id, 'locked' => $locked)),
+                                        'userid' => $USER->id, 'timecreated' => time()));
+        return array('status' => $result, 'historyid' => $historyid);
     }
 
     /**
@@ -662,7 +688,9 @@ class board {
         $content = empty($content) ? "" : substr($content, 0, get_config('mod_board', 'post_max_length'));
         $content = clean_text($content, FORMAT_HTML);
 
-        $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $columnid));
+        $column = static::get_column($columnid);
+
+        $boardid = $column->boardid;
         // Get the count of notes in the column to add to bottom of sort order.
         $countnotes = $DB->count_records('board_notes', ['columnid' => $columnid]);
 
@@ -897,6 +925,51 @@ class board {
             'other' => array('columnid' => $columnid)
         ));
         $event->trigger();
+    }
+
+    /**
+     * Moves a column to a new position.
+     *
+     * @param int $id the column id
+     * @param int $sortorder the new sortorder
+     */
+    public static function board_move_column(int $id, int $sortorder): array {
+        global $DB, $USER;
+
+        $column = static::get_column($id);
+        $columns = $DB->get_records('board_columns', ['boardid' => $column->boardid], 'sortorder ASC, id ASC');
+        self::repositionan_array_element($columns, $id, $sortorder);
+        $sortorder = 1;
+        $neworder = [];
+        foreach ($columns as $column) {
+            $column->sortorder = $sortorder++;
+            $neworder[] = $column->id;
+            $DB->update_record('board_columns', $column);
+        }
+        $historyid = $DB->insert_record('board_history', [
+            'boardid' => $column->boardid, 'action' => 'move_column',
+            'content' => json_encode(['sortorder' => $neworder]),
+            'userid' => $USER->id, 'timecreated' => time()]);
+        return ['status' => 1, 'historyid' => $historyid];
+
+    }
+
+    /**
+     * Reposition an array element by its key.
+     *
+     * @param array      $array The array being reordered.
+     * @param string|int $key They key of the element you want to reposition.
+     * @param int        $order The position in the array you want to move the element to. (0 is first)
+     *
+     * @throws \Exception
+     */
+    private static function repositionan_array_element(array &$array, $key, int $order): void {
+        if (($a = array_search($key, array_keys($array))) === false) {
+            throw new \Exception("The {$key} cannot be found in the given array.");
+        }
+        $p1 = array_splice($array, $a, 1);
+        $p2 = array_splice($array, 0, $order);
+        $array = array_merge($p2, $p1, $array);
     }
 
     /**
