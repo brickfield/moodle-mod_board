@@ -37,7 +37,7 @@ class backup_board_activity_structure_step extends backup_activity_structure_ste
             'completionnotes'));
 
         $columns = new backup_nested_element('columns');
-        $column = new backup_nested_element('column', array('id'), array('boardid', 'name'));
+        $column = new backup_nested_element('column', array('id'), array('boardid', 'name', 'sortorder'));
 
         $notes = new backup_nested_element('notes');
         $note = new backup_nested_element('note', array('id'), array(

@@ -123,6 +123,7 @@ class mod_board_external extends external_api {
                 array(
                     'id' => new external_value(PARAM_INT, 'column id'),
                     'name' => new external_value(PARAM_TEXT, 'column name'),
+                    'locked' => new external_value(PARAM_BOOL, 'column locked'),
                     'notes' => new external_multiple_structure(
                         new external_single_structure(
                             array(
@@ -265,6 +266,49 @@ class mod_board_external extends external_api {
     public static function delete_column_returns(): external_single_structure {
         return new external_single_structure([
             'status' => new external_value(PARAM_BOOL, 'The delete status'),
+            'historyid' => new external_value(PARAM_INT, 'The last history id')
+        ]);
+    }
+
+    /**
+     * Function lock_column_parameters.
+     * @return external_function_parameters
+     */
+    public static function lock_column_parameters(): external_function_parameters {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'The column id', VALUE_REQUIRED),
+            'status' => new external_value(PARAM_BOOL, 'True to lock the column', VALUE_REQUIRED),
+        ]);
+    }
+
+    /**
+     * Function lock_column.
+     * @param int $id
+     * @param bool $status
+     * @return array
+     */
+    public static function lock_column(int $id, bool $status): array {
+        // Validate recieved parameters.
+        $params = self::validate_parameters(self::lock_column_parameters(), [
+            'id' => $id,
+            'status' => $status,
+        ]);
+
+        // Request and permission validation.
+        $column = board::get_column($params['id']);
+        $context = board::context_for_board($column->boardid);
+        self::validate_context($context);
+
+        return board::board_lock_column($params['id'], $params['status']);
+    }
+
+    /**
+     * Function lock_column_returns.
+     * @return external_single_structure
+     */
+    public static function lock_column_returns(): external_single_structure {
+        return new external_single_structure([
+            'status' => new external_value(PARAM_BOOL, 'The lock status'),
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
     }
@@ -417,6 +461,49 @@ class mod_board_external extends external_api {
     public static function delete_note_returns(): external_single_structure {
         return new external_single_structure([
             'status' => new external_value(PARAM_BOOL, 'The delete status'),
+            'historyid' => new external_value(PARAM_INT, 'The last history id')
+        ]);
+    }
+
+    /**
+     * Function move_column_parameters.
+     * @return external_function_parameters
+     */
+    public static function move_column_parameters(): external_function_parameters {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'The column id', VALUE_REQUIRED),
+            'sortorder' => new external_value(PARAM_INT, 'The new sort order for the column', VALUE_REQUIRED)
+        ]);
+    }
+
+    /**
+     * Function move_column.
+     * @param int $id
+     * @param int $sortorder The order in the column that the note was placed.
+     * @return array
+     */
+    public static function move_column(int $id, int $sortorder): array {
+        // Validate recieved parameters.
+        $params = self::validate_parameters(self::move_column_parameters(), [
+            'id' => $id,
+            'sortorder' => $sortorder,
+        ]);
+
+        // Request and permission validation.
+        $column = board::get_column($params['id']);
+        $context = board::context_for_board($column->boardid);
+        self::validate_context($context);
+
+        return board::board_move_column($params['id'], $params['sortorder']);
+    }
+
+    /**
+     * Function move_column_returns.
+     * @return external_single_structure
+     */
+    public static function move_column_returns(): external_single_structure {
+        return new external_single_structure([
+            'status' => new external_value(PARAM_BOOL, 'The move status'),
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
     }

@@ -91,6 +91,28 @@ $functions = [
         'loginrequired' => true,
     ],
 
+    'mod_board_lock_column' => [
+        'classname'     => 'mod_board_external',
+        'methodname'    => 'lock_column',
+        'classpath'     => 'mod/board/external.php',
+        'description'   => 'Lock a column from the board',
+        'type'          => 'write',
+        'capabilities'  => '',
+        'ajax'          => true,
+        'loginrequired' => true,
+    ],
+
+    'mod_board_move_column' => [
+        'classname'     => 'mod_board_external',
+        'methodname'    => 'move_column',
+        'classpath'     => 'mod/board/external.php',
+        'description'   => 'Move a note on the board',
+        'type'          => 'write',
+        'capabilities'  => '',
+        'ajax'          => true,
+        'loginrequired' => true,
+    ],
+
     'mod_board_move_note' => [
         'classname'     => 'mod_board_external',
         'methodname'    => 'move_note',
