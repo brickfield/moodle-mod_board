@@ -47,13 +47,13 @@ class note_form extends \moodleform {
         $maxlen = 100;
         $mform->addElement('text', 'heading', get_string('form_title', 'mod_board'), ['maxlength' => $maxlen]);
         $mform->setType('heading', PARAM_TEXT);
-        $mform->addRule('heading', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
+        $mform->addRule('heading', get_string('maximumchars', '', $maxlen), 'maxlength', $maxlen, 'client');
 
         $maxlen = $config->post_max_length;
         $options = ['maxlength' => $maxlen, 'cols' => 30, 'rows' => 3];
         $mform->addElement('textarea', 'content', get_string('form_body', 'mod_board'), $options);
         $mform->setType('content', PARAM_TEXT);
-        $mform->addRule('content', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
+        $mform->addRule('content', get_string('maximumchars', '', $maxlen), 'maxlength', $maxlen, 'client');
 
         $options = [
             0 => get_string('option_empty', 'mod_board'),
@@ -73,37 +73,42 @@ class note_form extends \moodleform {
         $mform->addElement('static', 'mediabuttons', get_string('form_mediatype', 'mod_board'), $html);
 
         // Link.
-        $options = ['maxlength' => 100, 'placeholder' => get_string('option_link_info', 'mod_board')];
+        $maxlen = 100;
+        $options = ['maxlength' => $maxlen, 'placeholder' => get_string('option_link_info', 'mod_board')];
         $mform->addElement('text', 'linktitle', get_string('option_link_info', 'mod_board'), $options);
         $mform->setType('linktitle', PARAM_TEXT);
         $mform->hideIf('linktitle', 'mediatype', 'neq', 3);
-        $mform->addRule('linktitle', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
+        $mform->addRule('linktitle', get_string('maximumchars', '', $maxlen), 'maxlength', $maxlen, 'client');
 
-        $attr = ['maxlength' => 200, 'placeholder' => get_string('option_link_url', 'mod_board')];
+        $maxlen = 200;
+        $attr = ['maxlength' => $maxlen, 'placeholder' => get_string('option_link_url', 'mod_board')];
         $mform->addElement('url', 'linkurl', get_string('option_link_url', 'mod_board'), $attr, ['usefilepicker' => false]);
         $mform->setType('linkurl', PARAM_URL);
         $mform->hideIf('linkurl', 'mediatype', 'neq', 3);
-        $mform->addRule('linkurl', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
+        $mform->addRule('linkurl', get_string('maximumchars', '', $maxlen), 'maxlength', $maxlen, 'client');
 
         // YouTube video.
-        $options = ['maxlength' => 100, 'placeholder' => get_string('option_youtube_info', 'mod_board')];
+        $maxlen = 100;
+        $options = ['maxlength' => $maxlen, 'placeholder' => get_string('option_youtube_info', 'mod_board')];
         $mform->addElement('text', 'youtubetitle', get_string('option_youtube_info', 'mod_board'), $options);
         $mform->setType('youtubetitle', PARAM_TEXT);
         $mform->hideIf('youtubetitle', 'mediatype', 'neq', 1);
-        $mform->addRule('youtubetitle', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
+        $mform->addRule('youtubetitle', get_string('maximumchars', '', $maxlen), 'maxlength', $maxlen, 'client');
 
-        $options = ['maxlength' => 200, 'placeholder' => get_string('option_youtube_url', 'mod_board')];
+        $maxlen = 200;
+        $options = ['maxlength' => $maxlen, 'placeholder' => get_string('option_youtube_url', 'mod_board')];
         $mform->addElement('text', 'youtubeurl', get_string('option_youtube_url', 'mod_board'), $options);
         $mform->setType('youtubeurl', PARAM_URL);
         $mform->hideIf('youtubeurl', 'mediatype', 'neq', 1);
-        $mform->addRule('youtubeurl', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
+        $mform->addRule('youtubeurl', get_string('maximumchars', '', $maxlen), 'maxlength', $maxlen, 'client');
 
         // Image file.
-        $options = ['maxlength' => 100, 'placeholder' => get_string('option_image_info', 'mod_board')];
+        $maxlen = 100;
+        $options = ['maxlength' => $maxlen, 'placeholder' => get_string('option_image_info', 'mod_board')];
         $mform->addElement('text', 'imagetitle', get_string('option_image_info', 'mod_board'), $options);
         $mform->setType('imagetitle', PARAM_TEXT);
         $mform->hideIf('imagetitle', 'mediatype', 'neq', 2);
-        $mform->addRule('imagetitle', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
+        $mform->addRule('imagetitle', get_string('maximumchars', '', $maxlen), 'maxlength', $maxlen, 'client');
 
         $pickerparams = board::get_image_picker_options();
         $mform->addElement('filemanager', 'imagefile', get_string('form_image_file', 'mod_board'), null, $pickerparams);
