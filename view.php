@@ -63,7 +63,6 @@ $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $b
     'columnicon' => $config->new_column_icon,
     'noteicon' => $config->new_note_icon,
     'mediaselection' => $config->media_selection,
-    'post_max_length' => $config->post_max_length,
     'history_refresh' => $config->history_refresh,
     'file' => array(
         'extensions' => explode(',', board::ACCEPTED_FILE_EXTENSIONS),
