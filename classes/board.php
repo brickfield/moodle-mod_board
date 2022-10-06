@@ -312,7 +312,7 @@ class board {
     public static function board_add_column(int $boardid, string $name): array {
         global $DB, $USER;
 
-        $name = substr($name, 0, 100);
+        $name = mb_substr($name, 0, 100);
 
         static::require_capability_for_board($boardid);
 
@@ -358,7 +358,7 @@ class board {
     public static function board_update_column(int $id, string $name): array {
         global $DB, $USER;
 
-        $name = substr($name, 0, 100);
+        $name = mb_substr($name, 0, 100);
 
         static::require_capability_for_column($id);
 
@@ -609,8 +609,8 @@ class board {
             require_capability('mod/board:view', $context);
         }
 
-        $heading = empty($heading) ? null : substr($heading, 0, 100);
-        $content = empty($content) ? "" : substr($content, 0, get_config('mod_board', 'post_max_length'));
+        $heading = empty($heading) ? null : mb_substr($heading, 0, 100);
+        $content = empty($content) ? "" : mb_substr($content, 0, get_config('mod_board', 'post_max_length'));
         $content = clean_text($content, FORMAT_HTML);
 
         $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $columnid));
@@ -627,8 +627,8 @@ class board {
             }
             $transaction = $DB->start_delegated_transaction();
             $type = !empty($attachment['type']) ? $attachment['type'] : 0;
-            $info = !empty($type) ? substr(s($attachment['info']), 0, 100) : null;
-            $url = !empty($type) ? substr($attachment['url'], 0, 200) : null;
+            $info = !empty($type) ? mb_substr(s($attachment['info']), 0, 100) : null;
+            $url = !empty($type) ? mb_substr($attachment['url'], 0, 200) : null;
 
             $notecreated = time();
             $noteid = $DB->insert_record('board_notes', array('groupid' => $groupid, 'columnid' => $columnid,
@@ -701,8 +701,8 @@ class board {
 
         static::require_capability_for_note($id);
 
-        $heading = empty($heading) ? null : substr($heading, 0, 100);
-        $content = empty($content) ? "" : substr($content, 0, get_config('mod_board', 'post_max_length'));
+        $heading = empty($heading) ? null : mb_substr($heading, 0, 100);
+        $content = empty($content) ? "" : mb_substr($content, 0, get_config('mod_board', 'post_max_length'));
         $content = clean_text($content, FORMAT_HTML);
 
         $note = static::get_note($id);
@@ -723,8 +723,8 @@ class board {
             $attachment = static::board_note_update_attachment($id, $attachment, $previoustype);
 
             $type = !empty($attachment['type']) ? $attachment['type'] : 0;
-            $info = !empty($type) ? substr(s($attachment['info']), 0, 100) : null;
-            $url = !empty($type) ? substr($attachment['url'], 0, 200) : null;
+            $info = !empty($type) ? mb_substr(s($attachment['info']), 0, 100) : null;
+            $url = !empty($type) ? mb_substr($attachment['url'], 0, 200) : null;
 
             $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'update_note',
                                             'userid' => $USER->id, 'content' => json_encode(array('id' => $id,
