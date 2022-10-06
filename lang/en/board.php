@@ -118,6 +118,8 @@ $string['event_update_column'] = 'Column updated';
 $string['event_update_column_desc'] = 'The user with id \'{$a->userid}\' updated board column with id \'{$a->objectid}\' to \'{$a->name}\'.';
 $string['event_delete_column'] = 'Column deleted';
 $string['event_delete_column_desc'] = 'The user with id \'{$a->userid}\' deleted board column with id \'{$a->objectid}\'.';
+$string['event_add_comment'] = 'Comment added';
+$string['event_add_comment_desc'] = 'The user with id \'{$a->userid}\' added a comment with id \'{$a->objectid}\', content \'{$a->content}\' on note id \'{$a->noteid}\'.';
 $string['event_add_note'] = 'Post added';
 $string['event_add_note_desc'] = 'The user with id \'{$a->userid}\' created board post with id \'{$a->objectid}\', heading \'{$a->heading}\', content \'{$a->content}\', media \'{$a->media}\' on column id \'{$a->columnid}\', group id \'{$a->groupid}\'.';
 $string['event_update_note'] = 'Post updated';
@@ -177,6 +179,11 @@ $string['userscanedit'] = 'Allow all users to edit the placement of their own po
 
 $string['invalid_youtube_url'] = 'Invalid YouTube URL';
 
+$string['privacy:metadata:board_comments'] = 'Comments for each board post.';
+$string['privacy:metadata:board_comments:content'] = 'The content of the comment on the post';
+$string['privacy:metadata:board_comments:noteid'] = 'The ID of the related post';
+$string['privacy:metadata:board_comments:timecreated'] = 'The time when the post comment was created';
+$string['privacy:metadata:board_comments:userid'] = 'The ID of the user who added the comment on the post';
 $string['privacy:metadata:board_notes'] = 'Information about the individual posts for each board.';
 $string['privacy:metadata:board_notes:columnid'] = 'The column location of the post';
 $string['privacy:metadata:board_notes:content'] = 'The content of the post';
@@ -195,3 +202,8 @@ $string['privacy:metadata:board_note_ratings'] = 'Information about the individu
 $string['privacy:metadata:board_note_ratings:noteid'] = 'The ID of the related post';
 $string['privacy:metadata:board_note_ratings:timecreated'] = 'The time when the post rating was created';
 $string['privacy:metadata:board_note_ratings:userid'] = 'The ID of the user who created the post rating';
+
+$string['deletecomment'] = 'Delete comment';
+$string['comments'] = '{$a} Comments';
+$string['comment'] = 'Comment';
+$string['addcomment'] = 'Add comment';
