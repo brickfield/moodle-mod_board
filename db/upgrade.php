@@ -103,7 +103,6 @@ function xmldb_board_upgrade(int $oldversion) {
     }
 
     if ($oldversion < 2021052410) {
-
         // Define field singleusermode to be added to board.
         $table = new xmldb_table('board');
         $field = new xmldb_field('singleusermode', XMLDB_TYPE_INTEGER, '4', null, null, null, '0', 'userscanedit');
@@ -154,6 +153,30 @@ function xmldb_board_upgrade(int $oldversion) {
 
         // Board savepoint reached.
         upgrade_mod_savepoint(true, 2021052412, 'board');
+    }
+
+    if ($oldversion < 2021052413) {
+
+        // Define table board_note_comments to be created.
+        $table = new xmldb_table('board_comments');
+
+        // Adding fields to table board_note_comments.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('noteid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('content', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+
+        // Adding keys to table board_note_comments.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+
+        // Conditionally launch create table for board_note_comments.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2021052413, 'board');
     }
 
     return true;

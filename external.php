@@ -636,4 +636,229 @@ class mod_board_external extends external_api {
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
     }
+
+    /**
+     * Returns description of method parameters
+     *
+     * @return external_function_parameters
+     * @since Moodle 2.9
+     */
+    public static function get_comments_parameters() {
+
+        return new external_function_parameters(
+            [
+                'noteid' => new external_value(PARAM_INT, 'id of note'),
+            ]
+        );
+    }
+
+    /**
+     * Get the comments for this note.
+     *
+     * @param int $noteid The id of the note.
+     * @return array of results
+     */
+    public static function get_comments($noteid) {
+        global $DB, $USER;
+
+        $warnings = [];
+        $arrayparams = array(
+            'noteid' => $noteid,
+        );
+        $params = self::validate_parameters(self::get_comments_parameters(), $arrayparams);
+
+        $comment = new \mod_board\comment($params);
+
+        $context = $comment->get_context();
+
+        self::validate_context($context);
+
+        require_capability('mod/board:view', $context);
+
+        $canpost = has_capability('mod/board:postcomment', $context);
+        $candeleteall = has_capability('mod/board:deleteallcomments', $context);
+
+        $notes = $DB->get_records('board_comments', ['noteid' => $params['noteid']], 'timecreated DESC');
+        $comments = [];
+        foreach ($notes as $note) {
+            $comment = (object)[];
+            $comment->id = $note->id;
+            $comment->noteid = $note->noteid;
+            $comment->content = $note->content;
+            $comment->candelete = ($note->userid === $USER->id || $candeleteall) ? true : false;
+            $comment->date = userdate($note->timecreated);
+            $comments[] = $comment;
+        }
+
+        $results = array(
+            'noteid' => $params['noteid'],
+            'commentcount' => count($comments),
+            'canpost' => $canpost,
+            'comments' => $comments,
+            'warnings' => $warnings
+        );
+        return $results;
+    }
+
+    /**
+     * Returns description of method result value
+     *
+     * @return external_description
+     * @since Moodle 2.9
+     */
+    public static function get_comments_returns() {
+
+        return new external_single_structure(
+            [
+                'canpost' => new external_value(PARAM_BOOL, 'can post comments'),
+                'noteid' => new external_value(PARAM_INT, 'The note id.'),
+                'commentcount' => new external_value(PARAM_INT, 'The number of comments.'),
+                'comments' => new external_multiple_structure(
+                    new external_single_structure(
+                        [
+                            'id' => new external_value(PARAM_INT, 'The comment id.'),
+                            'noteid' => new external_value(PARAM_INT, 'The note id.'),
+                            'candelete' => new external_value(PARAM_BOOL, 'Can delete the comment.'),
+                            'date' => new external_value(PARAM_TEXT, 'The date of the comment.'),
+                            'content' => new external_value(PARAM_RAW, 'The content of the comment.')
+                        ]
+                    )
+                ),
+                'warnings' => new external_warnings()
+            ]
+        );
+    }
+
+    /**
+     * Add a note
+     *
+     * @return external_function_parameters
+     * @since Moodle 2.9
+     */
+    public static function add_comment_parameters() {
+
+        return new external_function_parameters(
+            [
+                'noteid' => new external_value(PARAM_INT, 'id of note'),
+                'content' => new external_value(PARAM_RAW, 'content of comment'),
+            ]
+        );
+    }
+
+    /**
+     * Save a comment.
+     *
+     * @param int $noteid The id of the note.
+     * @param string $content The content of the comment.
+     *
+     * @return array of results
+     */
+    public static function add_comment($noteid, $content) {
+        global $USER, $DB;
+
+        $warnings = [];
+        $arrayparams = [
+            'noteid' => $noteid,
+            'content' => $content
+        ];
+        $params = self::validate_parameters(self::add_comment_parameters(), $arrayparams);
+
+        $comment = new \mod_board\comment($params);
+
+        $context = $comment->get_context();
+
+        self::validate_context($context);
+
+        if (!$comment->can_create($context)) {
+            $results = array(
+                'count' => '',
+                'id' => 0,
+                'warnings' => $warnings
+            );
+            return $results;
+        }
+
+        $comment->save();
+
+        $results = array(
+            'id' => $comment->id,
+            'warnings' => $warnings
+        );
+        return $results;
+    }
+
+    /**
+     * Returns description of method result value
+     *
+     * @return external_description
+     * @since Moodle 2.9
+     */
+    public static function add_comment_returns() {
+
+        return new external_single_structure(
+            [
+                'id' => new external_value(PARAM_INT, 'The comment id.'),
+                'warnings' => new external_warnings()
+            ]
+        );
+    }
+
+    /**
+     * Delete a comment parameters.
+     */
+    public static function delete_comment_parameters() {
+        return new external_function_parameters([
+            'commentid' => new external_value(PARAM_INT, 'The comment id'),
+        ]);
+    }
+
+    /**
+     * Delete a comment.
+     *
+     * @param int $commentid The id of the comment.
+     *
+     * @return array of results
+     */
+    public static function delete_comment($commentid) {
+        global $DB;
+
+        $warnings = [];
+        $arrayparams = [
+            'commentid' => $commentid,
+        ];
+        $params = self::validate_parameters(self::delete_comment_parameters(), $arrayparams);
+
+        $comment = new \mod_board\comment($params);
+
+        $context = $comment->get_context();
+        self::validate_context($context);
+
+        if (!$comment->can_delete($context)) {
+            $results = array(
+                'id' => 0,
+                'warnings' => $warnings
+            );
+            return $results;
+        }
+
+        $DB->delete_records('board_comments', ['id' => $comment->id]);
+
+        $results = array(
+            'id' => $comment->id,
+            'warnings' => $warnings
+        );
+        return $results;
+    }
+
+    /**
+     * Returns description of method result value
+     */
+    public static function delete_comment_returns() {
+        return new external_single_structure(
+            [
+                'id' => new external_value(PARAM_INT, 'The comment id.'),
+                'warnings' => new external_warnings()
+            ]
+        );
+    }
 }
