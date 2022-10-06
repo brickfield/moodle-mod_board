@@ -30,6 +30,7 @@ import Notification from "core/notification";
 import "mod_board/jquery.editable.amd";
 import "mod_board/jquery.sortable.amd";
 import Fragment from "core/fragment";
+import Comments from "mod_board/comments";
 
 /**
  * Execute a ajax call to a mod_board ajax service.
@@ -837,7 +838,7 @@ export default function(board, options, contextid) {
 
             note.append(notecontrols);
 
-            handleAction(notecontent, () => fullScreenNote(notecontent));
+            handleAction(notecontent, () => fullScreenNote(ident, notecontent));
 
             if (!noteHeading.html()) {
                 noteHeading.hide();
@@ -1660,8 +1661,12 @@ export default function(board, options, contextid) {
         }).catch(Notification.exception);
     };
 
-
-    var fullScreenNote = (notecontent) => {
+    /**
+     * Show the note in a modal
+     * @param {Int} ident The note id
+     * @param {Object} notecontent The note content
+     */
+    var fullScreenNote = (ident, notecontent) => {
         const heading = getNoteHeadingForNote(notecontent).html();
         const modalBody = $(document.createElement('div'));
         modalBody.addClass('mod_board_note_content');
@@ -1674,6 +1679,12 @@ export default function(board, options, contextid) {
             modalBody.append(preview.clone());
         }
 
+        // Adds the comments to a note.
+        const commentArea = $(document.createElement('div'));
+        commentArea.attr('data-region', 'comment-area');
+        modalBody.append(commentArea);
+        Comments.fetchFor(ident, commentArea);
+
         ModalFactory.create({
             type: ModalFactory.types.CANCEL,
             title: heading,
@@ -1681,6 +1692,11 @@ export default function(board, options, contextid) {
         }).then(function(modal) {
             modal.setLarge();
             modal.show();
+            // Handle hidden event.
+            modal.getRoot().on(ModalEvents.hidden, function () {
+                // Destroy when hidden.
+                modal.destroy();
+            });
             return modal;
         }, this).catch(Notification.exception);
     };

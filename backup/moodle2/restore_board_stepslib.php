@@ -37,6 +37,7 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
         if ($userinfo) {
             $paths[] = new restore_path_element('board_note', '/activity/board/columns/column/notes/note');
             $paths[] = new restore_path_element('board_note_rating', '/activity/board/columns/column/notes/note/ratings/rating');
+            $paths[] = new restore_path_element('board_comments', '/activity/board/columns/column/notes/note/comments/comment');
         }
 
         return $this->prepare_activity_structure($paths);
@@ -118,6 +119,26 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
 
         $newitemid = $DB->insert_record('board_note_ratings', $data);
         $this->set_mapping('board_note_rating', $oldid, $newitemid, true);
+    }
+
+    /**
+     * Restore comments.
+     * @param array $data
+     */
+    protected function process_board_comments($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $oldid = $data->id;
+
+        $data->noteid = $this->get_new_parentid('board_note');
+        if (!empty($data->userid)) {
+            $data->userid = $this->get_mappingid('user', $data->userid);
+        }
+        $data->timecreated = $this->apply_date_offset($data->timecreated);
+
+        $newitemid = $DB->insert_record('board_comments', $data);
+        $this->set_mapping('board_comments', $oldid, $newitemid, true);
     }
 
     /**

@@ -155,5 +155,38 @@ $functions = [
         'capabilities'  => '',
         'ajax'          => true,
         'loginrequired' => true,
-    ]
+    ],
+
+    'mod_board_get_comments' => [
+        'classname'     => 'mod_board_external',
+        'methodname'    => 'get_comments',
+        'classpath'     => 'mod/board/external.php',
+        'description'   => 'Get the list of comments for a note',
+        'type'          => 'write',
+        'capabilities'  => '',
+        'ajax'          => true,
+        'loginrequired' => true,
+    ],
+
+    'mod_board_add_comment' => [
+        'classname'     => 'mod_board_external',
+        'methodname'    => 'add_comment',
+        'classpath'     => 'mod/board/external.php',
+        'description'   => 'Add a comment to a note',
+        'type'          => 'write',
+        'capabilities'  => '',
+        'ajax'          => true,
+        'loginrequired' => true,
+    ],
+
+    'mod_board_delete_comment' => [
+        'classname'     => 'mod_board_external',
+        'methodname'    => 'delete_comment',
+        'classpath'     => 'mod/board/external.php',
+        'description'   => 'Delete a comment from a note',
+        'type'          => 'write',
+        'capabilities'  => '',
+        'ajax'          => true,
+        'loginrequired' => true,
+    ],
 ];
