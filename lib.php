@@ -467,3 +467,45 @@ function board_get_completion_state($course, $cm, $userid, $type) {
     }
     return $type;
 }
+/**
+ * Dynamically change the activity to not show a link if we want to embed it.
+ * This is called via a automatic callback if this method exists.
+ * @param cm_info $cm
+ * @return void
+ */
+function board_cm_info_dynamic(cm_info $cm) {
+
+    // Look up the board based on the course module.
+    $board = board::get_board($cm->instance);
+
+    // If we are embedding the board, turn off the view link.
+    if ($board->embed) {
+        $cm->set_no_view_link();
+    }
+
+}
+
+/**
+ * Shows the board on the course page if the board is embedded.
+ *
+ * @param cm_info $cm course module info.
+ */
+function board_cm_info_view(cm_info $cm) {
+
+    // Look up the board based on the course module.
+    $board = board::get_board($cm->instance);
+
+    if ($board->embed) {
+        $width = get_config('mod_board', 'embed_width');
+        $height = get_config('mod_board', 'embed_height');
+        $output = html_writer::start_tag('iframe', [
+            'src' => new moodle_url('/mod/board/view.php', ['id' => $cm->id, 'embed' => 1]),
+            'width' => $width,
+            'height' => $height,
+            'frameborder' => 0,
+            'allowfullscreen' => true,
+        ]);
+        $output .= html_writer::end_tag('iframe');
+        $cm->set_content($output, true);
+    }
+}
