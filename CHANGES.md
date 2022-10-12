@@ -1,11 +1,24 @@
 Release Notes
 
-_NOTE - This release will work on Moodle 3.9, Moodle 3.10, and Moodle 3.11._
+_NOTE - This release will work on Moodle 3.11._
 
-##### 1.39.07 (Build 2022072700)
+##### 1.311.01 (Build 2022101201)
 
-* Added a single user mode
-* In single user mode a teacher can post on your board
+* Added a single user mode.
+* In single user mode a teacher can post on your board.
+* Teachers can move columns.
+* Per board control of opening links in a new window.
+* Added activity completion settings.
+* CSV export includes number of "likes".
+* Added setting to allow each student to have their own board.
+* Added a setting to allow/prevent Youtube videos.
+* Better UI for moving and editing.
+* Allow columns to be locked.
+* Enable commenting functionality on each post when opened in overlay.
+* Change loglevel for actions to be 'participating'.
+* Add ability to embed board on the course page.
+* Ensure move icon has proper aria labelling.
+* Ensure all keyboard controls work in the View Post popup.
 
 ##### 1.39.06 (Build 2021101501)
 New features / improvements:
