@@ -112,6 +112,8 @@ class mod_board_mod_form extends moodleform_mod {
 
         $mform->addElement('advcheckbox', 'enableblanktarget', get_string('enableblanktarget', 'mod_board'));
         $mform->addHelpButton('enableblanktarget', 'enableblanktarget', 'mod_board');
+        // Embed board on the course, rather then give a link to it.
+        $mform->addElement('advcheckbox', 'embed', get_string('embedboard', 'mod_board'));
 
         $this->standard_coursemodule_elements();
 

@@ -328,3 +328,17 @@
 .path-mod-board .modal-content .stretched-link::after {
     content: unset;
 }
+
+.modtype_board div.flex-fill {
+    width: 100%;
+}
+
+.modtype_board div.contentwithoutlink {
+    /* stylelint-disable-next-line declaration-no-important */
+    display: block !important;
+    width: 100%;
+}
+
+iframe.mod_board-iframe {
+    overflow-x: auto;
+}

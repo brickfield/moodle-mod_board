@@ -401,3 +401,111 @@ function board_get_coursemodule_info($coursemodule) {
 
     return $result;
 }
+
+/**
+ * Callback which returns human-readable strings describing the active completion custom rules for the module instance.
+ *
+ * @param cm_info|stdClass $cm object with fields ->completion and ->customdata['customcompletionrules']
+ * @return array $descriptions the array of descriptions for the custom rules.
+ */
+function mod_board_get_completion_active_rule_descriptions($cm) {
+    // Values will be present in cm_info, and we assume these are up to date.
+    if (empty($cm->customdata['customcompletionrules'])
+        || $cm->completion != COMPLETION_TRACKING_AUTOMATIC) {
+        return [];
+    }
+
+    $descriptions = [];
+    foreach ($cm->customdata['customcompletionrules'] as $key => $val) {
+        switch ($key) {
+            case 'completionnotes':
+                if (!empty($val)) {
+                    $descriptions[] = get_string('completionnotesdesc', 'mod_board', $val);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    return $descriptions;
+}
+
+/**
+ * Obtains the automatic completion state for this board on any conditions
+ * in board settings
+ *
+ * @param object $course Course
+ * @param object $cm Course-module
+ * @param int $userid User ID
+ * @param bool $type Type of comparison (or/and; can be used as return value if no conditions)
+ * @return bool True if completed, false if not. (If no conditions, then return
+ *   value depends on comparison type)
+ */
+function board_get_completion_state($course, $cm, $userid, $type) {
+    global $DB;
+
+    $boardid = $cm->instance;
+
+    if (!$board = $DB->get_record('board', ['id' => $boardid])) {
+        throw new \moodle_exception('Unable to find board with id ' . $boardid);
+    }
+
+    $notescountparams = ['userid' => $userid, 'boardid' => $boardid];
+    $notescountsql = "SELECT COUNT(*)
+                        FROM {board_notes} bn
+                        JOIN {board_columns} bc ON bn.columnid = bc.id
+                        WHERE bn.userid = :userid
+                        AND bc.boardid = :boardid";
+
+    if ($board->completionnotes) {
+        $numnotes = $DB->get_field_sql($notescountsql, $notescountparams);
+        if ($numnotes) {
+            return ($numnotes >= $board->completionnotes) ? COMPLETION_COMPLETE : COMPLETION_INCOMPLETE;
+        } else {
+            return COMPLETION_INCOMPLETE;
+        }
+    }
+    return $type;
+}
+/**
+ * Dynamically change the activity to not show a link if we want to embed it.
+ * This is called via a automatic callback if this method exists.
+ * @param cm_info $cm
+ * @return void
+ */
+function board_cm_info_dynamic(cm_info $cm) {
+
+    // Look up the board based on the course module.
+    $board = board::get_board($cm->instance);
+
+    // If we are embedding the board, turn off the view link.
+    if ($board->embed) {
+        $cm->set_no_view_link();
+    }
+
+}
+
+/**
+ * Shows the board on the course page if the board is embedded.
+ *
+ * @param cm_info $cm course module info.
+ */
+function board_cm_info_view(cm_info $cm) {
+
+    // Look up the board based on the course module.
+    $board = board::get_board($cm->instance);
+
+    if ($board->embed) {
+        $width = get_config('mod_board', 'embed_width');
+        $height = get_config('mod_board', 'embed_height');
+        $output = html_writer::start_tag('iframe', [
+            'src' => new moodle_url('/mod/board/view.php', ['id' => $cm->id, 'embed' => 1]),
+            'width' => $width,
+            'height' => $height,
+            'frameborder' => 0,
+            'allowfullscreen' => true,
+        ]);
+        $output .= html_writer::end_tag('iframe');
+        $cm->set_content($output, true);
+    }
+}
