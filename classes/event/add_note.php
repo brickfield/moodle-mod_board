@@ -29,7 +29,7 @@ class add_note extends \core\event\base {
      */
     protected function init() {
         $this->data['crud'] = 'c';
-        $this->data['edulevel'] = self::LEVEL_OTHER;
+        $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
         $this->data['objecttable'] = 'board';
     }
 
