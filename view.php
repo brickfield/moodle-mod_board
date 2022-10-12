@@ -30,6 +30,7 @@ $id      = optional_param('id', 0, PARAM_INT); // Course Module ID.
 $b       = optional_param('b', 0, PARAM_INT);  // Board instance ID.
 $group = optional_param('group', 0, PARAM_INT);  // Group ID.
 $ownerid = optional_param('ownerid', 0, PARAM_INT);  // Board owner ID.
+$embed   = optional_param('embed', 0, PARAM_INT);
 
 if ($b) {
     if (!$board = $DB->get_record('board', array('id' => $b))) {
@@ -97,6 +98,15 @@ $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $b
     'colours' => board::get_column_colours(),
     'enableblanktarget' => $board->enableblanktarget
 ), 'contextid' => $context->id));
+
+$PAGE->set_title(format_string($board->name));
+$PAGE->set_heading($course->fullname);
+$PAGE->set_activity_record($board);
+
+// If we are embedding the board on the course, set the layout to embedded to remove all other content.
+if ($embed) {
+    $PAGE->set_pagelayout('embedded');
+}
 
 echo $OUTPUT->header();
 
