@@ -138,6 +138,7 @@ $string['groupingid_required'] = 'A course grouping must be selected for this gr
 
 $string['aria_newcolumn'] = 'Add new column';
 $string['aria_newpost'] = 'Add new post to column {column}';
+$string['aria_movecolumn'] = 'Move column {column}';
 $string['aria_deletecolumn'] = 'Delete column {column}';
 $string['aria_deletepost'] = 'Delete post {post} from column {column}';
 $string['aria_movepost'] = 'Move post {post}';
