@@ -179,6 +179,7 @@ export default function(board, options, contextid) {
         aria_newcolumn: '',
         aria_newpost: '',
         aria_deletecolumn: '',
+        aria_movecolumn: '',
         aria_deletepost: '',
         aria_movepost: '',
         aria_editpost: '',
@@ -369,9 +370,11 @@ export default function(board, options, contextid) {
         var column = $('.board_column[data-ident=' + columnId + ']'),
             columnIdentifier = column.find('.mod_board_column_name').text(),
             newNoteString = strings.aria_newpost.replace('{column}', columnIdentifier),
+            moveColumnString = strings.aria_movecolumn.replace('{column}', columnIdentifier),
             deleteColumnString = strings.aria_deletecolumn.replace('{column}', columnIdentifier),
             lockColumnString = strings.aria_lockcolumn.replace('{column}', columnIdentifier);
         column.find('.newnote').attr('aria-label', newNoteString).attr('title', newNoteString);
+        column.find('.mod_column_move').attr('aria-label', moveColumnString).attr('title', moveColumnString);
         column.find('.delete_column').attr('aria-label', deleteColumnString).attr('title', deleteColumnString);
         column.find('.lock_column').attr('aria-label', lockColumnString).attr('title', lockColumnString);
 
