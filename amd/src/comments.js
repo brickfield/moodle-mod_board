@@ -134,7 +134,6 @@ const init = () => {
         const postCommentClick = e.target.closest('[data-action="postcomment"]');
         const cancelCommentClick = e.target.closest('[data-action="cancelcomment"]');
         const deleteCommentClick = e.target.closest('[data-action="deletecomment"]');
-        const inputCommentClick = e.target.closest('[data-region="commentinput"]');
         const emojiClick = e.target.closest('[data-action="toggle-emoji-picker"]');
 
         if (postCommentClick) {
@@ -150,10 +149,6 @@ const init = () => {
             e.preventDefault();
             deleteComment(noteId, deleteCommentClick.dataset.commentid);
         }
-        if (inputCommentClick) {
-            e.preventDefault();
-            commentControls.classList.add('show');
-        }
         if (emojiClick) {
             e.preventDefault();
             if (!emojiPickerContainer.dataset.init) {
@@ -163,6 +158,15 @@ const init = () => {
                 });
             }
             emojiPickerContainer.classList.toggle('hidden');
+        }
+    });
+    document.addEventListener('focusin', e => {
+        const inputCommentClick = e.target.closest('[data-region="commentinput"]');
+        if (inputCommentClick) {
+            e.preventDefault();
+            const commentbox = e.target.closest('[data-region="commentbox"]');
+            const commentControls = commentbox.querySelector('[data-region="comment-controls"]');
+            commentControls.classList.add('show');
         }
     });
 };
