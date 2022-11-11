@@ -59,7 +59,11 @@ $config = get_config('mod_board');
 $completion = new completion_info($course);
 $completion->set_module_viewed($cm);
 
-$pageurl = new moodle_url('/mod/board/view.php', array('id' => $cm->id));
+if (!$ownerid) {
+    $ownerid = $USER->id;
+}
+
+$pageurl = new moodle_url('/mod/board/view.php', ['id' => $cm->id, 'ownerid' => $ownerid]);
 $PAGE->set_url($pageurl);
 
 $PAGE->set_title(format_string($board->name));
@@ -71,9 +75,6 @@ if ($ownerid && !board::can_view_user($board->id, $ownerid)) {
     echo $OUTPUT->heading(get_string('nopermission', 'mod_board'));
     echo $OUTPUT->footer();
     die();
-}
-if (!$ownerid) {
-    $ownerid = $USER->id;
 }
 
 $PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $board, 'options' => array(
