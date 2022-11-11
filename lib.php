@@ -109,9 +109,12 @@ function board_add_instance($data, $mform = null) {
     $boardid = $DB->insert_record('board', $data);
     if ($boardid) {
         $columnheading = get_string('default_column_heading', 'mod_board');
-        $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $columnheading));
-        $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $columnheading));
-        $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $columnheading));
+        $DB->insert_record('board_columns',
+            array('boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 1));
+        $DB->insert_record('board_columns',
+            array('boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 2));
+        $DB->insert_record('board_columns',
+            array('boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 3));
     }
 
     // Save background image if set.
