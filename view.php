@@ -127,7 +127,8 @@ if ($board->singleusermode == board::SINGLEUSER_PUBLIC ||
         echo $OUTPUT->notification(get_string('nousers', 'mod_board'));
         echo $OUTPUT->box_end();
     } else {
-        $select = new single_select($pageurl, 'ownerid', $users, $ownerid);
+        $url = new moodle_url('/mod/board/view.php', ['id' => $cm->id]);
+        $select = new single_select($url, 'ownerid', $users, $ownerid);
         $select->label = get_string('selectuser', 'mod_board');
         echo html_writer::tag('div', $OUTPUT->render($select));
     }
