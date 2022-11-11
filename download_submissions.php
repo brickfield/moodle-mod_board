@@ -27,6 +27,7 @@ require('../../config.php');
 use mod_board\board;
 
 $id      = optional_param('id', 0, PARAM_INT); // Course Module ID.
+$ownerid = optional_param('ownerid', 0, PARAM_INT); // The ID of the board owner.
 
 if (!$cm = get_coursemodule_from_id('board', $id)) {
     throw new \moodle_exception('invalidcoursemodule');
@@ -45,7 +46,9 @@ header("Pragma: no-cache");
 header("Expires: 0");
 
 $fp = fopen('php://output', 'w');
-$boarddata = board::board_get($board->id);
+
+board::require_capability_for_board_view($board->id);
+$boarddata = board::board_get($board->id, $ownerid);
 
 $users = [];
 
