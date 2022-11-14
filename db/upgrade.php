@@ -66,43 +66,15 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2021052406, 'board');
     }
 
+    // Release 1.39.06.
     if ($oldversion < 2021052407) {
         mod_board_remove_unattached_ratings();
         // Board savepoint reached.
         upgrade_mod_savepoint(true, 2021052407, 'board');
     }
 
-    if ($oldversion < 2021052408) {
-
-        // Define field enableblanktarget to be added to board.
-        $table = new xmldb_table('board');
-        $field = new xmldb_field('enableblanktarget', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'singleusermode');
-
-        // Conditionally launch add field enableblanktarget.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Board savepoint reached.
-        upgrade_mod_savepoint(true, 2021052408, 'board');
-    }
-
-    if ($oldversion < 2021052409) {
-
-        // Define field completionnotes to be added to board.
-        $table = new xmldb_table('board');
-        $field = new xmldb_field('completionnotes', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'userscanedit');
-
-        // Conditionally launch add field completionnotes.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Board savepoint reached.
-        upgrade_mod_savepoint(true, 2021052409, 'board');
-    }
-
-    if ($oldversion < 2021052410) {
+    if ($oldversion < 2021052413) {
+        // Version 2021052410.
         // Define field singleusermode to be added to board.
         $table = new xmldb_table('board');
         $field = new xmldb_field('singleusermode', XMLDB_TYPE_INTEGER, '4', null, null, null, '0', 'userscanedit');
@@ -130,11 +102,27 @@ function xmldb_board_upgrade(int $oldversion) {
             $dbman->add_field($table, $field);
         }
 
-        upgrade_mod_savepoint(true, 2021052410, 'board');
-    }
+        // Version 2021052408.
+        // Define field enableblanktarget to be added to board.
+        $table = new xmldb_table('board');
+        $field = new xmldb_field('enableblanktarget', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'singleusermode');
 
-    if ($oldversion < 2021052412) {
+        // Conditionally launch add field enableblanktarget.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
 
+        // Version 2021052409.
+        // Define field completionnotes to be added to board.
+        $table = new xmldb_table('board');
+        $field = new xmldb_field('completionnotes', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'enableblanktarget');
+
+        // Conditionally launch add field completionnotes.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Version 2021052412.
         // Define field locked to be added to board_columns.
         $table = new xmldb_table('board_columns');
         $field = new xmldb_field('locked', XMLDB_TYPE_INTEGER, '4', null, null, null, null, 'name');
@@ -151,12 +139,7 @@ function xmldb_board_upgrade(int $oldversion) {
             $dbman->add_field($table, $field);
         }
 
-        // Board savepoint reached.
-        upgrade_mod_savepoint(true, 2021052412, 'board');
-    }
-
-    if ($oldversion < 2021052413) {
-
+        // Version 2021052413.
         // Define table board_note_comments to be created.
         $table = new xmldb_table('board_comments');
 
@@ -179,10 +162,11 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2021052413, 'board');
     }
 
+    // Release 1.39.07.
     if ($oldversion < 2021052414) {
         // Define field embed to be added to board.
         $table = new xmldb_table('board');
-        $field = new xmldb_field('embed', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'userscanedit');
+        $field = new xmldb_field('embed', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'completionnotes');
 
         // Conditionally launch add field embed.
         if (!$dbman->field_exists($table, $field)) {
