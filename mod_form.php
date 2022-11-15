@@ -92,9 +92,9 @@ class mod_board_mod_form extends moodleform_mod {
         }
         $mform->addElement('select', 'singleusermode', get_string('singleusermode', 'mod_board'),
            array(
-                board::SORTBYNONE => get_string('singleusermodenone', 'mod_board'),
-                board::SORTBYDATE => get_string('singleusermodeprivate', 'mod_board'),
-                board::SORTBYRATING => get_string('singleusermodepublic', 'mod_board')
+                board::SINGLEUSER_DISABLED => get_string('singleusermodenone', 'mod_board'),
+                board::SINGLEUSER_PRIVATE => get_string('singleusermodeprivate', 'mod_board'),
+                board::SINGLEUSER_PUBLIC => get_string('singleusermodepublic', 'mod_board')
             )
         );
         $mform->setType('singleusermode', PARAM_INT);

@@ -70,7 +70,9 @@ $PAGE->set_title(format_string($board->name));
 $PAGE->set_heading($course->fullname);
 $PAGE->set_activity_record($board);
 
-if ($ownerid && !board::can_view_user($board->id, $ownerid)) {
+// Logic to limit view when board is in singleuser mode.
+if (($board->singleusermode != board::SINGLEUSER_DISABLED)
+    && (!board::can_view_user($board->id, $ownerid))) {
     echo $OUTPUT->header();
     echo $OUTPUT->heading(get_string('nopermission', 'mod_board'));
     echo $OUTPUT->footer();
