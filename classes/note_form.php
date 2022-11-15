@@ -46,16 +46,18 @@ class note_form extends \moodleform {
         $mform->addElement('hidden', 'ownerid');
         $mform->setType('ownerid', PARAM_INT);
 
-        $maxlen = 100;
-        $mform->addElement('text', 'heading', get_string('form_title', 'mod_board'), ['maxlength' => $maxlen]);
+        $maxlenheading = board::LENGTH_HEADING;
+        $mform->addElement('text', 'heading', get_string('form_title', 'mod_board'),
+            ['maxlength' => $maxlenheading]);
         $mform->setType('heading', PARAM_TEXT);
-        $mform->addRule('heading', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
+        $mform->addRule('heading', get_string('maximumchars', '', $maxlenheading), 'maxlength',
+            $maxlenheading, 'client');
 
         $maxlen = $config->post_max_length;
         $options = ['maxlength' => $maxlen, 'cols' => 30, 'rows' => 3];
         $mform->addElement('textarea', 'content', get_string('form_body', 'mod_board'), $options);
         $mform->setType('content', PARAM_TEXT);
-        $mform->addRule('content', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
+        $mform->addRule('content', get_string('maximumchars', '', $maxlen), 'maxlength', $maxlen, 'client');
 
         if ($config->allowyoutube) {
             $options = [
@@ -86,39 +88,42 @@ class note_form extends \moodleform {
         $mform->addElement('static', 'mediabuttons', get_string('form_mediatype', 'mod_board'), $html);
 
         // Link.
-        $options = ['maxlength' => 100, 'placeholder' => get_string('option_link_info', 'mod_board')];
+        $maxleninfo = board::LENGTH_INFO;
+        $options = ['maxlength' => $maxleninfo, 'placeholder' => get_string('option_link_info', 'mod_board')];
         $mform->addElement('text', 'linktitle', get_string('option_link_info', 'mod_board'), $options);
         $mform->setType('linktitle', PARAM_TEXT);
         $mform->hideIf('linktitle', 'mediatype', 'neq', 3);
-        $mform->addRule('linktitle', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
+        $mform->addRule('linktitle', get_string('maximumchars', '', $maxleninfo), 'maxlength', $maxleninfo, 'client');
 
-        $attr = ['maxlength' => 200, 'placeholder' => get_string('option_link_url', 'mod_board')];
+        // URL.
+        $maxlenurl = board::LENGTH_URL;
+        $attr = ['maxlength' => $maxlenurl, 'placeholder' => get_string('option_link_url', 'mod_board')];
         $mform->addElement('url', 'linkurl', get_string('option_link_url', 'mod_board'), $attr, ['usefilepicker' => false]);
         $mform->setType('linkurl', PARAM_URL);
         $mform->hideIf('linkurl', 'mediatype', 'neq', 3);
-        $mform->addRule('linkurl', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
+        $mform->addRule('linkurl', get_string('maximumchars', '', $maxlenurl), 'maxlength', $maxlenurl, 'client');
 
         if ($config->allowyoutube) {
             // YouTube video.
-            $options = ['maxlength' => 100, 'placeholder' => get_string('option_youtube_info', 'mod_board')];
+            $options = ['maxlength' => $maxleninfo, 'placeholder' => get_string('option_youtube_info', 'mod_board')];
             $mform->addElement('text', 'youtubetitle', get_string('option_youtube_info', 'mod_board'), $options);
             $mform->setType('youtubetitle', PARAM_TEXT);
             $mform->hideIf('youtubetitle', 'mediatype', 'neq', 1);
-            $mform->addRule('youtubetitle', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
+            $mform->addRule('youtubetitle', get_string('maximumchars', '', $maxleninfo), 'maxlength', $maxleninfo, 'client');
 
-            $options = ['maxlength' => 200, 'placeholder' => get_string('option_youtube_url', 'mod_board')];
+            $options = ['maxlength' => $maxlenurl, 'placeholder' => get_string('option_youtube_url', 'mod_board')];
             $mform->addElement('text', 'youtubeurl', get_string('option_youtube_url', 'mod_board'), $options);
             $mform->setType('youtubeurl', PARAM_URL);
             $mform->hideIf('youtubeurl', 'mediatype', 'neq', 1);
-            $mform->addRule('youtubeurl', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
+            $mform->addRule('youtubeurl', get_string('maximumchars', '', $maxlenurl), 'maxlength', $maxlenurl, 'client');
         }
 
         // Image file.
-        $options = ['maxlength' => 100, 'placeholder' => get_string('option_image_info', 'mod_board')];
+        $options = ['maxlength' => $maxleninfo, 'placeholder' => get_string('option_image_info', 'mod_board')];
         $mform->addElement('text', 'imagetitle', get_string('option_image_info', 'mod_board'), $options);
         $mform->setType('imagetitle', PARAM_TEXT);
         $mform->hideIf('imagetitle', 'mediatype', 'neq', 2);
-        $mform->addRule('imagetitle', get_string('maximumchars', '', $maxlen), 'maxlength', 255, 'client');
+        $mform->addRule('imagetitle', get_string('maximumchars', '', $maxleninfo), 'maxlength', $maxleninfo, 'client');
 
         $pickerparams = board::get_image_picker_options();
         $mform->addElement('filemanager', 'imagefile', get_string('form_image_file', 'mod_board'), null, $pickerparams);
