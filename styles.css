@@ -21,6 +21,10 @@
     border-radius: 0.5em;
 }
 
+.mod_board .board_column[data-locked="true"] .move_note {
+    display: none;
+}
+
 .mod_board .board_column_empty {
     display: flex;
     flex-direction: column;
