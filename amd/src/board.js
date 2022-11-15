@@ -826,15 +826,17 @@ export default function(board, options, contextid) {
 
                 notecontrols.append(removeElement);
 
-                var moveElement = $('<div class="mod_board_move fa fa-arrows move_note" role="button" tabindex="0"></div>');
-                notecontrols.append(moveElement);
+                if (usersCanEdit == 1 || isEditor) {
+                    var moveElement = $('<div class="mod_board_move fa fa-arrows move_note" role="button" tabindex="0"></div>');
+                    notecontrols.append(moveElement);
+                }
 
                 var editElement = $('<div class="mod_board_move fa fa-pencil edit_note" role="button" tabindex="0"></div>');
                 notecontrols.append(editElement);
                 handleAction(editElement, () => {
                     beginEdit();
                 });
-
+                updateSortable();
                 setAttachment(note, attachment);
             } else {
                 previewAttachment(note, attachment);
