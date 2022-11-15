@@ -177,5 +177,18 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2021110104, 'board');
     }
 
+    if ($oldversion < 2021110105) {
+        // Update incorrect value for singleusermode disabled.
+        $DB->set_field(
+            'board',
+            'singleusermode',
+            0,
+            ['singleusermode' => 3]
+        );
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2021110105, 'board');
+    }
+
     return true;
 }
