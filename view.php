@@ -166,8 +166,16 @@ if (($board->singleusermode == board::SINGLEUSER_PUBLIC || $board->singleusermod
         $extrabackground = "background:url({$url}) no-repeat center center; -webkit-background-size: cover;
         -moz-background-size: cover; -o-background-size: cover; background-size: cover;";
     }
-    echo '<div class="mod_board_wrapper class="d-flex">
-        <div class="mod_board flex-fill" style="' . $extrabackground . '"></div></div>';
+    echo '<div class="mod_board_wrapper">';
+    echo '<div class="mod_board flex-fill" style="' . $extrabackground . '"></div>';
+    if (has_capability('mod/board:manageboard', $context)) {
+        $img = html_writer::img($OUTPUT->image_url('brickfield-logo-poweredby', 'mod_board'),
+            get_string('brickfieldlogo', 'mod_board'),
+            ['style' => 'display: block !important; width: 140px;']);
+        $img .= html_writer::tag('span', get_string('opensinnewwindow', 'mod_board'), ['class' => 'sr-only']);
+        echo html_writer::link('https://www.brickfield.ie/docs/mod_board/', $img, ['target' => '_blank',
+            'style' => 'margin-left: auto; margin-right: 90px; display: block !important; width: 140px;']);
+    }
+    echo '</div>';
 }
-
 echo $OUTPUT->footer();

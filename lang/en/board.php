@@ -214,3 +214,6 @@ $string['deletecomment'] = 'Delete comment';
 $string['comments'] = '{$a} Comments';
 $string['comment'] = 'Comment';
 $string['addcomment'] = 'Add comment';
+
+$string['opensinnewwindow'] = 'Opens in new window';
+$string['brickfieldlogo'] = 'Powered by Brickfield logo';
