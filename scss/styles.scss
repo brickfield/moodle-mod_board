@@ -22,6 +22,11 @@
         background: #eaeaea;
         margin: 12px 4px;
         border-radius: 0.5em;
+        &[data-locked="true"] {
+            .move_note {
+                display: none;
+            }
+        }
     }
 
     .board_column_empty {
@@ -322,4 +327,17 @@
     .modal-content .stretched-link::after {
         content: unset;
     }
+}
+.modtype_board div.flex-fill {
+    width: 100%;
+}
+
+.modtype_board div.contentwithoutlink {
+    /* stylelint-disable-next-line declaration-no-important */
+    display: block !important;
+    width: 100%;
+}
+
+iframe.mod_board-iframe {
+    overflow-x: auto;
 }
