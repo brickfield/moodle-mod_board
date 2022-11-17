@@ -216,5 +216,10 @@ $string['comments'] = '{$a} Comments';
 $string['comment'] = 'Comment';
 $string['addcomment'] = 'Add comment';
 
+$string['move_to_firstitemcolumn'] = 'Move to column {$a}';
+$string['move_to_afterpost'] = 'Move after post {$a}';
+$string['move_column_to_firstplace'] = 'Move column to first place';
+$string['move_column_to_aftercolumn'] = 'Move column after column {$a}';
+
 $string['opensinnewwindow'] = 'Opens in new window';
 $string['brickfieldlogo'] = 'Powered by Brickfield logo';

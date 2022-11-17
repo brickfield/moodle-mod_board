@@ -31,6 +31,8 @@ import Notification from "core/notification";
 import "mod_board/jquery.editable.amd";
 import Fragment from "core/fragment";
 import Comments from "mod_board/comments";
+import moveNotesDialog from "./movenotesdialog";
+import moveColumnsDialog from "./movecolumnsdialog";
 
 /**
  * Execute a ajax call to a mod_board ajax service.
@@ -234,7 +236,9 @@ export default function(board, options, contextid) {
             stopUpdating();
         }
         _serviceCall(method, args, function() {
-            callback.apply(null, arguments);
+            if (callback) {
+                callback.apply(null, arguments);
+            }
             if (method !== 'board_history' && method != 'get_board') {
                 updateBoard(true);
             }
@@ -829,6 +833,7 @@ export default function(board, options, contextid) {
                 if (usersCanEdit == 1 || isEditor) {
                     var moveElement = $('<div class="mod_board_move fa fa-arrows move_note" role="button" tabindex="0"></div>');
                     notecontrols.append(moveElement);
+                    moveNotesDialog.init(ownerId, moveNote);
                 }
 
                 var editElement = $('<div class="mod_board_move fa fa-pencil edit_note" role="button" tabindex="0"></div>');
@@ -934,6 +939,7 @@ export default function(board, options, contextid) {
             columnHeader.addClass('icon-size-3');
             const moveElement = $('<div class="icon fa fa-arrows mod_column_move" role="button" tabindex="0"></div>');
             columnHeader.append(moveElement);
+            moveColumnsDialog.init(moveColumn);
             var removeElement = $('<div class="icon fa fa-remove delete_column" role="button" tabindex="0"></div>');
             handleAction(removeElement, () => {
                 Notification.confirm(
@@ -1319,16 +1325,31 @@ export default function(board, options, contextid) {
                     ownerid: ownerId,
                     sortorder: sortorder
                 };
-                updateSortOrders(fromColumnID, payload.columnid, payload.id, payload.sortorder);
-                serviceCall('move_note', payload, (result) => {
-                    if (result.status) {
-                        lastHistoryId = result.historyid;
-                        updateNoteAria(payload.id);
-                        sortNotes($(`.board_column[data-ident=${payload.columnid}] .board_column_content`));
-                    } else {
-                        elem.sortable('cancel');
-                    }
-                });
+                moveNote(fromColumnID, payload, elem);
+            }
+        });
+    };
+
+    /**
+     * Move a note to a new position / column.
+     *
+     * @param {Int} fromColumnID The column the note is being moved from.
+     * @param {Object} payload The payload to send to the server.
+     * @param {Domnode} elem The element clicked to trigger the move.
+     */
+    const moveNote = (fromColumnID, payload, elem) => {
+        updateSortOrders(fromColumnID, payload.columnid, payload.id, payload.sortorder);
+
+        serviceCall('move_note', payload, (result) => {
+            if (result.status) {
+                lastHistoryId = result.historyid;
+                updateNoteAria(payload.id);
+                updateBoard();
+                sortNotes($(`.board_column[data-ident=${payload.columnid}] .board_column_content`));
+            } else {
+                if (elem) {
+                    elem.sortable('cancel');
+                }
             }
         });
     };
@@ -1355,9 +1376,18 @@ export default function(board, options, contextid) {
                     id: movingColumnId,
                     sortorder: sortorder
                 };
-                serviceCall('move_column', payload);
+                moveColumn(payload);
             }
         });
+    };
+
+    /**
+     * Move a column to a new position.
+     *
+     * @param {Object} payload The payload to send to the server.
+     */
+    const moveColumn = (payload) => {
+        serviceCall('move_column', payload, false);
     };
 
     /**
