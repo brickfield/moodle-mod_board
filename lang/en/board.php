@@ -222,3 +222,4 @@ $string['move_column_to_aftercolumn'] = 'Move column after column {$a}';
 
 $string['opensinnewwindow'] = 'Opens in new window';
 $string['brickfieldlogo'] = 'Powered by Brickfield logo';
+$string['singleusermodenotembed'] = 'Board does not allow a single user board to be embedded. Please change your settings.';
