@@ -17,6 +17,7 @@ _NOTE - This release will work on Moodle 4.00._
 * Enable commenting functionality on each post when opened in overlay.
 * Change loglevel for actions to be 'participating'.
 * Add ability to embed board on the course page. 
+* Add ability to embed board on the course page.
 * Ensure move icon has proper aria labelling.
 * Ensure all keyboard controls work in the View Post popup.
 
