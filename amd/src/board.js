@@ -1569,6 +1569,7 @@ export default function(board, options, contextid) {
                     // First, make sure the native html5 validity checks are run.
                     let valid = modal.getRoot().find('form').get(0).reportValidity();
                     if (!valid) {
+                        saveInProgress = false;
                         return;
                     }
 
@@ -1590,6 +1591,7 @@ export default function(board, options, contextid) {
                     // If we found invalid fields, focus on the first one and do not submit via ajax.
                     if (invalid.length) {
                         invalid.first().focus();
+                        saveInProgress = false;
                         return;
                     }
 
