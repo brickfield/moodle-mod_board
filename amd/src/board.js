@@ -1,3 +1,4 @@
+/* eslint-disable promise/catch-or-return */
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -1535,9 +1536,10 @@ export default function(board, options, contextid) {
             removeOnClose: true
         }).then(function(modal) {
             // Use the body promise so we know body content is loaded.
+            // eslint-disable-next-line promise/catch-or-return
             modal.getBodyPromise().then(function () {
-                let saveInProgress = false;
                 editModal = modal;
+                let saveInProgress = false;
                 modal.setLarge();
                 modal.setSaveButtonText(strings.post_button_text);
                 modal.setButtonText('cancel', strings.cancel_button_text);
@@ -1560,15 +1562,16 @@ export default function(board, options, contextid) {
                 modal.getRoot().on('submit', 'form', function (e) {
                     e.preventDefault();
 
-                    // Prevent multiple form submissions from being sent.
                     if (saveInProgress) {
                         return;
                     }
+                    // Make sure to reset me to false if we error out in this code block!
                     saveInProgress = true;
 
                     // First, make sure the native html5 validity checks are run.
                     let valid = modal.getRoot().find('form').get(0).reportValidity();
                     if (!valid) {
+                        saveInProgress = false;
                         return;
                     }
 
@@ -1590,10 +1593,11 @@ export default function(board, options, contextid) {
                     // If we found invalid fields, focus on the first one and do not submit via ajax.
                     if (invalid.length) {
                         invalid.first().focus();
+                        saveInProgress = false;
                         return;
                     }
 
-                    var formData = JSON.stringify(modal.getRoot().find('form').serialize());
+                        var formData = JSON.stringify(modal.getRoot().find('form').serialize());
                     serviceCall('submit_form', {contextid: contextid, jsonformdata: formData}, function (result) {
                         if (result.status) {
                             if (result.action == 'insert') {
@@ -1628,7 +1632,6 @@ export default function(board, options, contextid) {
                             // TODO show error.
                         }
                     });
-
                 });
 
                 if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
