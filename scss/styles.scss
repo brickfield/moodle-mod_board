@@ -210,7 +210,9 @@
 }
 
 .path-mod-board {
-
+    .mod_board_note_text {
+        word-break: break-word;
+    }
     .comment {
         .comment-input {
             font-size: 0.8rem;

@@ -396,7 +396,7 @@ class board {
         }
         if ($board->singleusermode == self::SINGLEUSER_PUBLIC || $board->singleusermode == self::SINGLEUSER_PRIVATE) {
             if (self::can_view_user($boardid, $ownerid)) {
-                $condition .= " AND (ownerid=:ownerid OR ownerid=0)";
+                $condition .= " AND (ownerid=:ownerid OR ownerid=null)";
                 $params['ownerid'] = $ownerid;
             }
         }
