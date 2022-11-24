@@ -15,7 +15,6 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace mod_board\event;
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Update column event handler.
@@ -29,7 +28,7 @@ class update_column extends \core\event\base {
      * Init function.
      */
     protected function init() {
-        $this->data['crud'] = 'u'; // C(reate), r(ead), u(pdate), d(elete).
+        $this->data['crud'] = 'u';
         $this->data['edulevel'] = self::LEVEL_OTHER;
         $this->data['objecttable'] = 'board';
     }
