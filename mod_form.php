@@ -86,11 +86,34 @@ class mod_board_mod_form extends moodleform_mod {
         );
         $mform->setType('sortby', PARAM_INT);
 
+        $boardhasnotes = (!empty($this->_cm) && board::board_has_notes($this->_cm->instance));
+        if ($boardhasnotes) {
+            $mform->addElement('html', '<div class="alert alert-info">'.get_string('boardhasnotes', 'mod_board').'</div>');
+        }
+        $mform->addElement('select', 'singleusermode', get_string('singleusermode', 'mod_board'),
+           array(
+                board::SINGLEUSER_DISABLED => get_string('singleusermodenone', 'mod_board'),
+                board::SINGLEUSER_PRIVATE => get_string('singleusermodeprivate', 'mod_board'),
+                board::SINGLEUSER_PUBLIC => get_string('singleusermodepublic', 'mod_board')
+            )
+        );
+        $mform->setType('singleusermode', PARAM_INT);
+        if ($boardhasnotes) {
+            $mform->addElement('hidden', 'hasnotes', $boardhasnotes);
+            $mform->setType('hasnotes', PARAM_BOOL);
+            $mform->disabledIf('singleusermode', 'hasnotes', 'gt', 0);
+        }
+
         $mform->addElement('checkbox', 'postbyenabled', get_string('postbyenabled', 'mod_board'));
         $mform->addElement('date_time_selector', 'postby', get_string('postbydate', 'mod_board'));
         $mform->hideIf('postby', 'postbyenabled', 'notchecked');
 
         $mform->addElement('advcheckbox', 'userscanedit', get_string('userscanedit', 'mod_board'));
+
+        $mform->addElement('advcheckbox', 'enableblanktarget', get_string('enableblanktarget', 'mod_board'));
+        $mform->addHelpButton('enableblanktarget', 'enableblanktarget', 'mod_board');
+        // Embed board on the course, rather then give a link to it.
+        $mform->addElement('advcheckbox', 'embed', get_string('embedboard', 'mod_board'));
 
         $this->standard_coursemodule_elements();
 
@@ -112,6 +135,8 @@ class mod_board_mod_form extends moodleform_mod {
         $defaultvalues['background_image'] = $draftitemid;
 
         $defaultvalues['postbyenabled'] = !empty($defaultvalues['postby']);
+
+        $defaultvalues['completionnotesenabled'] = !empty($defaultvalues['completionnotes']) ? 1 : 0;
     }
 
     /**
@@ -126,8 +151,57 @@ class mod_board_mod_form extends moodleform_mod {
         if (!empty($data['groupmode']) && empty($data['groupingid'])) {
             $errors['groupingid'] = get_string('groupingid_required', 'mod_board');
         }
+        if (($data['embed'] == 1) && ($data['singleusermode'] != board::SINGLEUSER_DISABLED)) {
+            $errors['embed'] = get_string('singleusermodenotembed', 'mod_board');
+        }
 
         return $errors;
     }
-}
 
+    /**
+     * Add custom completion rules.
+     *
+     * @return array Array of string IDs of added items, empty array if none
+     */
+    public function add_completion_rules() {
+        $mform =& $this->_form;
+
+        $group = [];
+        $group[] =& $mform->createElement('checkbox', 'completionnotesenabled', '', get_string('completionnotes', 'mod_board'));
+        $group[] =& $mform->createElement('text', 'completionnotes', '', ['size' => 3]);
+        $mform->setType('completionnotes', PARAM_INT);
+        $mform->addGroup($group, 'completionnotesgroup', get_string('completionnotesgroup', 'mod_board'), [' '], false);
+        $mform->disabledIf('completionnotes', 'completionnotesenabled', 'notchecked');
+
+        return ['completionnotesgroup'];
+    }
+
+    /**
+     * Determines if completion is enabled for this module.
+     *
+     * @param array $data
+     * @return bool
+     */
+    public function completion_rule_enabled($data) {
+        return (!empty($data['completionnotesenabled']) && $data['completionnotes'] != 0);
+    }
+
+    /**
+     * Allows module to modify the data returned by form get_data().
+     * This method is also called in the bulk activity completion form.
+     *
+     * Only available on moodleform_mod.
+     *
+     * @param stdClass $data the form data to be modified.
+     */
+    public function data_postprocessing($data) {
+        parent::data_postprocessing($data);
+        // Turn off completion settings if the checkboxes aren't ticked.
+        if (!empty($data->completionunlocked)) {
+            $autocompletion = !empty($data->completion) && $data->completion == COMPLETION_TRACKING_AUTOMATIC;
+            if (empty($data->completionnotesenabled) || !$autocompletion) {
+                $data->completionnotes = 0;
+            }
+        }
+    }
+}

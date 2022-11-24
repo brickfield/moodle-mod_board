@@ -22,8 +22,6 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
-
 use mod_board\board;
 
 /**
@@ -38,6 +36,10 @@ function board_supports($feature) {
         case FEATURE_GROUPS:
             return true;
         case FEATURE_GROUPINGS:
+            return true;
+        case FEATURE_COMPLETION_TRACKS_VIEWS:
+            return true;
+        case FEATURE_COMPLETION_HAS_RULES:
             return true;
         case FEATURE_BACKUP_MOODLE2:
             return true;
@@ -107,9 +109,12 @@ function board_add_instance($data, $mform = null) {
     $boardid = $DB->insert_record('board', $data);
     if ($boardid) {
         $columnheading = get_string('default_column_heading', 'mod_board');
-        $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $columnheading));
-        $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $columnheading));
-        $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $columnheading));
+        $DB->insert_record('board_columns',
+            array('boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 1));
+        $DB->insert_record('board_columns',
+            array('boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 2));
+        $DB->insert_record('board_columns',
+            array('boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 3));
     }
 
     // Save background image if set.
@@ -197,14 +202,18 @@ function board_extend_settings_navigation($settings, $boardnode) {
     global $PAGE;
 
     if (has_capability('mod/board:manageboard', $PAGE->cm->context)) {
+        $params = ['id' => $PAGE->cm->id];
+        if ($ownerid = $PAGE->url->get_param('ownerid')) {
+            $params['ownerid'] = $ownerid;
+        }
         $node = navigation_node::create(get_string('export_board', 'board'),
-                new moodle_url('/mod/board/download_board.php', array('id' => $PAGE->cm->id)),
+                new moodle_url('/mod/board/download_board.php', $params),
                 navigation_node::TYPE_SETTING, null, null,
                 new pix_icon('i/export', ''));
         $boardnode->add_node($node);
 
         $node = navigation_node::create(get_string('export_submissions', 'board'),
-                new moodle_url('/mod/board/download_submissions.php', array('id' => $PAGE->cm->id)),
+                new moodle_url('/mod/board/download_submissions.php', $params),
                 navigation_node::TYPE_SETTING, null, null,
                 new pix_icon('i/export', ''));
         $boardnode->add_node($node);
@@ -248,7 +257,7 @@ function mod_board_pluginfile($course, $cm, $context, $filearea, $args, $forcedo
         $fullpath = '/' . $context->id . '/mod_board/images/' . $relativepath;
 
         $fs = get_file_storage();
-        if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+        if ((!$file = $fs->get_file_by_hash(sha1($fullpath))) || $file->is_directory()) {
             return false;
         }
 
@@ -259,7 +268,7 @@ function mod_board_pluginfile($course, $cm, $context, $filearea, $args, $forcedo
         $fullpath = '/' . $context->id . '/mod_board/background/' . $relativepath;
 
         $fs = get_file_storage();
-        if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+        if ((!$file = $fs->get_file_by_hash(sha1($fullpath))) || $file->is_directory()) {
             return false;
         }
 
@@ -282,6 +291,7 @@ function mod_board_output_fragment_note_form($args) {
     $args = (object)$args;
     $noteid = clean_param(($args->noteid ?? 0), PARAM_INT);
     $columnid = clean_param(($args->columnid ?? 0), PARAM_INT);
+    $ownerid = clean_param(($args->ownerid ?? 0), PARAM_INT);
 
     if (empty($columnid)) {
         throw new \coding_exception('invalidformrequest');
@@ -291,7 +301,8 @@ function mod_board_output_fragment_note_form($args) {
     $context = board::context_for_board($column->boardid);
 
     $formdata = [
-        'columnid' => $columnid
+        'columnid' => $columnid,
+        'ownerid' => $ownerid,
     ];
 
     if ($noteid) {
@@ -359,4 +370,149 @@ function mod_board_remove_unattached_ratings() {
         }
     }
     $recordset->close();
+}
+
+
+/**
+ * Add a get_coursemodule_info function in case any forum type wants to add 'extra' information
+ * for the course (see resource).
+ *
+ * Given a course_module object, this function returns any "extra" information that may be needed
+ * when printing this activity in a course listing.  See get_array_of_activities() in course/lib.php.
+ *
+ * @param stdClass $coursemodule The coursemodule object (record).
+ * @return cached_cm_info An object on information that the courses
+ *                        will know about (most noticeably, an icon).
+ */
+function board_get_coursemodule_info($coursemodule) {
+    global $DB;
+
+    $dbparams = ['id' => $coursemodule->instance];
+    $fields = 'id, name, intro, introformat, completionnotes';
+    if (!$board = $DB->get_record('board', $dbparams, $fields)) {
+        return false;
+    }
+
+    $result = new cached_cm_info();
+    $result->name = $board->name;
+
+    if ($coursemodule->showdescription) {
+        // Convert intro to html. Do not filter cached version, filters run at display time.
+        $result->content = format_module_intro('board', $board, $coursemodule->id, false);
+    }
+
+    // Populate the custom completion rules as key => value pairs, but only if the completion mode is 'automatic'.
+    if ($coursemodule->completion == COMPLETION_TRACKING_AUTOMATIC) {
+        $result->customdata['customcompletionrules']['completionnotes'] = $board->completionnotes;
+    }
+
+    return $result;
+}
+
+/**
+ * Callback which returns human-readable strings describing the active completion custom rules for the module instance.
+ *
+ * @param cm_info|stdClass $cm object with fields ->completion and ->customdata['customcompletionrules']
+ * @return array $descriptions the array of descriptions for the custom rules.
+ */
+function mod_board_get_completion_active_rule_descriptions($cm) {
+    // Values will be present in cm_info, and we assume these are up to date.
+    if (empty($cm->customdata['customcompletionrules'])
+        || $cm->completion != COMPLETION_TRACKING_AUTOMATIC) {
+        return [];
+    }
+
+    $descriptions = [];
+    foreach ($cm->customdata['customcompletionrules'] as $key => $val) {
+        switch ($key) {
+            case 'completionnotes':
+                if (!empty($val)) {
+                    $descriptions[] = get_string('completionnotesdesc', 'mod_board', $val);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    return $descriptions;
+}
+
+/**
+ * Obtains the automatic completion state for this board on any conditions
+ * in board settings
+ *
+ * @param object $course Course
+ * @param object $cm Course-module
+ * @param int $userid User ID
+ * @param bool $type Type of comparison (or/and; can be used as return value if no conditions)
+ * @return bool True if completed, false if not. (If no conditions, then return
+ *   value depends on comparison type)
+ */
+function board_get_completion_state($course, $cm, $userid, $type) {
+    global $DB;
+
+    $boardid = $cm->instance;
+
+    if (!$board = $DB->get_record('board', ['id' => $boardid])) {
+        throw new \moodle_exception('Unable to find board with id ' . $boardid);
+    }
+
+    $notescountparams = ['userid' => $userid, 'boardid' => $boardid];
+    $notescountsql = "SELECT COUNT(*)
+                        FROM {board_notes} bn
+                        JOIN {board_columns} bc ON bn.columnid = bc.id
+                        WHERE bn.userid = :userid
+                        AND bc.boardid = :boardid";
+
+    if ($board->completionnotes) {
+        $numnotes = $DB->get_field_sql($notescountsql, $notescountparams);
+        if ($numnotes) {
+            return ($numnotes >= $board->completionnotes) ? COMPLETION_COMPLETE : COMPLETION_INCOMPLETE;
+        } else {
+            return COMPLETION_INCOMPLETE;
+        }
+    }
+    return $type;
+}
+/**
+ * Dynamically change the activity to not show a link if we want to embed it.
+ * This is called via a automatic callback if this method exists.
+ * @param cm_info $cm
+ * @return void
+ */
+function board_cm_info_dynamic(cm_info $cm) {
+
+    // Look up the board based on the course module.
+    $board = board::get_board($cm->instance);
+
+    // If we are embedding the board, turn off the view link.
+    if ($board->embed) {
+        $cm->set_no_view_link();
+    }
+
+}
+
+/**
+ * Shows the board on the course page if the board is embedded.
+ *
+ * @param cm_info $cm course module info.
+ */
+function board_cm_info_view(cm_info $cm) {
+
+    // Look up the board based on the course module.
+    $board = board::get_board($cm->instance);
+
+    if ($board->embed) {
+        $width = get_config('mod_board', 'embed_width');
+        $height = get_config('mod_board', 'embed_height');
+        $output = html_writer::start_tag('iframe', [
+            'src' => new moodle_url('/mod/board/view.php', ['id' => $cm->id, 'embed' => 1]),
+            'width' => $width,
+            'height' => $height,
+            'frameborder' => 0,
+            'allowfullscreen' => true,
+        ]);
+        $output .= html_writer::end_tag('iframe');
+        $cm->set_content($output, true);
+    }
 }

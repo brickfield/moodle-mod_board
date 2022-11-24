@@ -1,3 +1,4 @@
+/* eslint-disable promise/catch-or-return */
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,7 +17,6 @@
 /**
  * A javascript module to handle the board.
  *
- * @package    mod_board
  * @author     Karen Holland <karen@brickfieldlabs.ie>
  * @copyrigt   2021 Brickfield Education Labs <https://www.brickfield.ie/>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -31,15 +31,17 @@ import ModalEvents from "core/modal_events";
 import Notification from "core/notification";
 import "mod_board/jquery.editable.amd";
 import Fragment from "core/fragment";
+import Comments from "mod_board/comments";
+import moveNotesDialog from "./movenotesdialog";
+import moveColumnsDialog from "./movecolumnsdialog";
 
 /**
  * Execute a ajax call to a mod_board ajax service.
  *
- * @method _serviceCall
- * @param method
- * @param args
- * @param callback
- * @param failcallback
+ * @param {string} method
+ * @param {array} args
+ * @param {method} callback
+ * @param {method} failcallback
  * @private
  */
 const _serviceCall = function(method, args, callback, failcallback) {
@@ -62,9 +64,8 @@ const _serviceCall = function(method, args, callback, failcallback) {
  * Indicates if this is a keycode we want to listend to for
  * aria purposes.
  *
- * @method isAriaTriggerKey
- * @param key
  * @returns {boolean}
+ * @param {number} key
  */
 const isAriaTriggerKey = function(key) {
     return key == 13 || key == 32;
@@ -73,8 +74,7 @@ const isAriaTriggerKey = function(key) {
 /**
  * Encodes text into html entities.
  *
- * @method encodeText
- * @param rawText
+ * @param {string} rawText
  * @returns {*|jQuery}
  */
 const encodeText = function(rawText) {
@@ -84,8 +84,7 @@ const encodeText = function(rawText) {
 /**
  * Decodes text from html entities.
  *
- * @method decodeText
- * @param encodedText
+ * @param {string} encodedText
  * @returns {*|jQuery}
  */
 const decodeText = function(encodedText) {
@@ -95,9 +94,8 @@ const decodeText = function(encodedText) {
 /**
  * Handler for keypress and click actions.
  *
- * $method handleAction
- * @param elem
- * @param callback
+ * @param {object} elem
+ * @param {function} callback
  * @returns {*}
  */
 const handleAction = function(elem, callback) {
@@ -111,16 +109,16 @@ const handleAction = function(elem, callback) {
         }
 
         callback();
+        e.preventDefault();
     });
 };
 
 /**
  * Setting up element edibility.
  *
- * @method handleEditableAction
- * @param elem
- * @param callback
- * @param callBeforeOnKeyEditing
+ * @param {object} elem
+ * @param {function} callback
+ * @param {function} callBeforeOnKeyEditing
  * @returns {*}
  */
 const handleEditableAction = function(elem, callback, callBeforeOnKeyEditing) {
@@ -152,9 +150,9 @@ const handleEditableAction = function(elem, callback, callBeforeOnKeyEditing) {
 /**
  * The default function of the module, which does the setup of the page.
  *
- * @param board
- * @param options
- * @param contextid
+ * @param {object} board
+ * @param {object} options
+ * @param {number} contextid
  */
 export default function(board, options, contextid) {
     // An array of strings to load as a batch later.
@@ -169,6 +167,7 @@ export default function(board, options, contextid) {
         note_changed_title: '',
         note_changed_text: '',
         note_deleted_text: '',
+        rate_note_title: '',
         rate_note_text: '',
         Ok: '',
         delete: '',
@@ -183,10 +182,14 @@ export default function(board, options, contextid) {
         aria_newcolumn: '',
         aria_newpost: '',
         aria_deletecolumn: '',
+        aria_movecolumn: '',
         aria_deletepost: '',
+        aria_movepost: '',
+        aria_editpost: '',
         aria_addmedia: '',
         aria_addmedianew: '',
         aria_deleteattachment: '',
+        aria_lockcolumn: '',
         aria_postedit: '',
         aria_canceledit: '',
         aria_postnew: '',
@@ -211,28 +214,32 @@ export default function(board, options, contextid) {
         lastHistoryId = null,
         isEditor = options.isEditor || false,
         usersCanEdit = options.usersCanEdit,
-        userId = options.userId || -1,
+        userId = parseInt(options.userId) || -1,
+        ownerId = parseInt(options.ownerId),
         mediaSelection = options.mediaselection || MEDIA_SELECTION_BUTTONS,
         editingNote = 0,
         isReadOnlyBoard = options.readonly || false,
         ratingenabled = options.ratingenabled,
         sortby = options.sortby || SORTBY_DATE,
-        editModal = null;
+        editModal = null,
+        enableblanktarget = (parseInt(options.enableblanktarget) === 1);
+
     /**
-     * Helper method to make calles to mod_board external services.
+     * Helper method to make calls to mod_board external services.
      *
-     * @method serviceCall
-     * @param method
-     * @param args
-     * @param callback
-     * @param failcallback
+     * @param {string} method
+     * @param {array} args
+     * @param {function} callback
+     * @param {function} failcallback
      */
     var serviceCall = function(method, args, callback, failcallback) {
         if (method !== 'board_history') {
             stopUpdating();
         }
         _serviceCall(method, args, function() {
-            callback.apply(null, arguments);
+            if (callback) {
+                callback.apply(null, arguments);
+            }
             if (method !== 'board_history' && method != 'get_board') {
                 updateBoard(true);
             }
@@ -242,7 +249,6 @@ export default function(board, options, contextid) {
     /**
      * Returns the jquery element of a given note identifier.
      *
-     * @method getNote
      * @param {number} ident
      * @returns {jQuery<HTMLElement>}
      */
@@ -254,7 +260,7 @@ export default function(board, options, contextid) {
      * Returns the jquery element of the note text for the given note element.
      *
      * @method getNoteTextForNote
-     * @param note
+     * @param {object} note
      * @returns {*|jQuery}
      */
     var getNoteTextForNote = function(note) {
@@ -262,10 +268,22 @@ export default function(board, options, contextid) {
     };
 
     /**
+     * Returns the jquery element of the preview for the given note element.
+     *
+     * @method getNotePreviewForNote
+     * @param {object} note
+     * @returns {*|jQuery}
+     */
+    var getNotePreviewForNote = (note) => {
+        return $(note).find(".mod_board_preview");
+    };
+
+
+    /**
      * Returns the jquery element of the note heading for the given note element.
      *
      * @method getNoteHeadingForNote
-     * @param note
+     * @param {object} note
      * @returns {*|jQuery}
      */
     var getNoteHeadingForNote = function(note) {
@@ -276,7 +294,7 @@ export default function(board, options, contextid) {
      * Returns the jquery element of the note border for the given note element.
      *
      * @method getNoteBorderForNote
-     * @param note
+     * @param {object} note
      * @returns {*|jQuery}
      */
     var getNoteBorderForNote = function(note) {
@@ -287,7 +305,7 @@ export default function(board, options, contextid) {
      * Gets a jquery node for the attachments of a given note.
      *
      * @method getNoteAttachmentsForNote
-     * @param note
+     * @param {object} note
      * @returns {*|jQuery}
      */
     var getNoteAttachmentsForNote = function(note) {
@@ -298,7 +316,7 @@ export default function(board, options, contextid) {
      * Creates text identifier for a given node.
      *
      * @method textIdentifierForNote
-     * @param note
+     * @param {object} note
      * @returns {null|*|jQuery}
      */
     var textIdentifierForNote = function(note) {
@@ -322,7 +340,7 @@ export default function(board, options, contextid) {
      * Update the Aria info for a given note id.
      *
      * @method updateNoteAria
-     * @param noteId
+     * @param {number} noteId
      */
     var updateNoteAria = function(noteId) {
         var note = getNote(noteId),
@@ -333,6 +351,13 @@ export default function(board, options, contextid) {
                 deleteNoteString = strings.aria_deletepost.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
 
             note.find('.delete_note').attr('aria-label', deleteNoteString).attr('title', deleteNoteString);
+
+            var moveNoteString = strings.aria_movepost.replace('{post}', noteIdentifier);
+            note.find('.move_note').attr('aria-label', moveNoteString).attr('title', moveNoteString);
+
+            var editNoteString = strings.aria_editpost.replace('{post}', noteIdentifier);
+            note.find('.edit_note').attr('aria-label', editNoteString).attr('title', editNoteString);
+
             note.find('.mod_board_rating').attr('aria-label', strings.aria_ratepost.replace('{column}',
                 columnIdentifier).replace('{post}', noteIdentifier));
             note.find('.note_ariatext').html(noteIdentifier);
@@ -344,15 +369,19 @@ export default function(board, options, contextid) {
      * Update the Aria information for a given column id.
      *
      * @method updateColumnAria
-     * @param columnId
+     * @param {number} columnId
      */
     var updateColumnAria = function(columnId) {
         var column = $('.board_column[data-ident=' + columnId + ']'),
             columnIdentifier = column.find('.mod_board_column_name').text(),
             newNoteString = strings.aria_newpost.replace('{column}', columnIdentifier),
-            deleteColumnString = strings.aria_deletecolumn.replace('{column}', columnIdentifier);
+            moveColumnString = strings.aria_movecolumn.replace('{column}', columnIdentifier),
+            deleteColumnString = strings.aria_deletecolumn.replace('{column}', columnIdentifier),
+            lockColumnString = strings.aria_lockcolumn.replace('{column}', columnIdentifier);
         column.find('.newnote').attr('aria-label', newNoteString).attr('title', newNoteString);
+        column.find('.mod_column_move').attr('aria-label', moveColumnString).attr('title', moveColumnString);
         column.find('.delete_column').attr('aria-label', deleteColumnString).attr('title', deleteColumnString);
+        column.find('.lock_column').attr('aria-label', lockColumnString).attr('title', lockColumnString);
 
         column.find(".board_note").each(function(index, note) {
             updateNoteAria($(note).data('ident'));
@@ -398,7 +427,7 @@ export default function(board, options, contextid) {
      * Start the editing of a particular note, by identifier.
      *
      * @method startNoteEdit
-     * @param ident
+     * @param {number} ident
      */
     var startNoteEdit = function(ident) {
 
@@ -430,7 +459,7 @@ export default function(board, options, contextid) {
      * Delete a given note, by identifier.
      *
      * @method deleteNote
-     * @param ident
+     * @param {number} ident
      */
     var deleteNote = function(ident) {
         Notification.confirm(
@@ -479,7 +508,7 @@ export default function(board, options, contextid) {
      * Rate (star) a give note, by identifier.
      *
      * @method rateNote
-     * @param ident
+     * @param {number} ident
      */
     var rateNote = function(ident) {
         if (!ratingenabled) {
@@ -499,8 +528,8 @@ export default function(board, options, contextid) {
         serviceCall('can_rate_note', {id: ident}, function(canrate) {
             if (canrate) {
                 Notification.confirm(
+                    strings.rate_note_title,
                     strings.rate_note_text, // Are you sure?
-                    null,
                     strings.Ok,
                     strings.Cancel,
                     function() {
@@ -529,7 +558,7 @@ export default function(board, options, contextid) {
      * Update the attachment information of a note.
      *
      * @method attachmentTypeChanged
-     * @param note
+     * @param {object} note
      */
     var attachmentTypeChanged = function(note) {
         var noteAttachment = getNoteAttachmentsForNote(note),
@@ -565,8 +594,8 @@ export default function(board, options, contextid) {
      * Set the attachment of a note.
      *
      * @method setAttachment
-     * @param note
-     * @param attachment
+     * @param {object} note
+     * @param {object} attachment
      */
     var setAttachment = function(note, attachment) {
         var noteAttachment = getNoteAttachmentsForNote(note);
@@ -591,7 +620,7 @@ export default function(board, options, contextid) {
      * Returns an object with various information about a note's attachment.
      *
      * @method attachmentDataForNote
-     * @param note
+     * @param {object} note
      * @returns {{filename: null, filecontents: null, type: number, url: null, info: null}}
      */
     var attachmentDataForNote = function(note) {
@@ -619,7 +648,7 @@ export default function(board, options, contextid) {
      * Get the string type of a attachment type number.
      *
      * @method attachmentTypeToString
-     * @param type
+     * @param {number} type
      * @returns {string|null}
      */
     var attachmentTypeToString = function(type) {
@@ -638,7 +667,7 @@ export default function(board, options, contextid) {
      * @returns {string | null} The youtube embed URL or null.
      */
     const getEmbedUrl = (url) => {
-        // Thanks for the regex from: https://gist.github.com/rodrigoborgesdeoliveira/987683cfbfcc8d800192da1e73adc486
+        // Thanks for the regex from: https://gist.github.com/rodrigoborgesdeoliveira/987683cfbfcc8d800192da1e73adc486.
         let regex = /(\/|%3D|v=)([0-9A-z-_]{11})([%#?&]|$)/;
         let videoID = url.match(regex);
         if (!videoID || videoID[2] === undefined || videoID[2].length !== 11) {
@@ -651,8 +680,8 @@ export default function(board, options, contextid) {
      * Display the attachment preview for a note.
      *
      * @method previewAttachment
-     * @param note
-     * @param attachment
+     * @param {object} note
+     * @param {object} attachment
      */
     var previewAttachment = function(note, attachment) {
         var elem = note.find('.mod_board_preview');
@@ -675,6 +704,7 @@ export default function(board, options, contextid) {
             elem.addClass('wrapper_image');
             elem.show();
         } else if (attachment.url) {
+            const blanktarget = enableblanktarget ? ' target="_blank"' : '';
             switch (parseInt(attachment.type)) {
                 case ATTACHMENT_VIDEO: { // Youtube
                     let url = getEmbedUrl(attachment.url);
@@ -683,8 +713,9 @@ export default function(board, options, contextid) {
                     } else {
                         elem.html('<iframe src="' + url +
                             '" class="mod_board_preview_element" frameborder="0" allow="accelerometer; autoplay; clipboard-write;' +
-                            'encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>');
-                        elem.addClass('wrapper_youtube');
+                            'encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><a href="#" ' +
+                            'class="stretched-link" aria-hidden="true"></a>');
+                        elem.addClass('wrapper_youtube').addClass('position-relative');
                     }
                     elem.show();
                 }
@@ -696,7 +727,7 @@ export default function(board, options, contextid) {
                     elem.show();
                 break;
                 case ATTACHMENT_LINK: // Url
-                    elem.html('<a href="' + attachment.url + '" class="mod_board_preview_element" target="_blank">' +
+                    elem.html('<a href="' + attachment.url + '" class="mod_board_preview_element"' + blanktarget + '>' +
                              (attachment.info || attachment.url) + '</a>');
                     elem.addClass('wrapper_url');
                     elem.show();
@@ -715,14 +746,14 @@ export default function(board, options, contextid) {
      * Add a new note with the given information.
      *
      * @method addNote
-     * @param columnid
-     * @param ident
-     * @param heading
-     * @param content
-     * @param attachment
-     * @param owner
-     * @param sortorder
-     * @param rating
+     * @param {number} columnid
+     * @param {number} ident
+     * @param {string} heading
+     * @param {string} content
+     * @param {object} attachment
+     * @param {object} owner
+     * @param {number} sortorder
+     * @param {string} rating
      */
     var addNote = function(columnid, ident, heading, content, attachment, owner, sortorder, rating) {
         var ismynote = owner.id == userId || !ident;
@@ -760,6 +791,7 @@ export default function(board, options, contextid) {
         }
 
         var notecontent = $('<div class="mod_board_note_content"></div>'),
+            notecontrols = $('<div class="mod_board_note_controls"></div>'),
             noteHeading = $('<div class="mod_board_note_heading" tabindex="0">' + (heading ? heading : '') + '</div>'),
             noteBorder = $('<div class="mod_board_note_border"></div>'),
             noteText = $('<div class="mod_board_note_text" tabindex="0">' + (content ? content : '') + '</div>'),
@@ -788,25 +820,37 @@ export default function(board, options, contextid) {
                 handleAction(rateElement, () => {
                     rateNote(ident);
                 });
-                notecontent.append(rateElement);
+                notecontrols.append(rateElement);
             }
 
             if (iseditable) {
-                var removeElement = $('<div class="mod_board_remove fa fa-remove delete_note" role="button" tabindex="0"></div>');
+                var removeElement = $('<div class="fa fa-remove delete_note" role="button" tabindex="0"></div>');
                 handleAction(removeElement, () => {
                     deleteNote(ident);
                 });
 
-                notecontent.append(removeElement);
+                notecontrols.append(removeElement);
 
-                handleEditableAction(noteText, beginEdit);
-                handleEditableAction(noteHeading, beginEdit);
-                handleEditableAction(noteBorder, beginEdit);
+                if (usersCanEdit == 1 || isEditor) {
+                    var moveElement = $('<div class="mod_board_move fa fa-arrows move_note" role="button" tabindex="0"></div>');
+                    notecontrols.append(moveElement);
+                    moveNotesDialog.init(ownerId, moveNote);
+                }
 
+                var editElement = $('<div class="mod_board_move fa fa-pencil edit_note" role="button" tabindex="0"></div>');
+                notecontrols.append(editElement);
+                handleAction(editElement, () => {
+                    beginEdit();
+                });
+                updateSortable();
                 setAttachment(note, attachment);
             } else {
                 previewAttachment(note, attachment);
             }
+
+            note.append(notecontrols);
+
+            handleAction(notecontent, () => fullScreenNote(ident, notecontent));
 
             if (!noteHeading.html()) {
                 noteHeading.hide();
@@ -836,15 +880,18 @@ export default function(board, options, contextid) {
      * Add a new column.
      *
      * @method addColumn
-     * @param ident
-     * @param name
-     * @param notes
+     * @param {object} ident
+     * @param {string} name
+     * @param {bool} locked
+     * @param {array} notes
+     * @param {string} colour
      */
-    var addColumn = function (ident, name, notes, colour) {
+    var addColumn = function(ident, name, locked, notes, colour) {
         let headerStyle = `style="border-top: 10px solid #${colour}"`;
         var iseditable = isEditor,
             nameCache = null,
-            column = $(`<div class="board_column board_column_hasdata" ${headerStyle} data-ident="${ident}"></div>`),
+            column = $(`<div class="board_column board_column_hasdata" data-locked="${locked}"\
+                 ${headerStyle} data-ident="${ident}"></div>`),
             columnHeader = $('<div class="board_column_header"></div>'),
             columnSort = $('<div class="mod_board_column_sort fa"></div>'),
             columnName = $('<div class="mod_board_column_name" tabindex="0" aria-level="3" role="heading">' + name + '</div>'),
@@ -866,8 +913,35 @@ export default function(board, options, contextid) {
 
         if (iseditable) {
             column.addClass('mod_board_editablecolumn');
+            const lockIcon = locked ? 'fa-lock' : 'fa-unlock';
+            const lockElement = $(`<div class="icon fa ${lockIcon} lock_column" role="button" tabindex="0"></div>`);
 
-            var removeElement = $('<div class="mod_board_remove fa fa-remove delete_column" role="button" tabindex="0"></div>');
+            handleAction(lockElement, () => {
+                const lockColumn = column.attr('data-locked') !== 'true';
+                serviceCall('lock_column', {id: ident, status: lockColumn}, function(result) {
+                    if (result.status) {
+                        if (lockColumn) {
+                            lockElement.removeClass('fa-unlock').addClass('fa-lock');
+                            column.attr('data-locked', 'true');
+                            column.find('.board_button.newnote').addClass('d-none');
+                        } else {
+                            lockElement.removeClass('fa-lock').addClass('fa-unlock');
+                            column.attr('data-locked', 'false');
+                            column.find('.board_button.newnote').removeClass('d-none');
+
+                        }
+                        lastHistoryId = result.historyid;
+                        updateSortable();
+                    }
+                });
+            });
+            columnHeader.append(lockElement);
+
+            columnHeader.addClass('icon-size-3');
+            const moveElement = $('<div class="icon fa fa-arrows mod_column_move" role="button" tabindex="0"></div>');
+            columnHeader.append(moveElement);
+            moveColumnsDialog.init(moveColumn);
+            var removeElement = $('<div class="icon fa fa-remove delete_column" role="button" tabindex="0"></div>');
             handleAction(removeElement, () => {
                 Notification.confirm(
                     strings.remove_column_title, // Are you sure?
@@ -923,9 +997,12 @@ export default function(board, options, contextid) {
         }
 
         if (!isReadOnlyBoard) {
-            columnNewContent.append('<div class="board_button newnote" role="button" tabindex="0">' +
+            const newNoteButton = $('<div class="board_button newnote" role="button" tabindex="0">' +
             '<div class="button_content"><span class="fa ' + options.noteicon + '"></span></div></div>');
-
+            columnNewContent.append(newNoteButton);
+            if (column.attr('data-locked') === 'true') {
+                newNoteButton.addClass('d-none');
+            }
             handleAction(columnNewContent.find('.newnote'), function() {
                 addNote(ident, 0, null, null, null, {id: userId}, 0, 0);
             });
@@ -951,6 +1028,9 @@ export default function(board, options, contextid) {
         if (isEditor || usersCanEdit == 1) {
             updateSortable();
         }
+        if (isEditor) {
+            columnSorting();
+        }
     };
 
     /**
@@ -968,7 +1048,7 @@ export default function(board, options, contextid) {
      * @method addNewColumnButton
      */
     var addNewColumnButton = function() {
-        var column = $('<div class="board_column board_column_empty"></div>'),
+        var column = $('<div class="board_column_empty"></div>'),
             newBusy = false;
         column.append('<div class="board_button newcolumn" role="button" tabindex="0" aria-label="' +
             strings.aria_newcolumn + '" title="' + strings.aria_newcolumn + '"><div class="button_content"><span class="fa '
@@ -981,7 +1061,7 @@ export default function(board, options, contextid) {
             newBusy = true;
 
             serviceCall('add_column', {boardid: board.id, name: strings.default_column_heading}, function(result) {
-                addColumn(result.id, strings.default_column_heading, {}, selectHeadingColour());
+                addColumn(result.id, strings.default_column_heading, false, {}, selectHeadingColour());
                 lastHistoryId = result.historyid;
                 newBusy = false;
             }, function() {
@@ -1008,9 +1088,9 @@ export default function(board, options, contextid) {
      * Update a note with the provided information.
      *
      * @method updateNote
-     * @param note
-     * @param heading
-     * @param data
+     * @param {object} note
+     * @param {string} heading
+     * @param {object} data
      */
     var updateNote = function(note, heading, data) {
         var noteHeading = getNoteHeadingForNote(note);
@@ -1042,7 +1122,7 @@ export default function(board, options, contextid) {
      * @method processBoardHistory
      */
     var processBoardHistory = function() {
-        serviceCall('board_history', {id: board.id, since: lastHistoryId}, function(boardhistory) {
+        serviceCall('board_history', {id: board.id, ownerid: ownerId, since: lastHistoryId}, function(boardhistory) {
             for (var index in boardhistory) {
                 var item = boardhistory[index];
                 if (item.boardid != board.id) {
@@ -1093,10 +1173,24 @@ export default function(board, options, contextid) {
                     note.remove();
 
                 } else if (item.action == 'add_column') {
-                    addColumn(data.id, data.name, {}, selectHeadingColour());
+                    addColumn(data.id, data.name, false, {}, selectHeadingColour());
+                } else if (item.action == 'move_column') {
+                    const board = $('.mod_board');
+                    data.sortorder.forEach(column => {
+                        const columnElement = board.find(`.board_column[data-ident='${column}']`);
+                        columnElement.detach().appendTo(board);
+                    });
                 } else if (item.action == 'update_column') {
                     $(".board_column[data-ident='" + data.id + "'] .mod_board_column_name").html(data.name);
                     updateColumnAria(data.id);
+                } else if (item.action == 'lock_column') {
+                    $(".board_column[data-ident='" + data.id + "']").attr("data-locked", data.locked);
+                    if (data.locked) {
+                        $(".board_column[data-ident='" + data.id + "']").find('.board_button.newnote').addClass('d-none');
+                    } else {
+                        $(".board_column[data-ident='" + data.id + "']").find('.board_button.newnote').removeClass('d-none');
+                    }
+                    updateSortable();
                 } else if (item.action == 'delete_column') {
                     var column = $(".board_column[data-ident='" + data.id + "']");
                     if (editingNote && column.find('.board_note[data-ident="' + editingNote + '"]').length) {
@@ -1121,7 +1215,7 @@ export default function(board, options, contextid) {
      * Trigger a board update.
      *
      * @method updateBoard
-     * @param instant
+     * @param {boolean} instant
      */
     var updateBoard = function(instant) {
         if (instant) {
@@ -1148,8 +1242,8 @@ export default function(board, options, contextid) {
      * Sort a set of notes.
      *
      * @sortNotes
-     * @param content
-     * @param toggle
+     * @param {string} content
+     * @param {boolean} toggle
      */
     var sortNotes = function(content, toggle) {
         var sortCol = $(content).parent().find('.mod_board_column_sort'),
@@ -1211,9 +1305,10 @@ export default function(board, options, contextid) {
      */
     var updateSortable = function() {
         let fromColumnID;
-        $(".board_column_content").sortable({
-            connectWith: ".board_column_content",
+        $(".board_column[data-locked='false'] .board_column_content").sortable({
+            connectWith: ".board_column[data-locked='false'] .board_column_content",
             cancel: ".mod_board_nosort",
+            handle: ".move_note",
             start: function(_, ui) {
                 fromColumnID = $(ui.item).closest('.board_column').data('ident');
             },
@@ -1228,20 +1323,72 @@ export default function(board, options, contextid) {
                 let payload = {
                     id: noteid,
                     columnid: columnid,
+                    ownerid: ownerId,
                     sortorder: sortorder
                 };
-                updateSortOrders(fromColumnID, payload.columnid, payload.id, payload.sortorder);
-                serviceCall('move_note', payload, (result) => {
-                    if (result.status) {
-                        lastHistoryId = result.historyid;
-                        updateNoteAria(payload.id);
-                        sortNotes($(`.board_column[data-ident=${payload.columnid}] .board_column_content`));
-                    } else {
-                        elem.sortable('cancel');
-                    }
-                });
+                moveNote(fromColumnID, payload, elem);
             }
         });
+    };
+
+    /**
+     * Move a note to a new position / column.
+     *
+     * @param {Int} fromColumnID The column the note is being moved from.
+     * @param {Object} payload The payload to send to the server.
+     * @param {Domnode} elem The element clicked to trigger the move.
+     */
+    const moveNote = (fromColumnID, payload, elem) => {
+        updateSortOrders(fromColumnID, payload.columnid, payload.id, payload.sortorder);
+
+        serviceCall('move_note', payload, (result) => {
+            if (result.status) {
+                lastHistoryId = result.historyid;
+                updateNoteAria(payload.id);
+                updateBoard();
+                sortNotes($(`.board_column[data-ident=${payload.columnid}] .board_column_content`));
+            } else {
+                if (elem) {
+                    elem.sortable('cancel');
+                }
+            }
+        });
+    };
+
+    /**
+     * Enable column sorting
+     */
+    const columnSorting = () => {
+        let movingColumnId;
+        $(".mod_board").sortable({
+            connectWith: ".mod_board",
+            axis: "x",
+            containment: ".mod_board_wrapper",
+            cancel: ".mod_board_nosort",
+            handle: ".mod_column_move",
+            start: function(_, ui) {
+                movingColumnId = $(ui.item).closest('.board_column').data('ident');
+            },
+            stop: function(_, ui) {
+                let column = $(ui.item);
+                let columns = $(".mod_board").find('.board_column');
+                let sortorder = columns.index(column);
+                let payload = {
+                    id: movingColumnId,
+                    sortorder: sortorder
+                };
+                moveColumn(payload);
+            }
+        });
+    };
+
+    /**
+     * Move a column to a new position.
+     *
+     * @param {Object} payload The payload to send to the server.
+     */
+    const moveColumn = (payload) => {
+        serviceCall('move_column', payload, false);
     };
 
     /**
@@ -1295,21 +1442,22 @@ export default function(board, options, contextid) {
     /**
      * Get the body fragment for the modal form.
      *
-     * @param noteid
-     * @param columnid
+     * @param {number} noteid
+     * @param {number} columnid
+     * @param {number} ownerId
      * @returns {Deferred|*}
      */
-    var getBody = function(noteid, columnid) {
+    var getBody = function(noteid, columnid, ownerId) {
         // Get the content of the modal.
-        var params = {noteid: noteid, columnid: columnid};
+        var params = {noteid: noteid, columnid: columnid, ownerid: ownerId};
         return Fragment.loadFragment('mod_board', 'note_form', contextid, params);
     };
 
     /**
      * Setup the aria labels for the modal.
      *
-     * @param note
-     * @param modal
+     * @param {object} note
+     * @param {object} modal
      */
     var updateModalAria = function(note, modal) {
         let columnIdentifier = note.closest('.board_column').find('.mod_board_column_name').text(),
@@ -1364,7 +1512,7 @@ export default function(board, options, contextid) {
     /**
      * Displays the modal form to edit a note.
      *
-     * @param note
+     * @param {object} note
      */
     var showModalForm = function(note) {
         let noteId = 0,
@@ -1383,14 +1531,15 @@ export default function(board, options, contextid) {
         ModalFactory.create({
             type: ModalFactory.types.SAVE_CANCEL,
             title: title,
-            body: getBody(noteId, columnId),
+            body: getBody(noteId, columnId, ownerId),
             large: true,
             removeOnClose: true
         }).then(function(modal) {
             // Use the body promise so we know body content is loaded.
+            // eslint-disable-next-line promise/catch-or-return
             modal.getBodyPromise().then(function () {
-                let saveInProgress = false;
                 editModal = modal;
+                let saveInProgress = false;
                 modal.setLarge();
                 modal.setSaveButtonText(strings.post_button_text);
                 modal.setButtonText('cancel', strings.cancel_button_text);
@@ -1413,15 +1562,16 @@ export default function(board, options, contextid) {
                 modal.getRoot().on('submit', 'form', function (e) {
                     e.preventDefault();
 
-                    // Prevent multiple form submissions from being sent.
                     if (saveInProgress) {
                         return;
                     }
+                    // Make sure to reset me to false if we error out in this code block!
                     saveInProgress = true;
 
                     // First, make sure the native html5 validity checks are run.
                     let valid = modal.getRoot().find('form').get(0).reportValidity();
                     if (!valid) {
+                        saveInProgress = false;
                         return;
                     }
 
@@ -1443,10 +1593,11 @@ export default function(board, options, contextid) {
                     // If we found invalid fields, focus on the first one and do not submit via ajax.
                     if (invalid.length) {
                         invalid.first().focus();
+                        saveInProgress = false;
                         return;
                     }
 
-                    var formData = JSON.stringify(modal.getRoot().find('form').serialize());
+                        var formData = JSON.stringify(modal.getRoot().find('form').serialize());
                     serviceCall('submit_form', {contextid: contextid, jsonformdata: formData}, function (result) {
                         if (result.status) {
                             if (result.action == 'insert') {
@@ -1481,7 +1632,6 @@ export default function(board, options, contextid) {
                             // TODO show error.
                         }
                     });
-
                 });
 
                 if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
@@ -1545,9 +1695,49 @@ export default function(board, options, contextid) {
                 modal.show();
 
                 return modal;
+            }).catch(Notification.exception);
+            return modal;
+        }).catch(Notification.exception);
+    };
+
+    /**
+     * Show the note in a modal
+     * @param {Int} ident The note id
+     * @param {Object} notecontent The note content
+     */
+    var fullScreenNote = (ident, notecontent) => {
+        const heading = getNoteHeadingForNote(notecontent).html();
+        const modalBody = $(document.createElement('div'));
+        modalBody.addClass('mod_board_note_content');
+        const text = getNoteTextForNote(notecontent);
+        if (text) {
+            modalBody.append(text.clone());
+        }
+        const preview = getNotePreviewForNote(notecontent);
+        if (preview) {
+            modalBody.append(preview.clone());
+        }
+
+        // Adds the comments to a note.
+        const commentArea = $(document.createElement('div'));
+        commentArea.attr('data-region', 'comment-area');
+        modalBody.append(commentArea);
+        Comments.fetchFor(ident, commentArea);
+
+        ModalFactory.create({
+            type: ModalFactory.types.CANCEL,
+            title: heading,
+            body: modalBody,
+        }).then(function(modal) {
+            modal.setLarge();
+            modal.show();
+            // Handle hidden event.
+            modal.getRoot().on(ModalEvents.hidden, function () {
+                // Destroy when hidden.
+                modal.destroy();
             });
             return modal;
-        });
+        }, this).catch(Notification.exception);
     };
 
     /**
@@ -1556,15 +1746,16 @@ export default function(board, options, contextid) {
      * @method init
      */
     var init = function() {
-        serviceCall('get_board', {id: board.id}, function(columns) {
+        serviceCall('get_board', {id: board.id, ownerid: ownerId}, function(columns) {
             // Init
             if (columns) {
                 for (var index in columns) {
                     addColumn(
                         columns[index].id,
                         columns[index].name,
+                        columns[index].locked,
                         columns[index].notes || {},
-                        options.colours[index % options.colours.length]
+                        options.colours[columns[index].id % options.colours.length]
                     );
                 }
             }
@@ -1577,6 +1768,7 @@ export default function(board, options, contextid) {
 
             if (isEditor) {
                 updateSortable();
+                columnSorting();
             }
 
             updateBoard();

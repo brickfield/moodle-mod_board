@@ -33,18 +33,26 @@ class backup_board_activity_structure_step extends backup_activity_structure_ste
 
         $board = new backup_nested_element('board', array('id'), array(
             'course', 'name', 'timemodified', 'intro', 'introformat', 'historyid',
-            'background_color', 'addrating', 'hideheaders', 'sortby', 'postby'));
+            'background_color', 'addrating', 'hideheaders', 'sortby', 'postby', 'userscanedit', 'singleusermode',
+            'completionnotes'));
 
         $columns = new backup_nested_element('columns');
-        $column = new backup_nested_element('column', array('id'), array('boardid', 'name'));
+        $column = new backup_nested_element('column', array('id'), array('boardid', 'name', 'sortorder'));
 
         $notes = new backup_nested_element('notes');
         $note = new backup_nested_element('note', array('id'), array(
-            'columnid', 'userid', 'groupid', 'content', 'heading', 'type', 'info', 'url', 'timecreated'));
+            'columnid', 'ownerid', 'userid', 'groupid', 'content', 'heading', 'type', 'info', 'url', 'timecreated'));
 
         $ratings = new backup_nested_element('ratings');
         $rating = new backup_nested_element('rating', array('id'), array(
             'noteid', 'userid', 'timecreated'));
+
+        $comments = new backup_nested_element('comments');
+        $comment = new backup_nested_element('comment', array('id'), array(
+            'noteid', 'userid', 'content', 'timecreated', 'timemodified'));
+
+        $comments->add_child($comment);
+        $note->add_child($comments);
 
         $ratings->add_child($rating);
         $note->add_child($ratings);
@@ -61,8 +69,10 @@ class backup_board_activity_structure_step extends backup_activity_structure_ste
         if ($userinfo) {
             $note->set_source_table('board_notes', array('columnid' => backup::VAR_PARENTID), 'id ASC');
             $rating->set_source_table('board_note_ratings', array('noteid' => backup::VAR_PARENTID), 'id ASC');
+            $comment->set_source_table('board_comments', array('noteid' => backup::VAR_PARENTID), 'id ASC');
         }
 
+        $comment->annotate_ids('user', 'userid');
         $note->annotate_ids('user', 'userid');
         $note->annotate_ids('group', 'groupid');
         $rating->annotate_ids('user', 'userid');
