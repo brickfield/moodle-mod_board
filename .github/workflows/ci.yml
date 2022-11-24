@@ -9,17 +9,11 @@ jobs:
       matrix:
         include:
           - php: '7.4'
-            moodle-branch: 'MOODLE_311_STABLE'
+            moodle-branch: 'MOODLE_400_STABLE'
             database: 'mariadb'
-            node: '14.15.0'
-          - php: '7.3'
-            moodle-branch: 'MOODLE_310_STABLE'
-            database: 'mariadb'
-            node: '14.15.0'
-          - php: '7.2'
-            moodle-branch: 'MOODLE_39_STABLE'
+          - php: '8.0'
+            moodle-branch: 'MOODLE_400_STABLE'
             database: 'pgsql'
-            node: '14.15.0'
 
     services:
       postgres:
@@ -60,6 +54,8 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           extensions: zip, gd, mbstring, pgsql, mysqli
+          ini-values: max_input_vars=5000
+          coverage: none
 
       - name: Deploy moodle-plugin-ci
         run: |

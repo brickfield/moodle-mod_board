@@ -35,8 +35,6 @@ use \core_privacy\local\metadata\collection;
 use \core_privacy\local\request\transform;
 use tool_dataprivacy\context_instance;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Implementation of the privacy subsystem plugin provider for the Brickfield board module.
  *
@@ -52,9 +50,7 @@ class provider implements
     \core_privacy\local\request\plugin\provider,
 
     // This plugin is capable of determining which users have data within it.
-    \core_privacy\local\request\core_userlist_provider
-
-{
+    \core_privacy\local\request\core_userlist_provider {
 
     /**
      * Returns meta data about this system.
@@ -89,6 +85,14 @@ class provider implements
             'userid' => 'privacy:metadata:board_note_ratings:userid',
             'timecreated' => 'privacy:metadata:board_note_ratings:timecreated',
         ], 'privacy:metadata:board_note_ratings');
+
+        // The 'board_comments' table stores comments a user has added to a note.
+        $items->add_database_table('board_comments', [
+            'noteid' => 'privacy:metadata:board_comments:noteid',
+            'userid' => 'privacy:metadata:board_comments:userid',
+            'content' => 'privacy:metadata:board_comments:content',
+            'timecreated' => 'privacy:metadata:board_comments:timecreated',
+        ], 'privacy:metadata:board_comments');
 
         return $items;
     }
@@ -146,6 +150,19 @@ class provider implements
         ";
         $contextlist->add_from_sql($sql, $params);
 
+        // Board comments.
+        $sql = "SELECT c.id
+                  FROM {context} c
+                  JOIN {course_modules} cm ON cm.id = c.instanceid AND c.contextlevel = :contextlevel
+                  JOIN {modules} m ON m.id = cm.module AND m.name = :modname
+                  JOIN {board} b ON b.id = cm.instance
+                  JOIN {board_columns} bc ON bc.boardid = b.id
+                  JOIN {board_notes} n ON n.columnid = bc.id
+                  JOIN {board_comments} bcm ON bcm.noteid = n.id
+                 WHERE bcm.userid = :userid
+        ";
+        $contextlist->add_from_sql($sql, $params);
+
         return $contextlist;
     }
 
@@ -193,6 +210,17 @@ class provider implements
                   JOIN {board_columns} bc ON bc.boardid = b.id
                   JOIN {board_notes} n ON n.columnid = bc.id
                   JOIN {board_note_ratings} r ON r.noteid = n.id
+                 WHERE cm.id = :instanceid";
+        $userlist->add_from_sql('userid', $sql, $params);
+
+        // Board comments.
+        $sql = "SELECT bcm.userid
+                  FROM {course_modules} cm
+                  JOIN {modules} m ON m.id = cm.module AND m.name = :modulename
+                  JOIN {board} b ON b.id = cm.instance
+                  JOIN {board_columns} bc ON bc.boardid = b.id
+                  JOIN {board_notes} n ON n.columnid = bc.id
+                  JOIN {board_comments} bcm ON bcm.noteid = n.id
                  WHERE cm.id = :instanceid";
         $userlist->add_from_sql('userid', $sql, $params);
     }
@@ -252,6 +280,9 @@ class provider implements
 
             // Store all note ratings data for this board.
             static::export_ratings_data($userid, $mappings);
+
+            // Store all comments for this board.
+            static::export_comments_data($userid, $mappings);
         }
 
         $boards->close();
@@ -434,6 +465,64 @@ class provider implements
     }
 
     /**
+     * Store all information about comments that we have detected this user to have added.
+     *
+     * @param   int         $userid The userid of the user whose data is to be exported.
+     * @param   array       $mappings A list of mappings from boardid => contextid.
+     * @return  array       Which boards had ratings for them.
+     */
+    protected static function export_comments_data(int $userid, array $mappings) {
+        global $DB;
+
+        // Find all of the ratings for these boards.
+        list($boardinsql, $boardparams) = $DB->get_in_or_equal(array_keys($mappings), SQL_PARAMS_NAMED);
+        $sql = "SELECT
+                    n.*,
+                    b.id AS boardid, bc.id AS columnid, bcm.content AS comment
+                  FROM {board} b
+                  JOIN {board_columns} bc ON bc.boardid = b.id
+                  JOIN {board_notes} n ON n.columnid = bc.id
+                  JOIN {board_comments} bcm ON bcm.noteid = n.id
+                 WHERE b.id {$boardinsql}
+                   AND (
+                        bcm.userid    = :userid
+                   )
+        ";
+
+        $params = [
+            'userid'  => $userid,
+        ];
+        $params += $boardparams;
+
+        // Keep track of the boards which have data.
+        $boardswithdata = [];
+
+        $comments = $DB->get_recordset_sql($sql, $params);
+        foreach ($comments as $comment) {
+            $boardswithdata[$comment->boardid] = true;
+            $context = \context::instance_by_id($mappings[$comment->boardid]);
+
+            $commentdata = (object) [
+                'comment' => format_string($comment->comment, true),
+                'note id' => format_string($comment->id, true),
+                'notetitle' => format_string(static::get_note_title($comment)),
+                'timecreated' => transform::datetime($comment->timecreated),
+            ];
+
+            $commentarea = static::get_export_area($comment, 'comments');
+
+            // Store the comments content.
+            writer::with_context($context)
+                ->export_data($commentarea, $commentdata);
+
+        }
+
+        $comments->close();
+
+        return $boardswithdata;
+    }
+
+    /**
      * Retrieve information about a specific note title for privacy export.
      *
      * @param   stdClass    $note The note from which to compile the export data.
@@ -557,6 +646,13 @@ class provider implements
                 $notesparams
             );
 
+            // Delete all board comments.
+            $DB->delete_records_select(
+                'board_comments',
+                "userid = :userid AND noteid {$notesinsql}",
+                $notesparams
+            );
+
             $DB->delete_records('board_history', [
                 'boardid' => $board->id,
                 'userid' => $userid,
@@ -606,6 +702,11 @@ class provider implements
         );
         $DB->delete_records_select(
             'board_note_ratings',
+            "userid {$userinsql} AND noteid {$notesinsql}",
+            $notesparams
+        );
+        $DB->delete_records_select(
+            'board_comments',
             "userid {$userinsql} AND noteid {$notesinsql}",
             $notesparams
         );

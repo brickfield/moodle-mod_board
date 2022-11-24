@@ -16,8 +16,6 @@
 
 namespace mod_board;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * The main board class functions.
  * @package     mod_board
@@ -35,6 +33,18 @@ class board {
 
     /** @var int Maximum file size of 10Mb. */
     const ACCEPTED_FILE_MAX_SIZE = 1024 * 1024 * 10;
+
+    /** @var int Value for the max column name length, consistent with db */
+    const LENGTH_COLNAME = 100;
+
+    /** @var int Value for the max heading length, consistent with db */
+    const LENGTH_HEADING = 100;
+
+    /** @var int Value for the max info length, consistent with db */
+    const LENGTH_INFO = 100;
+
+    /** @var int Value for the max url length, consistent with db */
+    const LENGTH_URL = 200;
 
     /** @var int Value for disabling rating. */
     const RATINGDISABLED = 0;
@@ -56,6 +66,15 @@ class board {
 
     /** @var int Value for no sorting on posts */
     const SORTBYNONE = 3;
+
+    /** @var int Value for the singlusermode not set*/
+    const SINGLEUSER_DISABLED = 0;
+
+    /** @var int Value for the singlusermode setting in private mode*/
+    const SINGLEUSER_PRIVATE = 1;
+
+    /** @var int Value for the singleusermode setting in public mode*/
+    const SINGLEUSER_PUBLIC = 2;
 
     /**
      * Retrieves the course module for the board
@@ -234,13 +253,29 @@ class board {
     }
 
     /**
+     * Check if there are any notes on this board.
+     *
+     * @param int $boardid
+     * @return bool true if there are notes.
+     */
+    public static function board_has_notes($boardid): bool {
+        global $DB;
+        $sql = "SELECT COUNT(*) FROM {board_notes}
+            LEFT JOIN {board_columns} ON {board_notes}.columnid = {board_columns}.id
+            WHERE {board_columns}.boardid = :boardid";
+        return $DB->count_records_sql($sql, ['boardid' => $boardid]) > 0;
+    }
+
+
+    /**
      * Retrieves the board.
      *
      * @param int $boardid
+     * @param int $ownerid The user board to get notes from.
      * @return array
      */
-    public static function board_get(int $boardid): array {
-        global $DB;
+    public static function board_get(int $boardid, int $ownerid = 0): array {
+        global $DB, $USER;
 
         static::require_capability_for_board_view($boardid);
 
@@ -251,9 +286,25 @@ class board {
         $groupid = groups_get_activity_group(static::coursemodule_for_board(static::get_board($boardid)), true) ?: null;
         $hideheaders = static::board_hide_headers($boardid);
 
-        $columns = $DB->get_records('board_columns', array('boardid' => $boardid), 'id', 'id, name');
+        $columns = $DB->get_records('board_columns', array('boardid' => $boardid), 'sortorder, id', 'id, name, locked');
         $columnindex = 0;
+
+        if ($board->singleusermode == static::SINGLEUSER_PRIVATE) {
+            if (!static::can_view_user($board->id, $ownerid) || $ownerid == 0) {
+                $ownerid = $USER->id;
+            }
+        } else if ($board->singleusermode == static::SINGLEUSER_PUBLIC) {
+            if ($ownerid == 0) {
+                $ownerid = $USER->id;
+            }
+        } else {
+            $ownerid = 0;
+        }
+
         foreach ($columns as $columnid => $column) {
+            if ($column->locked === null) {
+                $column->locked = false;
+            }
             if ($hideheaders) {
                 $column->name = ++$columnindex;
             }
@@ -261,6 +312,11 @@ class board {
             if (!empty($groupid)) {
                 $params['groupid'] = $groupid;
             }
+
+            if ($ownerid) {
+                $params['ownerid'] = $ownerid;
+            }
+
             $column->notes = $DB->get_records('board_notes', $params, 'sortorder',
                                             'id, userid, heading, content, type, info, url, timecreated, sortorder');
             foreach ($column->notes as $colid => $note) {
@@ -276,10 +332,11 @@ class board {
      * Retrieves the boards history.
      *
      * @param int $boardid
+     * @param int $ownerid
      * @param int $since
      * @return array
      */
-    public static function board_history(int $boardid, int $since): array {
+    public static function board_history(int $boardid, int $ownerid, int $since): array {
         global $DB;
 
         static::require_capability_for_board_view($boardid);
@@ -298,6 +355,12 @@ class board {
             $condition .= " AND groupid=:groupid";
             $params['groupid'] = $groupid;
         }
+        if ($board->singleusermode == self::SINGLEUSER_PUBLIC || $board->singleusermode == self::SINGLEUSER_PRIVATE) {
+            if (self::can_view_user($boardid, $ownerid)) {
+                $condition .= " AND (ownerid=:ownerid OR ownerid=0)";
+                $params['ownerid'] = $ownerid;
+            }
+        }
 
         return $DB->get_records_select('board_history', $condition, $params);
     }
@@ -312,16 +375,19 @@ class board {
     public static function board_add_column(int $boardid, string $name): array {
         global $DB, $USER;
 
-        $name = substr($name, 0, 100);
+        $name = mb_substr($name, 0, static::LENGTH_COLNAME);
 
         static::require_capability_for_board($boardid);
 
         $transaction = $DB->start_delegated_transaction();
 
-        $columnid = $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $name));
+        $maxsortorder = $DB->get_field('board_columns', 'MAX(sortorder)', ['boardid' => $boardid]);
+
+        $columnid = $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $name,
+            'sortorder' => $maxsortorder + 1));
         $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'add_column',
-                                        'userid' => $USER->id, 'content' => json_encode(array('id' => $columnid, 'name' => $name)),
-                                        'timecreated' => time()));
+            'ownerid' => 0, 'userid' => $USER->id, 'content' => json_encode(array('id' => $columnid, 'name' => $name)),
+            'timecreated' => time()));
         $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
         $transaction->allow_commit();
 
@@ -358,7 +424,7 @@ class board {
     public static function board_update_column(int $id, string $name): array {
         global $DB, $USER;
 
-        $name = substr($name, 0, 100);
+        $name = mb_substr($name, 0, static::LENGTH_COLNAME);
 
         static::require_capability_for_column($id);
 
@@ -367,8 +433,8 @@ class board {
             $transaction = $DB->start_delegated_transaction();
             $update = $DB->update_record('board_columns', array('id' => $id, 'name' => $name));
             $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'update_column',
-                                            'userid' => $USER->id, 'content' => json_encode(array('id' => $id, 'name' => $name)),
-                                            'timecreated' => time()));
+                'ownerid' => 0, 'userid' => $USER->id, 'content' => json_encode(array('id' => $id, 'name' => $name)),
+                'timecreated' => time()));
             $DB->update_record('board', array('id' => $id, 'historyid' => $historyid));
             $transaction->allow_commit();
 
@@ -421,8 +487,8 @@ class board {
             $DB->delete_records('board_notes', array('columnid' => $id));
             $delete = $DB->delete_records('board_columns', array('id' => $id));
             $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'delete_column',
-                                            'content' => json_encode(array('id' => $id)),
-                                            'userid' => $USER->id, 'timecreated' => time()));
+                'ownerid' => 0, 'content' => json_encode(array('id' => $id)),
+                'userid' => $USER->id, 'timecreated' => time()));
             $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
             $transaction->allow_commit();
 
@@ -434,6 +500,26 @@ class board {
 
         static::clear_history();
         return array('status' => $delete, 'historyid' => $historyid);
+    }
+
+    /**
+     * Locks a columns
+     *
+     * @param int $id
+     * @param bool $locked True to lock the column, false to unlock it.
+     * @return array
+     */
+    public static function board_lock_column(int $id, bool $locked): array {
+        global $DB, $USER;
+
+        static::require_capability_for_column($id);
+        $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $id));
+
+        $result = $DB->set_field('board_columns', 'locked', $locked, ['id' => $id]);
+        $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'lock_column',
+                                        'content' => json_encode(array('id' => $id, 'locked' => $locked)),
+                                        'userid' => $USER->id, 'timecreated' => time()));
+        return array('status' => $result, 'historyid' => $historyid);
     }
 
     /**
@@ -596,12 +682,13 @@ class board {
      * Adds a note to the board
      *
      * @param int $columnid
+     * @param int $ownerid
      * @param string $heading
      * @param string $content
      * @param array $attachment
      * @return array
      */
-    public static function board_add_note(int $columnid, string $heading, string $content, array $attachment): array {
+    public static function board_add_note(int $columnid, int $ownerid, string $heading, string $content, array $attachment): array {
         global $DB, $USER;
 
         $context = static::context_for_column($columnid);
@@ -609,11 +696,13 @@ class board {
             require_capability('mod/board:view', $context);
         }
 
-        $heading = empty($heading) ? null : substr($heading, 0, 100);
-        $content = empty($content) ? "" : substr($content, 0, get_config('mod_board', 'post_max_length'));
+        $heading = empty($heading) ? null : mb_substr($heading, 0, static::LENGTH_HEADING);
+        $content = empty($content) ? "" : mb_substr($content, 0, get_config('mod_board', 'post_max_length'));
         $content = clean_text($content, FORMAT_HTML);
 
-        $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $columnid));
+        $column = static::get_column($columnid);
+
+        $boardid = $column->boardid;
         // Get the count of notes in the column to add to bottom of sort order.
         $countnotes = $DB->count_records('board_notes', ['columnid' => $columnid]);
 
@@ -625,31 +714,41 @@ class board {
             if (static::board_readonly($boardid)) {
                 throw new \Exception('board_add_note not available');
             }
+            if (!self::can_post($boardid, $USER->id, $ownerid)) {
+                throw new \Exception('board_add_note not available');
+            }
             $transaction = $DB->start_delegated_transaction();
             $type = !empty($attachment['type']) ? $attachment['type'] : 0;
-            $info = !empty($type) ? substr(s($attachment['info']), 0, 100) : null;
-            $url = !empty($type) ? substr($attachment['url'], 0, 200) : null;
+            $info = !empty($type) ? mb_substr(s($attachment['info']), 0, static::LENGTH_INFO) : null;
+            $url = !empty($type) ? mb_substr($attachment['url'], 0, static::LENGTH_URL) : null;
 
             $notecreated = time();
-            $noteid = $DB->insert_record('board_notes', array('groupid' => $groupid, 'columnid' => $columnid,
-                                        'heading' => $heading, 'content' => $content, 'type' => $type, 'info' => $info,
-                                        'url' => $url, 'userid' => $USER->id, 'timecreated' => $notecreated,
-                                        'sortorder' => $countnotes));
+            $noteid = $DB->insert_record('board_notes', array('groupid' => $groupid, 'columnid' => $columnid, 'ownerid' => $ownerid,
+                'heading' => $heading, 'content' => $content, 'type' => $type, 'info' => $info,
+                'url' => $url, 'userid' => $USER->id, 'timecreated' => $notecreated,
+                'sortorder' => $countnotes));
 
             $attachment = static::board_note_update_attachment($noteid, $attachment);
             $url = $attachment['url'];
             $DB->update_record('board_notes', array('id' => $noteid, 'url' => $url));
 
             $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'groupid' => $groupid,
-                                            'action' => 'add_note', 'userid' => $USER->id,
-                                            'content' => json_encode(array('id' => $noteid, 'columnid' => $columnid,
-                                            'heading' => $heading, 'content' => $content,
-                                            'attachment' => array('type' => $type, 'info' => $info, 'url' => $url), 'rating' => 0,
-                                            'timecreated' => $notecreated, 'sortorder' => $countnotes)),
-                                            'timecreated' => time()));
+                'action' => 'add_note', 'ownerid' => $ownerid, 'userid' => $USER->id,
+                'content' => json_encode(array('id' => $noteid, 'columnid' => $columnid,
+                'heading' => $heading, 'content' => $content,
+                'attachment' => array('type' => $type, 'info' => $info, 'url' => $url), 'rating' => 0,
+                'timecreated' => $notecreated, 'sortorder' => $countnotes)),
+                'timecreated' => time()));
 
             $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
             $transaction->allow_commit();
+
+            $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+            $board = $DB->get_record('board', array('id' => $boardid), '*', MUST_EXIST);
+            $completion = new \completion_info($course);
+            if ($completion->is_enabled($cm) && $board->completionnotes) {
+                $completion->update_state($cm);
+            }
 
             static::board_add_note_log($boardid, $groupid, $heading, $content, $attachment, $columnid, $noteid);
 
@@ -691,18 +790,19 @@ class board {
      * Updates a note.
      *
      * @param int $id
+     * @param int $ownerid
      * @param string $heading
      * @param string $content
      * @param array $attachment
      * @return array
      */
-    public static function board_update_note(int $id, string $heading, string $content, array $attachment): array {
+    public static function board_update_note(int $id, int $ownerid, string $heading, string $content, array $attachment): array {
         global $DB, $USER;
 
         static::require_capability_for_note($id);
 
-        $heading = empty($heading) ? null : substr($heading, 0, 100);
-        $content = empty($content) ? "" : substr($content, 0, get_config('mod_board', 'post_max_length'));
+        $heading = empty($heading) ? null : mb_substr($heading, 0, static::LENGTH_HEADING);
+        $content = empty($content) ? "" : mb_substr($content, 0, get_config('mod_board', 'post_max_length'));
         $content = clean_text($content, FORMAT_HTML);
 
         $note = static::get_note($id);
@@ -723,16 +823,16 @@ class board {
             $attachment = static::board_note_update_attachment($id, $attachment, $previoustype);
 
             $type = !empty($attachment['type']) ? $attachment['type'] : 0;
-            $info = !empty($type) ? substr(s($attachment['info']), 0, 100) : null;
-            $url = !empty($type) ? substr($attachment['url'], 0, 200) : null;
+            $info = !empty($type) ? mb_substr(s($attachment['info']), 0, static::LENGTH_INFO) : null;
+            $url = !empty($type) ? mb_substr($attachment['url'], 0, static::LENGTH_URL) : null;
 
             $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'update_note',
-                                            'userid' => $USER->id, 'content' => json_encode(array('id' => $id,
-                                            'columnid' => $columnid, 'heading' => $heading, 'content' => $content,
-                                            'attachment' => array('type' => $type, 'info' => $info, 'url' => $url))),
-                                            'timecreated' => time()));
+                'ownerid' => $ownerid, 'userid' => $USER->id, 'content' => json_encode(array('id' => $id,
+                'columnid' => $columnid, 'heading' => $heading, 'content' => $content,
+                'attachment' => array('type' => $type, 'info' => $info, 'url' => $url))),
+                'timecreated' => time()));
             $update = $DB->update_record('board_notes', array('id' => $id, 'heading' => $heading, 'content' => $content,
-                                        'type' => $type, 'info' => $info, 'url' => $url));
+                'type' => $type, 'info' => $info, 'url' => $url));
             $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
 
             $transaction->allow_commit();
@@ -802,8 +902,8 @@ class board {
             $transaction = $DB->start_delegated_transaction();
             $delete = $DB->delete_records('board_notes', array('id' => $id));
             $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'delete_note',
-                                            'content' => json_encode(array('id' => $id, 'columnid' => $columnid)),
-                                            'userid' => $USER->id, 'timecreated' => time()));
+                'ownerid' => 0, 'content' => json_encode(array('id' => $id, 'columnid' => $columnid)),
+                'userid' => $USER->id, 'timecreated' => time()));
 
             $sql = "UPDATE {board_notes} bn
                        SET sortorder = sortorder - 1
@@ -840,14 +940,60 @@ class board {
     }
 
     /**
+     * Moves a column to a new position.
+     *
+     * @param int $id the column id
+     * @param int $sortorder the new sortorder
+     */
+    public static function board_move_column(int $id, int $sortorder): array {
+        global $DB, $USER;
+
+        $column = static::get_column($id);
+        $columns = $DB->get_records('board_columns', ['boardid' => $column->boardid], 'sortorder ASC, id ASC');
+        self::repositionan_array_element($columns, $id, $sortorder);
+        $sortorder = 1;
+        $neworder = [];
+        foreach ($columns as $column) {
+            $column->sortorder = $sortorder++;
+            $neworder[] = $column->id;
+            $DB->update_record('board_columns', $column);
+        }
+        $historyid = $DB->insert_record('board_history', [
+            'boardid' => $column->boardid, 'action' => 'move_column',
+            'content' => json_encode(['sortorder' => $neworder]),
+            'userid' => $USER->id, 'timecreated' => time()]);
+        return ['status' => 1, 'historyid' => $historyid];
+
+    }
+
+    /**
+     * Reposition an array element by its key.
+     *
+     * @param array      $array The array being reordered.
+     * @param string|int $key They key of the element you want to reposition.
+     * @param int        $order The position in the array you want to move the element to. (0 is first)
+     *
+     * @throws \Exception
+     */
+    private static function repositionan_array_element(array &$array, $key, int $order): void {
+        if (($a = array_search($key, array_keys($array))) === false) {
+            throw new \Exception("The {$key} cannot be found in the given array.");
+        }
+        $p1 = array_splice($array, $a, 1);
+        $p2 = array_splice($array, 0, $order);
+        $array = array_merge($p2, $p1, $array);
+    }
+
+    /**
      * Moves a note to a different column
      *
      * @param int $id
+     * @param int $ownerid
      * @param int $columnid
      * @param int $sortorder The order in the column the note was placed.
      * @return array
      */
-    public static function board_move_note(int $id, int $columnid, int $sortorder): array {
+    public static function board_move_note(int $id, int $ownerid, int $columnid, int $sortorder): array {
         global $DB, $USER;
 
         $note = static::get_note($id);
@@ -862,16 +1008,16 @@ class board {
             $transaction = $DB->start_delegated_transaction();
 
             $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'delete_note',
-                            'content' => json_encode(array('id' => $note->id, 'columnid' => $note->columnid)),
-                            'userid' => $USER->id, 'timecreated' => time()));
+                'content' => json_encode(array('id' => $note->id, 'columnid' => $note->columnid)),
+                'ownerid' => $ownerid, 'userid' => $USER->id, 'timecreated' => time()));
             $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'groupid' => $note->groupid,
-                                            'action' => 'add_note', 'userid' => $note->userid,
-                                            'content' => json_encode(array('id' => $note->id, 'columnid' => $columnid,
-                                            'heading' => $note->heading, 'content' => $note->content,
-                                            'attachment' => array('type' => $note->type, 'info' => $note->info,
-                                            'url' => $note->url), 'timecreated' => $note->timecreated,
-                                            'rating' => static::get_note_rating($note->id), 'sortorder' => $sortorder)),
-                                            'timecreated' => time()));
+                'action' => 'add_note', 'userid' => $note->userid, 'ownerid' => $ownerid,
+                'content' => json_encode(array('id' => $note->id, 'columnid' => $columnid,
+                'heading' => $note->heading, 'content' => $note->content,
+                'attachment' => array('type' => $note->type, 'info' => $note->info,
+                'url' => $note->url), 'timecreated' => $note->timecreated,
+                'rating' => static::get_note_rating($note->id), 'sortorder' => $sortorder)),
+                'timecreated' => time()));
             // Checking if we move the note up or down.
             $ismovingup = $note->sortorder < $sortorder;
             $ismovingdown = $note->sortorder > $sortorder;
@@ -1230,5 +1376,75 @@ class board {
      */
     public static function get_default_colours() {
         return ["1B998B", "2D3047", "FFFD82", "FF9B71", "E84855", "AF9BB6", "F18F01"];
+    }
+
+    /**
+     * Get the users you can view if the board is set to single user with public posts.
+     * @param int $boardid the board id.
+     * @param int $groupid the group id.
+     * @return array the users.
+     */
+    public static function get_users_for_board($boardid, $groupid = 0): array {
+        if ($groupid) {
+            static::require_access_for_group($groupid, $boardid);
+            $userlist = groups_get_members($groupid,
+            'u.id, u.lastname, u.firstname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename',
+            'lastname ASC, firstname ASC');
+        } else {
+            $userlist = get_enrolled_users(static::context_for_board($boardid), 'mod/board:view', 0, 'u.id,
+                u.lastname, u.firstname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename');
+        }
+        $users = [];
+        foreach ($userlist as $user) {
+            $users[$user->id] = fullname($user);
+        }
+        return $users;
+    }
+
+    /**
+     * Check if you can view the notes for this user.
+     * @param int $boardid the board id.
+     * @param int $userid the user id.
+     * @return bool true if you can view the notes, false otherwise.
+     */
+    public static function can_view_user($boardid, $userid): bool {
+        global $USER;
+
+        $board = static::get_board($boardid);
+        $context = static::context_for_board($boardid);
+        if (has_capability('mod/board:manageboard', $context)) {
+            return true;
+        }
+        if ($board->singleusermode == self::SINGLEUSER_PUBLIC) {
+            return true;
+        }
+        if ($board->singleusermode == self::SINGLEUSER_PRIVATE && $USER->id == $userid) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if the user can post on this board
+     *
+     * @param int $boardid the board id.
+     * @param int $userid the user id.
+     * @param int $ownerid the board owner id.
+     */
+    public static function can_post(int $boardid, int $userid, int $ownerid): bool {
+        global $USER;
+
+        if ($userid == $ownerid) {
+            return true;
+        }
+        $board = static::get_board($boardid);
+        $context = static::context_for_board($boardid);
+        if (has_capability('mod/board:manageboard', $context) &&
+            ($board->singleusermode == self::SINGLEUSER_PUBLIC ||
+            $board->singleusermode == self::SINGLEUSER_PRIVATE)
+            ) {
+            return true;
+        }
+        return false;
     }
 }

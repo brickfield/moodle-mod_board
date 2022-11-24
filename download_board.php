@@ -27,6 +27,7 @@ require('../../config.php');
 use mod_board\board;
 
 $id      = optional_param('id', 0, PARAM_INT); // Course Module ID.
+$ownerid = optional_param('ownerid', 0, PARAM_INT); // The ID of the board owner.
 
 if (!$cm = get_coursemodule_from_id('board', $id)) {
     throw new \moodle_exception('invalidcoursemodule');
@@ -45,15 +46,21 @@ header("Pragma: no-cache");
 header("Expires: 0");
 
 $fp = fopen('php://output', 'w');
-$boarddata = board::board_get($board->id);
+
+board::require_capability_for_board_view($board->id);
+$boarddata = board::board_get($board->id, $ownerid);
+
+$hasrating = board::board_rating_enabled($board->id);
 
 $maxnotes = 0;
 $line = [];
 foreach ($boarddata as $index => $column) {
     $countnotes = count($column->notes);
     $maxnotes = $countnotes > $maxnotes ? $countnotes : $maxnotes;
-
     array_push($line, $column->name);
+    if ($hasrating) {
+        array_push($line, get_string('ratings', 'board'));
+    }
 }
 fputcsv($fp, $line);
 
@@ -63,6 +70,9 @@ while ($noterow < $maxnotes) {
     foreach ($boarddata as $index => $column) {
         $notes = array_values($column->notes);
         array_push($line, isset($notes[$noterow]) ? board::get_export_note($notes[$noterow]) : '');
+        if ($hasrating) {
+            array_push($line, isset($notes[$noterow]) ? $notes[$noterow]->rating : '');
+        }
     }
     $noterow++;
     fputcsv($fp, $line);

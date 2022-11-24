@@ -17,19 +17,19 @@
 namespace mod_board\event;
 
 /**
- * Add column event handler.
+ * Add comment event handler.
  * @package     mod_board
- * @author      Karen Holland <karen@brickfieldlabs.ie>
- * @copyright   2021 Brickfield Education Labs <https://www.brickfield.ie/>
+ * @author      Bas Brands <bas@sonsbeekmedia.nl>
+ * @copyright   2022 Brickfield Education Labs <https://www.brickfield.ie/>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class add_column extends \core\event\base {
+class add_comment extends \core\event\base {
     /**
      * Init function.
      */
     protected function init() {
         $this->data['crud'] = 'c';
-        $this->data['edulevel'] = self::LEVEL_OTHER;
+        $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
         $this->data['objecttable'] = 'board';
     }
 
@@ -38,7 +38,7 @@ class add_column extends \core\event\base {
      * @return \lang_string|string
      */
     public static function get_name() {
-        return get_string('event_add_column', 'mod_board');
+        return get_string('event_add_comment', 'mod_board');
     }
 
     /**
@@ -49,8 +49,9 @@ class add_column extends \core\event\base {
         $obj = new \stdClass;
         $obj->userid = $this->userid;
         $obj->objectid = $this->objectid;
-        $obj->name = $this->other['name'];
-        return get_string('event_add_column_desc', 'mod_board', $obj);
+        $obj->content = $this->other['content'];
+        $obj->noteid = $this->other['noteid'];
+        return get_string('event_add_comment_desc', 'mod_board', $obj);
     }
 
     /**
@@ -58,6 +59,7 @@ class add_column extends \core\event\base {
      * @return array
      */
     public function get_legacy_logdata() {
-        return array($this->courseid, 'mod_board', 'add_column', null, $this->objectid, $this->other['name']);
+        return array($this->courseid, 'mod_board', 'add_comment', null, $this->objectid,
+                     $this->other['content'], $this->other['noteid']);
     }
 }

@@ -36,6 +36,7 @@ class mod_board_external extends external_api {
     public static function board_history_parameters(): external_function_parameters {
         return new external_function_parameters([
             'id' => new external_value(PARAM_INT, 'The board id', VALUE_REQUIRED),
+            'ownerid' => new external_value(PARAM_INT, 'The board ownerid', VALUE_REQUIRED),
             'since' => new external_value(PARAM_INT, 'The last historyid', VALUE_REQUIRED)
         ]);
     }
@@ -43,13 +44,15 @@ class mod_board_external extends external_api {
     /**
      * Function board_history,
      * @param int $id
+     * @param int $ownerid
      * @param int $since
      * @return array
      */
-    public static function board_history(int $id, int $since): array {
+    public static function board_history(int $id, int $ownerid, int $since): array {
         // Validate recieved parameters.
         $params = self::validate_parameters(self::board_history_parameters(), [
             'id' => $id,
+            'ownerid' => $ownerid,
             'since' => $since,
         ]);
 
@@ -57,7 +60,7 @@ class mod_board_external extends external_api {
         $context = board::context_for_board($params['id']);
         self::validate_context($context);
 
-        return board::board_history($params['id'], $params['since']);
+        return board::board_history($params['id'], $params['ownerid'], $params['since']);
     }
 
     /**
@@ -84,26 +87,30 @@ class mod_board_external extends external_api {
      */
     public static function get_board_parameters(): external_function_parameters {
         return new external_function_parameters([
-            'id' => new external_value(PARAM_INT, 'The board id', VALUE_REQUIRED)
+            'id' => new external_value(PARAM_INT, 'The board id', VALUE_REQUIRED),
+            'ownerid' => new external_value(PARAM_INT, 'The ownerid', VALUE_OPTIONAL)
         ]);
     }
 
     /**
      * Function get_board.
      * @param int $id
+     * @param int $ownerid
      * @return array
      */
-    public static function get_board(int $id): array {
+    public static function get_board(int $id, int $ownerid = 0): array {
+        global $USER;
         // Validate recieved parameters.
         $params = self::validate_parameters(self::get_board_parameters(), [
             'id' => $id,
+            'ownerid' => $ownerid,
         ]);
 
         // Request and permission validation.
         $context = board::context_for_board($params['id']);
         self::validate_context($context);
 
-        return board::board_get($params['id']);
+        return board::board_get($params['id'], $params['ownerid']);
     }
 
     /**
@@ -116,6 +123,7 @@ class mod_board_external extends external_api {
                 array(
                     'id' => new external_value(PARAM_INT, 'column id'),
                     'name' => new external_value(PARAM_TEXT, 'column name'),
+                    'locked' => new external_value(PARAM_BOOL, 'column locked'),
                     'notes' => new external_multiple_structure(
                         new external_single_structure(
                             array(
@@ -263,6 +271,49 @@ class mod_board_external extends external_api {
     }
 
     /**
+     * Function lock_column_parameters.
+     * @return external_function_parameters
+     */
+    public static function lock_column_parameters(): external_function_parameters {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'The column id', VALUE_REQUIRED),
+            'status' => new external_value(PARAM_BOOL, 'True to lock the column', VALUE_REQUIRED),
+        ]);
+    }
+
+    /**
+     * Function lock_column.
+     * @param int $id
+     * @param bool $status
+     * @return array
+     */
+    public static function lock_column(int $id, bool $status): array {
+        // Validate recieved parameters.
+        $params = self::validate_parameters(self::lock_column_parameters(), [
+            'id' => $id,
+            'status' => $status,
+        ]);
+
+        // Request and permission validation.
+        $column = board::get_column($params['id']);
+        $context = board::context_for_board($column->boardid);
+        self::validate_context($context);
+
+        return board::board_lock_column($params['id'], $params['status']);
+    }
+
+    /**
+     * Function lock_column_returns.
+     * @return external_single_structure
+     */
+    public static function lock_column_returns(): external_single_structure {
+        return new external_single_structure([
+            'status' => new external_value(PARAM_BOOL, 'The lock status'),
+            'historyid' => new external_value(PARAM_INT, 'The last history id')
+        ]);
+    }
+
+    /**
      * Parameters for submit_form.
      *
      * @return external_function_parameters
@@ -299,9 +350,6 @@ class mod_board_external extends external_api {
 
         // Make the form with the ajax data to validate.
         $form = new note_form(null, null, 'post', '', null, true, $data);
-        // $errors = $form->validation($data);
-        // if (!empty())
-
         $data = $form->get_data();
         if ($data) {
             // Check that the passed context, and the context with this note/column match.
@@ -337,10 +385,10 @@ class mod_board_external extends external_api {
 
             // Process either as an update or insert.
             if ($data->noteid) {
-                $result = board::board_update_note($data->noteid, $data->heading, $data->content, $attachment);
+                $result = board::board_update_note($data->noteid, $data->ownerid, $data->heading, $data->content, $attachment);
                 $result['action'] = 'update';
             } else {
-                $result = board::board_add_note($data->columnid, $data->heading, $data->content, $attachment);
+                $result = board::board_add_note($data->columnid, $data->ownerid, $data->heading, $data->content, $attachment);
                 $result['action'] = 'insert';
             }
 
@@ -418,6 +466,49 @@ class mod_board_external extends external_api {
     }
 
     /**
+     * Function move_column_parameters.
+     * @return external_function_parameters
+     */
+    public static function move_column_parameters(): external_function_parameters {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'The column id', VALUE_REQUIRED),
+            'sortorder' => new external_value(PARAM_INT, 'The new sort order for the column', VALUE_REQUIRED)
+        ]);
+    }
+
+    /**
+     * Function move_column.
+     * @param int $id
+     * @param int $sortorder The order in the column that the note was placed.
+     * @return array
+     */
+    public static function move_column(int $id, int $sortorder): array {
+        // Validate recieved parameters.
+        $params = self::validate_parameters(self::move_column_parameters(), [
+            'id' => $id,
+            'sortorder' => $sortorder,
+        ]);
+
+        // Request and permission validation.
+        $column = board::get_column($params['id']);
+        $context = board::context_for_board($column->boardid);
+        self::validate_context($context);
+
+        return board::board_move_column($params['id'], $params['sortorder']);
+    }
+
+    /**
+     * Function move_column_returns.
+     * @return external_single_structure
+     */
+    public static function move_column_returns(): external_single_structure {
+        return new external_single_structure([
+            'status' => new external_value(PARAM_BOOL, 'The move status'),
+            'historyid' => new external_value(PARAM_INT, 'The last history id')
+        ]);
+    }
+
+    /**
      * Function move_note_parameters.
      * @return external_function_parameters
      */
@@ -425,6 +516,7 @@ class mod_board_external extends external_api {
         return new external_function_parameters([
             'id' => new external_value(PARAM_INT, 'The note id', VALUE_REQUIRED),
             'columnid' => new external_value(PARAM_INT, 'The new column id', VALUE_REQUIRED),
+            'ownerid' => new external_value(PARAM_INT, 'The owner id', VALUE_REQUIRED),
             'sortorder' => new external_value(PARAM_INT, 'The new sort order for the note', VALUE_REQUIRED)
         ]);
     }
@@ -433,14 +525,16 @@ class mod_board_external extends external_api {
      * Function move_note.
      * @param int $id
      * @param int $columnid
+     * @param int $ownerid
      * @param int $sortorder The order in the column that the note was placed.
      * @return array
      */
-    public static function move_note(int $id, int $columnid, int $sortorder): array {
+    public static function move_note(int $id, int $columnid, int $ownerid, int $sortorder): array {
         // Validate recieved parameters.
         $params = self::validate_parameters(self::move_note_parameters(), [
             'id' => $id,
             'columnid' => $columnid,
+            'ownerid' => $ownerid,
             'sortorder' => $sortorder,
         ]);
 
@@ -449,7 +543,7 @@ class mod_board_external extends external_api {
         $context = board::context_for_board($column->boardid);
         self::validate_context($context);
 
-        return board::board_move_note($params['id'], $params['columnid'], $params['sortorder']);
+        return board::board_move_note($params['id'], $params['ownerid'], $params['columnid'], $params['sortorder']);
     }
 
     /**
@@ -541,5 +635,230 @@ class mod_board_external extends external_api {
             'rating' => new external_value(PARAM_INT, 'The new rating id'),
             'historyid' => new external_value(PARAM_INT, 'The last history id')
         ]);
+    }
+
+    /**
+     * Returns description of method parameters
+     *
+     * @return external_function_parameters
+     * @since Moodle 2.9
+     */
+    public static function get_comments_parameters() {
+
+        return new external_function_parameters(
+            [
+                'noteid' => new external_value(PARAM_INT, 'id of note'),
+            ]
+        );
+    }
+
+    /**
+     * Get the comments for this note.
+     *
+     * @param int $noteid The id of the note.
+     * @return array of results
+     */
+    public static function get_comments($noteid) {
+        global $DB, $USER;
+
+        $warnings = [];
+        $arrayparams = array(
+            'noteid' => $noteid,
+        );
+        $params = self::validate_parameters(self::get_comments_parameters(), $arrayparams);
+
+        $comment = new \mod_board\comment($params);
+
+        $context = $comment->get_context();
+
+        self::validate_context($context);
+
+        require_capability('mod/board:view', $context);
+
+        $canpost = has_capability('mod/board:postcomment', $context);
+        $candeleteall = has_capability('mod/board:deleteallcomments', $context);
+
+        $notes = $DB->get_records('board_comments', ['noteid' => $params['noteid']], 'timecreated DESC');
+        $comments = [];
+        foreach ($notes as $note) {
+            $comment = (object)[];
+            $comment->id = $note->id;
+            $comment->noteid = $note->noteid;
+            $comment->content = $note->content;
+            $comment->candelete = ($note->userid === $USER->id || $candeleteall) ? true : false;
+            $comment->date = userdate($note->timecreated);
+            $comments[] = $comment;
+        }
+
+        $results = array(
+            'noteid' => $params['noteid'],
+            'commentcount' => count($comments),
+            'canpost' => $canpost,
+            'comments' => $comments,
+            'warnings' => $warnings
+        );
+        return $results;
+    }
+
+    /**
+     * Returns description of method result value
+     *
+     * @return external_description
+     * @since Moodle 2.9
+     */
+    public static function get_comments_returns() {
+
+        return new external_single_structure(
+            [
+                'canpost' => new external_value(PARAM_BOOL, 'can post comments'),
+                'noteid' => new external_value(PARAM_INT, 'The note id.'),
+                'commentcount' => new external_value(PARAM_INT, 'The number of comments.'),
+                'comments' => new external_multiple_structure(
+                    new external_single_structure(
+                        [
+                            'id' => new external_value(PARAM_INT, 'The comment id.'),
+                            'noteid' => new external_value(PARAM_INT, 'The note id.'),
+                            'candelete' => new external_value(PARAM_BOOL, 'Can delete the comment.'),
+                            'date' => new external_value(PARAM_TEXT, 'The date of the comment.'),
+                            'content' => new external_value(PARAM_RAW, 'The content of the comment.')
+                        ]
+                    )
+                ),
+                'warnings' => new external_warnings()
+            ]
+        );
+    }
+
+    /**
+     * Add a note
+     *
+     * @return external_function_parameters
+     * @since Moodle 2.9
+     */
+    public static function add_comment_parameters() {
+
+        return new external_function_parameters(
+            [
+                'noteid' => new external_value(PARAM_INT, 'id of note'),
+                'content' => new external_value(PARAM_RAW, 'content of comment'),
+            ]
+        );
+    }
+
+    /**
+     * Save a comment.
+     *
+     * @param int $noteid The id of the note.
+     * @param string $content The content of the comment.
+     *
+     * @return array of results
+     */
+    public static function add_comment($noteid, $content) {
+        global $USER, $DB;
+
+        $warnings = [];
+        $arrayparams = [
+            'noteid' => $noteid,
+            'content' => $content
+        ];
+        $params = self::validate_parameters(self::add_comment_parameters(), $arrayparams);
+
+        $comment = new \mod_board\comment($params);
+
+        $context = $comment->get_context();
+
+        self::validate_context($context);
+
+        if (!$comment->can_create($context)) {
+            $results = array(
+                'count' => '',
+                'id' => 0,
+                'warnings' => $warnings
+            );
+            return $results;
+        }
+
+        $comment->save();
+
+        $results = array(
+            'id' => $comment->id,
+            'warnings' => $warnings
+        );
+        return $results;
+    }
+
+    /**
+     * Returns description of method result value
+     *
+     * @return external_description
+     * @since Moodle 2.9
+     */
+    public static function add_comment_returns() {
+
+        return new external_single_structure(
+            [
+                'id' => new external_value(PARAM_INT, 'The comment id.'),
+                'warnings' => new external_warnings()
+            ]
+        );
+    }
+
+    /**
+     * Delete a comment parameters.
+     */
+    public static function delete_comment_parameters() {
+        return new external_function_parameters([
+            'commentid' => new external_value(PARAM_INT, 'The comment id'),
+        ]);
+    }
+
+    /**
+     * Delete a comment.
+     *
+     * @param int $commentid The id of the comment.
+     *
+     * @return array of results
+     */
+    public static function delete_comment($commentid) {
+        global $DB;
+
+        $warnings = [];
+        $arrayparams = [
+            'commentid' => $commentid,
+        ];
+        $params = self::validate_parameters(self::delete_comment_parameters(), $arrayparams);
+
+        $comment = new \mod_board\comment($params);
+
+        $context = $comment->get_context();
+        self::validate_context($context);
+
+        if (!$comment->can_delete($context)) {
+            $results = array(
+                'id' => 0,
+                'warnings' => $warnings
+            );
+            return $results;
+        }
+
+        $DB->delete_records('board_comments', ['id' => $comment->id]);
+
+        $results = array(
+            'id' => $comment->id,
+            'warnings' => $warnings
+        );
+        return $results;
+    }
+
+    /**
+     * Returns description of method result value
+     */
+    public static function delete_comment_returns() {
+        return new external_single_structure(
+            [
+                'id' => new external_value(PARAM_INT, 'The comment id.'),
+                'warnings' => new external_warnings()
+            ]
+        );
     }
 }
