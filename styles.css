@@ -133,6 +133,7 @@
 
 .mod_board .mod_board_note_content .mod_board_note_text {
     font-size: 0.9em;
+    word-break: break-word;
 }
 
 .mod_board .mod_board_note_content .mod_board_note_heading {
