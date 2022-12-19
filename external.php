@@ -701,7 +701,7 @@ class mod_board_external extends external_api {
         $canpost = has_capability('mod/board:postcomment', $context);
         $candeleteall = has_capability('mod/board:deleteallcomments', $context);
 
-        $notes = $DB->get_records('board_comments', ['noteid' => $params['noteid']], 'timecreated DESC');
+        $notes = $DB->get_records('board_comments', ['noteid' => $params['noteid'], 'deleted' => 0], 'timecreated DESC');
         $comments = [];
         foreach ($notes as $note) {
             $comment = (object)[];
@@ -856,15 +856,13 @@ class mod_board_external extends external_api {
         $context = $comment->get_context();
         self::validate_context($context);
 
-        if (!$comment->can_delete($context)) {
-            $results = array(
-                'id' => 0,
-                'warnings' => $warnings
-            );
-            return $results;
+        if (!$comment->delete()) {
+            $warnings[] = [
+                'item' => $comment->id,
+                'warningcode' => 'errorcommentnotdeleted',
+                'message' => 'The comment could not be deleted.'
+            ];
         }
-
-        $DB->delete_records('board_comments', ['id' => $comment->id]);
 
         $results = array(
             'id' => $comment->id,

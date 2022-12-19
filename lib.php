@@ -214,6 +214,12 @@ function board_extend_settings_navigation(settings_navigation $settings, navigat
                 navigation_node::TYPE_SETTING, null, null,
                 new pix_icon('i/export', ''));
         $boardnode->add_node($node);
+
+        $node = navigation_node::create(get_string('export_comments', 'board'),
+                new moodle_url('/mod/board/download_comments.php', $params),
+                navigation_node::TYPE_SETTING, null, null,
+                new pix_icon('i/export', ''));
+        $boardnode->add_node($node);
     }
 }
 

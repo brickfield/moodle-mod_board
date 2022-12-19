@@ -41,7 +41,8 @@ class backup_board_activity_structure_step extends backup_activity_structure_ste
 
         $notes = new backup_nested_element('notes');
         $note = new backup_nested_element('note', array('id'), array(
-            'columnid', 'ownerid', 'userid', 'groupid', 'content', 'heading', 'type', 'info', 'url', 'timecreated'));
+            'columnid', 'ownerid', 'userid', 'groupid', 'content', 'heading', 'type', 'info', 'url', 'timecreated',
+            'sortorder', 'deleted'));
 
         $ratings = new backup_nested_element('ratings');
         $rating = new backup_nested_element('rating', array('id'), array(
@@ -49,7 +50,7 @@ class backup_board_activity_structure_step extends backup_activity_structure_ste
 
         $comments = new backup_nested_element('comments');
         $comment = new backup_nested_element('comment', array('id'), array(
-            'noteid', 'userid', 'content', 'timecreated', 'timemodified'));
+            'noteid', 'userid', 'content', 'timecreated', 'timemodified', 'deleted'));
 
         $comments->add_child($comment);
         $note->add_child($comments);

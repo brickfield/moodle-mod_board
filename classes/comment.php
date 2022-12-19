@@ -184,6 +184,21 @@ class comment {
     }
 
     /**
+     * Delete this comment.
+     *
+     * @return bool true if comment is deleted.
+     */
+    public function delete() {
+        global $DB;
+
+        if (!$this->can_delete()) {
+            return false;
+        }
+        self::board_delete_comment_log($this->id, $this->context, $this->noteid);
+        return $DB->update_record('board_comments', ['id' => $this->id, 'deleted' => 1]);
+    }
+
+    /**
      * Triggers the add comment log.
      *
      * @param int $commentid
@@ -196,8 +211,24 @@ class comment {
         $event = \mod_board\event\add_comment::create(array(
             'objectid' => $commentid,
             'context' => $context,
-            'other' => array('noteid' => $noteid,
-                            'content' => $content)
+            'other' => ['noteid' => $noteid, 'content' => $content]
+        ));
+        $event->trigger();
+    }
+
+    /**
+     * Triggers the delete comment log.
+     *
+     * @param int $commentid
+     * @param object $context
+     * @param int $noteid
+     * @return void
+     */
+    public static function board_delete_comment_log($commentid, $context, $noteid) {
+        $event = \mod_board\event\delete_comment::create(array(
+            'objectid' => $commentid,
+            'context' => $context,
+            'other' => ['noteid' => $noteid]
         ));
         $event->trigger();
     }

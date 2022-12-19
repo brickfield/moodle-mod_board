@@ -168,7 +168,7 @@ class board {
      */
     public static function get_note($id) {
         global $DB;
-        return $DB->get_record('board_notes', array('id' => $id));
+        return $DB->get_record('board_notes', array('id' => $id, 'deleted' => 0));
     }
 
     /**
@@ -314,7 +314,8 @@ class board {
         global $DB;
         $sql = "SELECT COUNT(*) FROM {board_notes}
             LEFT JOIN {board_columns} ON {board_notes}.columnid = {board_columns}.id
-            WHERE {board_columns}.boardid = :boardid";
+            WHERE {board_columns}.boardid = :boardid
+            AND {board_notes}.deleted = 0";
         return $DB->count_records_sql($sql, ['boardid' => $boardid]) > 0;
     }
 
@@ -360,7 +361,7 @@ class board {
             if ($hideheaders) {
                 $column->name = ++$columnindex;
             }
-            $params = array('columnid' => $columnid);
+            $params = array('columnid' => $columnid, 'deleted' => 0);
             if (!empty($groupid)) {
                 $params['groupid'] = $groupid;
             }
@@ -534,9 +535,9 @@ class board {
             $notes = $DB->get_records('board_notes', array('columnid' => $id));
             foreach ($notes as $noteid => $note) {
                 $DB->delete_records('board_note_ratings', array('noteid' => $note->id));
+                $DB->update_record('board_notes', array('id' => $note->id, 'deleted' => 1));
                 static::delete_note_file($note->id);
             }
-            $DB->delete_records('board_notes', array('columnid' => $id));
             $delete = $DB->delete_records('board_columns', array('id' => $id));
             $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'delete_column',
                 'ownerid' => 0, 'content' => json_encode(array('id' => $id)),
@@ -756,7 +757,7 @@ class board {
 
         $boardid = $column->boardid;
         // Get the count of notes in the column to add to bottom of sort order.
-        $countnotes = $DB->count_records('board_notes', ['columnid' => $columnid]);
+        $countnotes = $DB->count_records('board_notes', ['columnid' => $columnid, 'deleted' => 0]);
 
         if ($boardid) {
             $cm = static::coursemodule_for_board(static::get_board($boardid));
@@ -778,7 +779,7 @@ class board {
             $noteid = $DB->insert_record('board_notes', array('groupid' => $groupid, 'columnid' => $columnid, 'ownerid' => $ownerid,
                 'heading' => $heading, 'content' => $content, 'type' => $type, 'info' => $info,
                 'url' => $url, 'userid' => $USER->id, 'timecreated' => $notecreated,
-                'sortorder' => $countnotes));
+                'sortorder' => $countnotes, 'deleted' => 0));
 
             $attachment = static::board_note_update_attachment($noteid, $attachment);
             $url = $attachment['url'];
@@ -951,8 +952,15 @@ class board {
             $deleteratings = $DB->delete_records('board_note_ratings', array('noteid' => $note->id));
             static::delete_note_file($note->id);
 
+            // Delete all note comments.
+            $commentrecords = $DB->get_records('board_comments', array('noteid' => $note->id));
+            foreach ($commentrecords as $commentrecord) {
+                $comment = new \mod_board\comment(['commentid' => $commentrecord->id]);
+                $comment->delete();
+            }
+
             $transaction = $DB->start_delegated_transaction();
-            $delete = $DB->delete_records('board_notes', array('id' => $id));
+            $delete = $DB->update_record('board_notes', array('id' => $id, 'deleted' => 1));
             $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'delete_note',
                 'ownerid' => 0, 'content' => json_encode(array('id' => $id, 'columnid' => $columnid)),
                 'userid' => $USER->id, 'timecreated' => time()));
