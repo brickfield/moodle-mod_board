@@ -209,14 +209,8 @@ function board_extend_settings_navigation(settings_navigation $settings, navigat
         if ($ownerid = $PAGE->url->get_param('ownerid')) {
             $params['ownerid'] = $ownerid;
         }
-        $node = navigation_node::create(get_string('export_board', 'board'),
-                new moodle_url('/mod/board/download_board.php', $params),
-                navigation_node::TYPE_SETTING, null, null,
-                new pix_icon('i/export', ''));
-        $boardnode->add_node($node);
-
-        $node = navigation_node::create(get_string('export_submissions', 'board'),
-                new moodle_url('/mod/board/download_submissions.php', $params),
+        $node = navigation_node::create(get_string('export', 'board'),
+                new moodle_url('/mod/board/export.php', $params),
                 navigation_node::TYPE_SETTING, null, null,
                 new pix_icon('i/export', ''));
         $boardnode->add_node($node);

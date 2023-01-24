@@ -332,6 +332,10 @@
     .modal-footer [data-action="cancel"] {
         order: 1;
     }
+    .cell {
+        max-width: 300px;
+        word-break: break-word;
+    }
 }
 .modtype_board div.flex-fill {
     width: 100%;
