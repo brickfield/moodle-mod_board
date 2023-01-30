@@ -57,4 +57,41 @@ class add_note extends \core\event\base {
         $obj->groupid = isset($this->other['groupid']) ? $this->other['groupid'] : null;
         return get_string('event_add_note_desc', 'mod_board', $obj);
     }
+
+    /**
+     * Get legacy logdata.
+     * @return array
+     */
+    public function get_legacy_logdata() {
+        return array($this->courseid, 'mod_board', 'add_note', null, $this->objectid, $this->other['heading'],
+                     $this->other['content'], $this->other['attachment']);
+    }
+
+    /**
+     * This is used when restoring course logs where it is required that we
+     * map the objectid to it's new value in the new course.
+     *
+     * Does nothing in the base class except display a debugging message warning
+     * the user that the event does not contain the required functionality to
+     * map this information. For events that do not store an objectid this won't
+     * be called, so no debugging message will be displayed.
+     *
+     * @return string the name of the restore mapping the objectid links to
+     */
+    public static function get_objectid_mapping() {
+        return [
+            'db'        => 'board',
+            'restore'   => \core\event\base::NOT_MAPPED,
+        ];
+    }
+
+    /**
+     * The 'other' fields for this event do not need to mapped during backup and restore as they
+     * only contain test values, not IDs for anything on the course.
+     *
+     * @return array Empty array
+     */
+    public static function get_other_mapping(): array {
+        return [];
+    }
 }
