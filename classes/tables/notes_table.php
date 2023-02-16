@@ -92,10 +92,10 @@ class notes_table extends table_sql {
     /**
      * Displays deleted in readable format.
      *
-     * @param object $value.
+     * @param \stdClass $value.
      * @return string returns deleted.
      */
-    public function col_deleted($value) {
+    public function col_deleted(\stdClass $value) {
         return ($value->deleted) ? get_string('yes') : get_string('no');
     }
 

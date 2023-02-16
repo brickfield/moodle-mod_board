@@ -46,7 +46,9 @@ require_capability('mod/board:manageboard', $context);
 $classname = 'mod_board\\tables\\' . $tabletype . '_table';
 
 $table = new $classname($cm->id, $board->id, $group, $ownerid, $includedeleted);
-$table->is_downloading($download, userdate(time(), '%Y-%m-%d-%H%M%S') . '_report');
+$filename = clean_param($board->name, PARAM_FILE) . '_' . $tabletype . '_report_' .
+    userdate(time(), '%Y-%m-%d-%H%M%S');
+$table->is_downloading($download, $filename);
 
 $pageurl = new moodle_url('/mod/board/export.php', ['id' => $id, 'ownerid' => $ownerid, 'tabletype' => $tabletype,
     'group' => $group, 'includedeleted' => $includedeleted]);
@@ -77,6 +79,8 @@ if (!$table->is_downloading()) {
     // Print the user selector.
     if ($board->singleusermode == board::SINGLEUSER_PUBLIC || $board->singleusermode == board::SINGLEUSER_PRIVATE) {
         $users = board::get_users_for_board($board->id, $group);
+        // Include board download user selection to have default all users option if required.
+        $users = [0 => get_string('all')] + $users;
         if (count($users) == 0) {
             echo $OUTPUT->notification(get_string('nousers', 'mod_board'));
         } else {

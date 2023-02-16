@@ -101,7 +101,7 @@ class comments_table extends table_sql {
     /**
      * Displays deleted in readable format.
      *
-     * @param object $value.
+     * @param object $value The value of the column.
      * @return string returns deleted.
      */
     public function col_deleted($value) {
