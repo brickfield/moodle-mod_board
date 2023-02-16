@@ -61,8 +61,7 @@ class comments_table extends table_sql {
         $this->define_baseurl($exporturl);
 
         // Define the list of columns to show.
-        $columns = array('pfirstname', 'plastname', 'pemail', 'heading', 'ptimecreated', 'pdeleted',
-            'firstname', 'lastname', 'content', 'timecreated', 'deleted');
+        $columns = array('heading', 'firstname', 'lastname', 'content', 'timecreated', 'deleted');
         $this->define_columns($columns);
 
         // Define the titles of columns to show in header.
@@ -77,8 +76,7 @@ class comments_table extends table_sql {
 
         // Define the SQL used to get the data.
         $this->sql = (object)[];
-        $this->sql->fields = 'c.id, u2.firstname as pfirstname, u2.lastname as plastname, u2.email as pemail,
-            bn.timecreated as ptimecreated, bn.deleted as pdeleted, bn.heading, u.firstname, u.lastname, c.content, c.timecreated,
+        $this->sql->fields = 'c.id, bn.heading, u.firstname, u.lastname, c.content, c.timecreated,
             c.deleted, bn.info, bn.url, bn.content as pcontent, bn.type';
         $this->sql->from = '{board_comments} c
             JOIN {board_notes} bn ON bn.id = c.noteid
@@ -98,6 +96,16 @@ class comments_table extends table_sql {
         if (!$includedeleted) {
             $this->sql->where .= ' AND bn.deleted = 0 AND c.deleted = 0';
         }
+    }
+
+    /**
+     * Displays deleted in readable format.
+     *
+     * @param object $value.
+     * @return string returns deleted.
+     */
+    public function col_deleted($value) {
+        return ($value->deleted) ? get_string('yes') : get_string('no');
     }
 
     /**

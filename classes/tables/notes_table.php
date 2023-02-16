@@ -90,6 +90,16 @@ class notes_table extends table_sql {
     }
 
     /**
+     * Displays deleted in readable format.
+     *
+     * @param object $value.
+     * @return string returns deleted.
+     */
+    public function col_deleted($value) {
+        return ($value->deleted) ? get_string('yes') : get_string('no');
+    }
+
+    /**
      * This function is called for each data row to allow processing of
      * columns which do not have a *_cols function.
      *
