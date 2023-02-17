@@ -469,15 +469,15 @@ class provider implements
      *
      * @param   int         $userid The userid of the user whose data is to be exported.
      * @param   array       $mappings A list of mappings from boardid => contextid.
-     * @return  array       Which boards had ratings for them.
+     * @return  array       Which boards had comments for them.
      */
     protected static function export_comments_data(int $userid, array $mappings) {
         global $DB;
 
-        // Find all of the ratings for these boards.
+        // Find all of the comments for these boards.
         list($boardinsql, $boardparams) = $DB->get_in_or_equal(array_keys($mappings), SQL_PARAMS_NAMED);
         $sql = "SELECT
-                    n.*,
+                    bcm.id AS commentid, n.*,
                     b.id AS boardid, bc.id AS columnid, bcm.content AS comment
                   FROM {board} b
                   JOIN {board_columns} bc ON bc.boardid = b.id
@@ -487,6 +487,7 @@ class provider implements
                    AND (
                         bcm.userid    = :userid
                    )
+              ORDER BY b.id, bc.id, n.id, bcm.id
         ";
 
         $params = [
@@ -494,28 +495,27 @@ class provider implements
         ];
         $params += $boardparams;
 
-        // Keep track of the boards which have data.
+        // Keep track of the notes which have comments.
         $boardswithdata = [];
 
         $comments = $DB->get_recordset_sql($sql, $params);
+        $commentdata = [];
         foreach ($comments as $comment) {
             $boardswithdata[$comment->boardid] = true;
             $context = \context::instance_by_id($mappings[$comment->boardid]);
 
-            $commentdata = (object) [
+            $commentdata['ID' . $comment->commentid] = [
                 'comment' => format_string($comment->comment, true),
                 'note id' => format_string($comment->id, true),
                 'notetitle' => format_string(static::get_note_title($comment)),
                 'timecreated' => transform::datetime($comment->timecreated),
             ];
-
-            $commentarea = static::get_export_area($comment, 'comments');
-
-            // Store the comments content.
-            writer::with_context($context)
-                ->export_data($commentarea, $commentdata);
-
         }
+        $commentarea = [get_string('comments', 'mod_board', '')];
+
+        // Store the comments content.
+        writer::with_context($context)
+            ->export_data($commentarea, (object) $commentdata);
 
         $comments->close();
 
@@ -590,6 +590,13 @@ class provider implements
         // Delete all board note ratings.
         $DB->delete_records_select(
             'board_note_ratings',
+            "noteid {$notesinsql}",
+            $notesinparams
+        );
+
+        // Delete all board comments.
+        $DB->delete_records_select(
+            'board_comments',
             "noteid {$notesinsql}",
             $notesinparams
         );
