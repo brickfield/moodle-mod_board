@@ -332,6 +332,7 @@ class provider implements
                 'mediatype' => format_string($note->type, true),
                 'mediainfo' => format_string($note->info, true),
                 'mediaurl' => format_string($note->url, true),
+                'deleted' => ($note->deleted) ? get_string('yes') : get_string('no'),
                 'timecreated' => transform::datetime($note->timecreated),
             ];
 
@@ -477,7 +478,7 @@ class provider implements
         // Find all of the comments for these boards.
         list($boardinsql, $boardparams) = $DB->get_in_or_equal(array_keys($mappings), SQL_PARAMS_NAMED);
         $sql = "SELECT
-                    bcm.id AS commentid, n.*,
+                    bcm.id AS commentid, bcm.deleted AS cdeleted, n.*,
                     b.id AS boardid, bc.id AS columnid, bcm.content AS comment
                   FROM {board} b
                   JOIN {board_columns} bc ON bc.boardid = b.id
@@ -508,6 +509,7 @@ class provider implements
                 'comment' => format_string($comment->comment, true),
                 'note id' => format_string($comment->id, true),
                 'notetitle' => format_string(static::get_note_title($comment)),
+                'deleted' => ($comment->cdeleted) ? get_string('yes') : get_string('no'),
                 'timecreated' => transform::datetime($comment->timecreated),
             ];
         }
