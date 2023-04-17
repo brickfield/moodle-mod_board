@@ -610,7 +610,7 @@ class board {
 
         $context = static::context_for_column($note->columnid);
         if ($context) {
-            require_capability('mod/board:view', $context);
+            require_capability('mod/board:post', $context);
 
             if ($USER->id != $note->userid) {
                 require_capability('mod/board:manageboard', $context);
@@ -751,7 +751,7 @@ class board {
 
         $context = static::context_for_column($columnid);
         if ($context) {
-            require_capability('mod/board:view', $context);
+            require_capability('mod/board:post', $context);
         }
 
         $heading = empty($heading) ? null : mb_substr($heading, 0, static::LENGTH_HEADING);
@@ -1189,7 +1189,7 @@ class board {
         }
 
         $context = static::context_for_board($board->id);
-        if (!has_capability('mod/board:view', $context)) {
+        if (!has_capability('mod/board:post', $context)) {
             return $result;
         }
 
@@ -1339,10 +1339,17 @@ class board {
      * a particular board.
      *
      * @param int $boardid
-     * @return void
+     * @return boolean
      */
     public static function board_users_can_edit($boardid) {
         global $DB;
+
+        $context = static::context_for_board($boardid);
+        if (!has_capability('mod/board:post', $context)) {
+            // The user is not allowed to post via capabilities.
+            return false;
+        }
+
         return $DB->get_field('board', 'userscanedit', ['id' => $boardid], IGNORE_MISSING);
     }
 
@@ -1510,7 +1517,8 @@ class board {
     public static function can_post(int $boardid, int $userid, int $ownerid): bool {
         global $USER;
 
-        if ($userid == $ownerid) {
+        $context = static::context_for_board($boardid);
+        if ($userid == $ownerid && has_capability('mod/board:post', $context)) {
             return true;
         }
         $board = static::get_board($boardid);
