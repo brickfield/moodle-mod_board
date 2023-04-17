@@ -149,11 +149,11 @@ class comment {
     public function can_delete() {
         global $USER;
 
-        if ($this->userid == $USER->id) {
+        $context = $this->get_context();
+        if ($this->userid == $USER->id && has_capability('mod/board:postcomment', $context)) {
             return true;
         }
 
-        $context = $this->get_context();
         if (has_capability('mod/board:deleteallcomments', $context)) {
             return true;
         }
