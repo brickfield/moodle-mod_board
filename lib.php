@@ -479,8 +479,11 @@ function board_cm_info_dynamic(cm_info $cm) {
     // Look up the board based on the course module.
     $board = board::get_board($cm->instance);
 
+    // Check if embedding feature is allowed.
+    $embedallowed = get_config('mod_board', 'embed_allowed');
+
     // If we are embedding the board, turn off the view link.
-    if ($board->embed) {
+    if ($embedallowed && $board->embed) {
         $cm->set_no_view_link();
     }
 
@@ -496,7 +499,10 @@ function board_cm_info_view(cm_info $cm) {
     // Look up the board based on the course module.
     $board = board::get_board($cm->instance);
 
-    if ($board->embed) {
+    // Check if embedding feature is allowed.
+    $embedallowed = get_config('mod_board', 'embed_allowed');
+
+    if ($embedallowed && $board->embed) {
         $width = get_config('mod_board', 'embed_width');
         $height = get_config('mod_board', 'embed_height');
         $output = html_writer::start_tag('div', ['class' => 'mod_board_embed_container']);
