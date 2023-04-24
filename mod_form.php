@@ -112,8 +112,12 @@ class mod_board_mod_form extends moodleform_mod {
 
         $mform->addElement('advcheckbox', 'enableblanktarget', get_string('enableblanktarget', 'mod_board'));
         $mform->addHelpButton('enableblanktarget', 'enableblanktarget', 'mod_board');
-        // Embed board on the course, rather then give a link to it.
-        $mform->addElement('advcheckbox', 'embed', get_string('embedboard', 'mod_board'));
+
+        // Only add the embed setting, if embedding is allowed globally.
+        if (get_config('mod_board', 'embed_allowed')) {
+            // Embed board on the course, rather then give a link to it.
+            $mform->addElement('advcheckbox', 'embed', get_string('embedboard', 'mod_board'));
+        }
 
         $this->standard_coursemodule_elements();
 
@@ -151,8 +155,10 @@ class mod_board_mod_form extends moodleform_mod {
         if (!empty($data['groupmode']) && empty($data['groupingid'])) {
             $errors['groupingid'] = get_string('groupingid_required', 'mod_board');
         }
-        if (($data['embed'] == 1) && ($data['singleusermode'] != board::SINGLEUSER_DISABLED)) {
-            $errors['embed'] = get_string('singleusermodenotembed', 'mod_board');
+        if (get_config('mod_board', 'embed_allowed')) {
+            if (($data['embed'] == 1) && ($data['singleusermode'] != board::SINGLEUSER_DISABLED)) {
+                $errors['embed'] = get_string('singleusermodenotembed', 'mod_board');
+            }
         }
 
         return $errors;
