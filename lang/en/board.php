@@ -125,6 +125,8 @@ $string['embed_width'] = 'Embed width';
 $string['embed_width_desc'] = 'Width to use for the iframe when embedding the board within the course. This should be a valid CSS value, e.g. px, rem, %, etc...';
 $string['embed_height'] = 'Embed height';
 $string['embed_height_desc'] = 'Height to use for the iframe when embedding the board within the course. This should be a valid CSS value, e.g. px, rem, %, etc...';
+$string['embed_allowed'] = 'Allow board embedding';
+$string['embed_allowed_desc'] = 'If activated, the board embedding feature is available in the activity settings.';
 
 $string['acceptedfiletypeforbackground'] = 'Accepted filetypes for background images.';
 $string['acceptedfiletypeforbackground_desc'] = 'Select the filetypes for background images to be supported.';
