@@ -101,7 +101,7 @@ $string['column_colours'] = 'Colores de las columnas';
 $string['column_colours_desc'] = 'El color es usado al tope de cada columna. Estos son colores hex y deberían ser coloccados uno por línea como 3 o 6 caracteres. Si uno de estos valores no son iguales a un color entonces los de por defecto serán usados.';
 $string['embed_width'] = 'Ancho de incrustado';
 $string['embed_width_desc'] = 'Ancho para uso del iframe cuando incruste el Tablero en dentro del curso. Este deberia tener un valor CSS válido, e.j. px, rem, %, etc...';
-$string['embed_height'] = 'Altura de incruastado';
+$string['embed_height'] = 'Altura de incrustado';
 $string['embed_height_desc'] = 'Altura para usar para el iframe cuando incruste el tablero dentro del curso. Este deberia tener un valor CSS válido, e.j. px, rem, %, etc...';
 
 $string['export_board'] = 'Exportar CSV';
@@ -185,7 +185,7 @@ $string['postbyenabled'] = 'Límite de estudiantes publicando por fecha';
 $string['userscanedit'] = 'Permite a todos los usuarios editar  el lugar de sus propias publicaciones.';
 $string['embedboard'] = 'Incruste el tablero dentro de la página del curso';
 
-$string['invalid_youtube_url'] = 'YouTube URL inválida';
+$string['invalid_youtube_url'] = 'URL de YouTube inválida';
 
 $string['privacy:metadata:board_comments'] = 'Comentarios por cada publicación de tablero .';
 $string['privacy:metadata:board_comments:content'] = 'El contenido del comentario en la publicación';
@@ -217,9 +217,9 @@ $string['comment'] = 'Comentario';
 $string['addcomment'] = 'Agregar comentario';
 
 $string['move_to_firstitemcolumn'] = 'Mover a la columna {$a}';
-$string['move_to_afterpost'] = 'Mover despues de la publicación {$a}';
+$string['move_to_afterpost'] = 'Mover después de la publicación {$a}';
 $string['move_column_to_firstplace'] = 'Mover columna al primer lugar';
-$string['move_column_to_aftercolumn'] = 'Mover columna despues de la columna {$a}';
+$string['move_column_to_aftercolumn'] = 'Mover columna después de la columna {$a}';
 
 $string['opensinnewwindow'] = 'Abre en una nueva ventana';
 $string['brickfieldlogo'] = 'Potenciado por el logo Brickfield';
