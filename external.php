@@ -347,6 +347,7 @@ class mod_board_external extends external_api {
         $serialiseddata = json_decode($params['jsonformdata']);
         $data = array();
         parse_str($serialiseddata, $data);
+        $data = str_replace(["\r", "\n"], '', $data);
 
         // Make the form with the ajax data to validate.
         $form = new note_form(null, null, 'post', '', null, true, $data);
