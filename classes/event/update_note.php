@@ -56,13 +56,4 @@ class update_note extends \core\event\base {
         $obj->columnid = $this->other['columnid'];
         return get_string('event_update_note_desc', 'mod_board', $obj);
     }
-
-    /**
-     * Get legacy logdata.
-     * @return array
-     */
-    public function get_legacy_logdata() {
-        return array($this->courseid, 'mod_board', 'update_note', null, $this->objectid, $this->other['heading'],
-                     $this->other['content'], $this->other['attachment']);
-    }
 }

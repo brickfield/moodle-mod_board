@@ -52,12 +52,4 @@ class add_column extends \core\event\base {
         $obj->name = $this->other['name'];
         return get_string('event_add_column_desc', 'mod_board', $obj);
     }
-
-    /**
-     * Get legacy logdata.
-     * @return array
-     */
-    public function get_legacy_logdata() {
-        return array($this->courseid, 'mod_board', 'add_column', null, $this->objectid, $this->other['name']);
-    }
 }

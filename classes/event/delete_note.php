@@ -52,12 +52,4 @@ class delete_note extends \core\event\base {
         $obj->columnid = $this->other['columnid'];
         return get_string('event_delete_note_desc', 'mod_board', $obj);
     }
-
-    /**
-     * Get legacy logdata.
-     * @return array
-     */
-    public function get_legacy_logdata() {
-        return array($this->courseid, 'mod_board', 'delete_note', null, $this->objectid);
-    }
 }

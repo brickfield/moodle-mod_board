@@ -51,12 +51,4 @@ class delete_column extends \core\event\base {
         $obj->objectid = $this->objectid;
         return get_string('event_delete_column_desc', 'mod_board', $obj);
     }
-
-    /**
-     * Get legacy logdata.
-     * @return array
-     */
-    public function get_legacy_logdata() {
-        return array($this->courseid, 'mod_board', 'delete_column', null, $this->objectid);
-    }
 }
