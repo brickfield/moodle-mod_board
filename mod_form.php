@@ -90,13 +90,23 @@ class mod_board_mod_form extends moodleform_mod {
         if ($boardhasnotes) {
             $mform->addElement('html', '<div class="alert alert-info">'.get_string('boardhasnotes', 'mod_board').'</div>');
         }
-        $mform->addElement('select', 'singleusermode', get_string('singleusermode', 'mod_board'),
-           array(
-                board::SINGLEUSER_DISABLED => get_string('singleusermodenone', 'mod_board'),
-                board::SINGLEUSER_PRIVATE => get_string('singleusermodeprivate', 'mod_board'),
-                board::SINGLEUSER_PUBLIC => get_string('singleusermodepublic', 'mod_board')
-            )
+        list($allowprivate, $allowpublic) = str_split(get_config('mod_board', 'allowed_singleuser_modes'));
+        $modesallow = [
+            board::SINGLEUSER_PRIVATE => $allowprivate,
+            board::SINGLEUSER_PUBLIC => $allowpublic,
+            board::SINGLEUSER_DISABLED => "1"
+        ];
+        $allowedsumodes = array_filter([
+            board::SINGLEUSER_DISABLED => get_string('singleusermodenone', 'mod_board'),
+            board::SINGLEUSER_PRIVATE => get_string('singleusermodeprivate', 'mod_board'),
+            board::SINGLEUSER_PUBLIC => get_string('singleusermodepublic', 'mod_board')
+            ], function($mode) use ($modesallow) {
+                return $modesallow[$mode];
+            }, ARRAY_FILTER_USE_KEY
         );
+        if (count($allowedsumodes) > 1) {
+            $mform->addElement('select', 'singleusermode', get_string('singleusermode', 'mod_board'), $allowedsumodes);
+        }
         $mform->setType('singleusermode', PARAM_INT);
         if ($boardhasnotes) {
             $mform->addElement('hidden', 'hasnotes', $boardhasnotes);

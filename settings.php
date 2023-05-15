@@ -73,4 +73,17 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configtext('mod_board/embed_height', get_string('embed_height', 'mod_board'),
                        get_string('embed_height_desc', 'mod_board'), '500px', PARAM_TEXT));
 
+    $settings->add(new admin_setting_configmulticheckbox2(
+        'mod_board/allowed_singleuser_modes',
+        get_string('allowed_singleuser_modes', 'mod_board'),
+        get_string('allowed_singleuser_modes_desc', 'mod_board'),
+        [
+            board::SINGLEUSER_PRIVATE => 1,
+            board::SINGLEUSER_PUBLIC => 1
+        ],
+        [
+            board::SINGLEUSER_PRIVATE => get_string('singleusermodeprivate', 'mod_board'),
+            board::SINGLEUSER_PUBLIC => get_string('singleusermodepublic', 'mod_board')
+        ]
+    ));
 }
