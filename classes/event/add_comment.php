@@ -53,13 +53,4 @@ class add_comment extends \core\event\base {
         $obj->noteid = $this->other['noteid'];
         return get_string('event_add_comment_desc', 'mod_board', $obj);
     }
-
-    /**
-     * Get legacy logdata.
-     * @return array
-     */
-    public function get_legacy_logdata() {
-        return array($this->courseid, 'mod_board', 'add_comment', null, $this->objectid,
-                     $this->other['content'], $this->other['noteid']);
-    }
 }
