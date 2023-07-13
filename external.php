@@ -88,7 +88,7 @@ class mod_board_external extends external_api {
     public static function get_board_parameters(): external_function_parameters {
         return new external_function_parameters([
             'id' => new external_value(PARAM_INT, 'The board id', VALUE_REQUIRED),
-            'ownerid' => new external_value(PARAM_INT, 'The ownerid', VALUE_OPTIONAL)
+            'ownerid' => new external_value(PARAM_INT, 'The ownerid', VALUE_DEFAULT, 0)
         ]);
     }
 
