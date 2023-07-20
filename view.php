@@ -109,6 +109,7 @@ $PAGE->set_activity_record($board);
 // If we are embedding the board on the course, set the layout to embedded to remove all other content.
 if ($embed) {
     $PAGE->set_pagelayout('embedded');
+    $PAGE->activityheader->disable();
 }
 
 echo $OUTPUT->header();
