@@ -57,13 +57,4 @@ class add_note extends \core\event\base {
         $obj->groupid = isset($this->other['groupid']) ? $this->other['groupid'] : null;
         return get_string('event_add_note_desc', 'mod_board', $obj);
     }
-
-    /**
-     * Get legacy logdata.
-     * @return array
-     */
-    public function get_legacy_logdata() {
-        return array($this->courseid, 'mod_board', 'add_note', null, $this->objectid, $this->other['heading'],
-                     $this->other['content'], $this->other['attachment']);
-    }
 }

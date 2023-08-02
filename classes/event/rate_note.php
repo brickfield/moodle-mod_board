@@ -52,12 +52,4 @@ class rate_note extends \core\event\base {
         $obj->rating = $this->other['rating'];
         return get_string('event_rate_note_desc', 'mod_board', $obj);
     }
-
-    /**
-     * Get legacy logdata
-     * @return array
-     */
-    public function get_legacy_logdata() {
-        return array($this->courseid, 'mod_board', 'rate_note', null, $this->objectid);
-    }
 }
