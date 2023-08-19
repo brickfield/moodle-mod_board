@@ -201,11 +201,10 @@ function board_delete_instance($id) {
  * @param object $boardnode
  */
 function board_extend_settings_navigation($settings, $boardnode) {
-    global $PAGE;
 
-    if (has_capability('mod/board:manageboard', $PAGE->cm->context)) {
-        $params = ['id' => $PAGE->cm->id];
-        if ($ownerid = $PAGE->url->get_param('ownerid')) {
+    if (has_capability('mod/board:manageboard', $settings->get_page()->cm->context)) {
+        $params = ['id' => $settings->get_page()->cm->id];
+        if ($ownerid = $settings->get_page()->url->get_param('ownerid')) {
             $params['ownerid'] = $ownerid;
         }
         $node = navigation_node::create(get_string('export_board', 'board'),
