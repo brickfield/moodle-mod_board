@@ -46,6 +46,18 @@ class backup_board_activity_task extends backup_activity_task {
      * @return string
      */
     public static function encode_content_links($content) {
+        global $CFG;
+
+        $base = preg_quote($CFG->wwwroot, "/");
+
+        // Link to the list of boards.
+        $search = "/(".$base."\/mod\/board\/index.php\?id\=)([0-9]+)/";
+        $content = preg_replace($search, '$@BOARDINDEX*$2@$', $content);
+
+        // Link to board view by moduleid.
+        $search = "/(".$base."\/mod\/board\/view.php\?id\=)([0-9]+)/";
+        $content = preg_replace($search, '$@BOARDVIEWBYID*$2@$', $content);
+
         return $content;
     }
 
