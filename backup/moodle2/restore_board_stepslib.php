@@ -146,7 +146,7 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
      */
     protected function after_execute() {
         global $DB;
-
+        $this->add_related_files('mod_board', 'intro', null);
         $this->add_related_files('mod_board', 'images', null);
         $this->add_related_files('mod_board', 'background', null);
 

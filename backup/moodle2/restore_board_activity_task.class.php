@@ -59,7 +59,11 @@ class restore_board_activity_task extends restore_activity_task {
      * @return array
      */
     public static function define_decode_rules() {
-        return array();
+        $rules = [];
+        $rules[] = new restore_decode_rule('BOARDVIEWBYID', '/mod/board/view.php?id=$1', 'course_module');
+        $rules[] = new restore_decode_rule('BOARDINDEX', '/mod/board/index.php?id=$1', 'course');
+
+        return $rules;
     }
 
     /**
