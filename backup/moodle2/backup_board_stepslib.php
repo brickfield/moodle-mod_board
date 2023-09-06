@@ -79,7 +79,7 @@ class backup_board_activity_structure_step extends backup_activity_structure_ste
 
         $note->annotate_files('mod_board', 'images', null);
         $board->annotate_files('mod_board', 'background', null);
-
+        $board->annotate_files('mod_board', 'intro', null);
         return $this->prepare_activity_structure($board);
     }
 }
