@@ -197,14 +197,14 @@ function board_delete_instance($id) {
 
 /**
  * Extend navigation.
- * @param object $settings
- * @param object $boardnode
+ * @param settings_navigation $settings
+ * @param navigation_node $boardnode
  */
-function board_extend_settings_navigation($settings, $boardnode) {
+function board_extend_settings_navigation(settings_navigation $settings, navigation_node $boardnode) {
     global $PAGE;
-
-    if (has_capability('mod/board:manageboard', $PAGE->cm->context)) {
-        $params = ['id' => $PAGE->cm->id];
+    $context = context_module::instance($settings->get_page()->cm->id);
+    if (has_capability('mod/board:manageboard', $context)) {
+        $params = ['id' => $settings->get_page()->cm->id];
         if ($ownerid = $PAGE->url->get_param('ownerid')) {
             $params['ownerid'] = $ownerid;
         }
