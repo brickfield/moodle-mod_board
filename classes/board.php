@@ -1091,50 +1091,54 @@ class board {
      * Checks to see if the user can rate the note.
      *
      * @param int $noteid
-     * @return bool
+     * @return array [canrate, hasrated]
      */
-    public static function board_can_rate_note(int $noteid): bool {
+    public static function board_can_rate_note(int $noteid): array {
         global $DB, $USER;
+
+        $hasrated = $DB->record_exists('board_note_ratings', array('userid' => $USER->id, 'noteid' => $noteid));
+
+        $result = ['canrate' => false, 'hasrated' => $hasrated];
 
         $note = static::get_note($noteid);
         if (!$note) {
-            return false;
+            return $result;
         }
 
         $column = static::get_column($note->columnid);
         if (!$column) {
-            return false;
+            return $result;
         }
 
         $board = static::get_board($column->boardid);
         if (!$board) {
-            return false;
+            return $result;
         }
 
         if (!static::board_rating_enabled($board->id)) {
-            return false;
+            return $result;
         }
 
         if (static::board_readonly($board->id)) {
-            return false;
+            return $result;
         }
 
         $context = static::context_for_board($board->id);
         if (!has_capability('mod/board:view', $context)) {
-            return false;
+            return $result;
         }
 
         $iseditor = has_capability('mod/board:manageboard', $context);
 
         if ($board->addrating == self::RATINGBYSTUDENTS && $iseditor) {
-            return false;
+            return $result;
         }
 
         if ($board->addrating == self::RATINGBYTEACHERS && !$iseditor) {
-            return false;
+            return $result;
         }
 
-        return !$DB->record_exists('board_note_ratings', array('userid' => $USER->id, 'noteid' => $noteid));
+        return ['canrate' => true, 'hasrated' => $hasrated];
     }
 
     /**
@@ -1173,7 +1177,7 @@ class board {
         }
 
         $boardid = $column->boardid;
-        if (!static::board_can_rate_note($noteid)) {
+        if (!static::board_can_rate_note($noteid)['canrate']) {
             return $return;
         }
         if (static::board_readonly($boardid)) {
@@ -1182,11 +1186,17 @@ class board {
 
         if ($note) {
             $transaction = $DB->start_delegated_transaction();
-
-            $DB->insert_record('board_note_ratings', array('userid' => $USER->id, 'noteid' => $noteid, 'timecreated' => time()));
+            $hasrating = $DB->record_exists('board_note_ratings', array('userid' => $USER->id, 'noteid' => $noteid));
+            $action = $hasrating ? 'delete_note_rating' : 'add_note_rating';
+            if ($hasrating) {
+                $DB->delete_records('board_note_ratings', array('userid' => $USER->id, 'noteid' => $noteid));
+            } else {
+                $DB->insert_record('board_note_ratings', array('userid' => $USER->id, 'noteid' => $noteid,
+                    'timecreated' => time()));
+            }
             $rate = true;
             $rating = static::get_note_rating($noteid);
-            $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'rate_note',
+            $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => $action,
                                             'content' => json_encode(array('id' => $note->id, 'rating' => $rating)),
                                             'userid' => $USER->id, 'timecreated' => time()));
 

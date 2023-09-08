@@ -337,7 +337,7 @@ class board_test extends \advanced_testcase {
         $note = self::add_note($column->id);
         $result = board::board_can_rate_note($note->id);
 
-        $this->assertTrue($result);
+        $this->assertTrue($result['canrate']);
     }
 
     public function test_board_rating_enabled() {

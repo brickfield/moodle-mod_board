@@ -572,7 +572,7 @@ class mod_board_external extends external_api {
      * @param int $id
      * @return bool
      */
-    public static function can_rate_note(int $id): bool {
+    public static function can_rate_note(int $id): array {
         // Validate recieved parameters.
         $params = self::validate_parameters(self::can_rate_note_parameters(), [
             'id' => $id,
@@ -589,10 +589,13 @@ class mod_board_external extends external_api {
 
     /**
      * Function can_rate_note_returns.
-     * @return external_value
+     * @return external_single_structure
      */
-    public static function can_rate_note_returns(): external_value {
-        return new external_value(PARAM_BOOL, 'Can rate status');
+    public static function can_rate_note_returns(): external_single_structure {
+        return new external_single_structure([
+            'canrate' => new external_value(PARAM_BOOL, 'The user can rate the note'),
+            'hasrated' => new external_value(PARAM_BOOL, 'The user has rated the note'),
+        ]);
     }
 
     /**
