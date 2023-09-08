@@ -205,6 +205,7 @@ function board_extend_settings_navigation(settings_navigation $settings, navigat
     $context = context_module::instance($settings->get_page()->cm->id);
     if (has_capability('mod/board:manageboard', $context)) {
         $params = ['id' => $settings->get_page()->cm->id];
+
         if ($ownerid = $PAGE->url->get_param('ownerid')) {
             $params['ownerid'] = $ownerid;
         }
