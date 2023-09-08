@@ -168,6 +168,7 @@ export default function(board, options, contextid) {
         note_deleted_text: '',
         rate_note_title: '',
         rate_note_text: '',
+        rate_remove_note_text: '',
         Ok: '',
         delete: '',
         Cancel: '',
@@ -524,18 +525,19 @@ export default function(board, options, contextid) {
         }
         rating.data('disabled', true);
 
-        serviceCall('can_rate_note', {id: ident}, function(canrate) {
-            if (canrate) {
+        serviceCall('can_rate_note', {id: ident}, function(result) {
+            if (result.canrate) {
+                const rateRemoveText = result.hasrated ? strings.rate_remove_note_text : strings.rate_note_text;
                 Notification.confirm(
                     strings.rate_note_title,
-                    strings.rate_note_text, // Are you sure?
+                    rateRemoveText, // Are you sure?
                     strings.Ok,
                     strings.Cancel,
                     function() {
                         serviceCall('rate_note', {id: ident}, function(result) {
                             if (result.status) {
                                 lastHistoryId = result.historyid;
-                                rating.html(result.rating);
+                                rating.html(` ${result.rating} `);
                                 if (sortby == SORTBY_RATING) {
                                     sortNotes(note.closest('.board_column_content'));
                                 }
