@@ -346,3 +346,7 @@
 iframe.mod_board-iframe {
     overflow-x: auto;
 }
+
+.pagelayout-embedded.path-mod-board .activity-header {
+    display: none;
+}

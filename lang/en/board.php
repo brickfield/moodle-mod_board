@@ -38,6 +38,7 @@ $string['hideheaders'] = 'Hide column headers from students';
 $string['completiondetail:notes'] = 'Add notes: {$a}';
 $string['completionnotesgroup'] = 'Require notes';
 $string['completionnotes'] = 'Require students this number of notes to complete the activity';
+$string['viewboard'] = 'View board activity';
 
 $string['enableblanktarget'] = 'Enable blank target';
 $string['enableblanktarget_help'] = 'When enabled all links will open in a new tab/window.';
