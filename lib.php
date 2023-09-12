@@ -508,7 +508,8 @@ function board_cm_info_view(cm_info $cm) {
     if ($board->embed) {
         $width = get_config('mod_board', 'embed_width');
         $height = get_config('mod_board', 'embed_height');
-        $output = html_writer::start_tag('iframe', [
+        $output = html_writer::tag('h3', $board->name);
+        $output .= html_writer::start_tag('iframe', [
             'src' => new moodle_url('/mod/board/view.php', ['id' => $cm->id, 'embed' => 1]),
             'width' => $width,
             'height' => $height,
@@ -516,6 +517,8 @@ function board_cm_info_view(cm_info $cm) {
             'allowfullscreen' => true,
         ]);
         $output .= html_writer::end_tag('iframe');
+        $output .= html_writer::link(new moodle_url('/mod/board/view.php', ['id' => $cm->id]),
+            get_string('viewboard', 'board'));
         $cm->set_content($output, true);
     }
 }
