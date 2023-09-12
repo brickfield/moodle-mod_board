@@ -53,7 +53,6 @@ $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST)
 require_course_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/board:view', $context);
-$config = get_config('mod_board');
 
 // Update 'viewed' state if required by completion system.
 $completion = new completion_info($course);
@@ -79,28 +78,12 @@ if (($board->singleusermode != board::SINGLEUSER_DISABLED)
     die();
 }
 
-$PAGE->requires->js_call_amd('mod_board/main', 'initialize', array('board' => $board, 'options' => array(
-    'isEditor' => board::board_is_editor($board->id),
-    'usersCanEdit' => board::board_users_can_edit($board->id),
-    'userId' => $USER->id,
-    'ownerId' => $ownerid,
-    'readonly' => (board::board_readonly($board->id) || !board::can_post($board->id, $USER->id, $ownerid)),
-    'columnicon' => $config->new_column_icon,
-    'noteicon' => $config->new_note_icon,
-    'mediaselection' => $config->media_selection,
-    'post_max_length' => $config->post_max_length,
-    'history_refresh' => $config->history_refresh,
-    'file' => array(
-        'extensions' => explode(',', board::ACCEPTED_FILE_EXTENSIONS),
-        'size_min' => board::ACCEPTED_FILE_MIN_SIZE,
-        'size_max' => board::ACCEPTED_FILE_MAX_SIZE
-    ),
-    'ratingenabled' => board::board_rating_enabled($board->id),
-    'hideheaders' => board::board_hide_headers($board->id),
-    'sortby' => $board->sortby,
-    'colours' => board::get_column_colours(),
-    'enableblanktarget' => $board->enableblanktarget
-), 'contextid' => $context->id));
+$PAGE->requires->js_call_amd('mod_board/main', 'initialize',
+    [
+    'boardid' => $board->id,
+    'ownerid' => $ownerid
+    ]
+);
 
 $PAGE->set_title(format_string($board->name));
 $PAGE->set_heading($course->fullname);

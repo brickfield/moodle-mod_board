@@ -22,9 +22,46 @@
  */
 
 import Board from "mod_board/board";
+import Ajax from 'core/ajax';
+import Notification from 'core/notification';
+
+/**
+ * Fetch the board configuration.
+ *
+ * @param {number} boardid the board id
+ * @param {number} ownerid the owner id
+ * @returns {Promise} config
+ */
+const fetchBoardConfiguration = (boardid, ownerid) => {
+    return Ajax.call([
+        {
+            methodname: 'mod_board_get_configuration',
+            args: {
+                id: boardid,
+                ownerid: ownerid
+            },
+            done: (response) => {
+                return response;
+            },
+            fail: Notification.exception
+        }
+    ], false);
+};
+
+/**
+ * Initialize the board.
+ * @param {number} boardid The board id
+ * @param {number} ownerid The owner id
+ */
+const initialize = (boardid, ownerid) => {
+    const promise = fetchBoardConfiguration(boardid, ownerid);
+    promise[0].then((config) => {
+        return new Board(config);
+    }).catch((error) => {
+        Notification.exception(error);
+    });
+};
 
 export default {
-    initialize: function (board, options, contextid) {
-        new Board(board, options, contextid);
-    }
+    initialize: initialize
 };

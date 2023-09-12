@@ -864,4 +864,54 @@ class mod_board_external extends external_api {
             ]
         );
     }
+
+    /**
+     * Get the board configuration
+     * @return external_function_parameters
+     */
+    public static function get_configuration_parameters() {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'The board id', VALUE_REQUIRED),
+            'ownerid' => new external_value(PARAM_INT, 'The ownerid', VALUE_DEFAULT, 0),
+        ]);
+    }
+
+    /**
+     * Get the board configuration
+     * @param int $id
+     * @param int $ownerid
+     * @return array
+     */
+    public static function get_configuration(int $id, int $ownerid): array {
+        // Validate recieved parameters.
+        $params = self::validate_parameters(self::get_configuration_parameters(), [
+            'id' => $id,
+            'ownerid' => $ownerid,
+        ]);
+
+        // Request and permission validation.
+        $context = board::context_for_board($params['id']);
+        self::validate_context($context);
+
+        $settings = board::get_configuration($params['id'], $params['ownerid']);
+
+        $result['settings'] = json_encode($settings);
+
+        $result['warnings'] = [];
+        return $result;
+    }
+
+    /**
+     * Get the board configuration
+     * @return external_single_structure
+     */
+    public static function get_configuration_returns(): external_single_structure {
+        return new external_single_structure(
+            array(
+                'settings' => new external_value(PARAM_RAW, 'The board settings'),
+                'warnings' => new external_warnings(),
+            )
+        );
+    }
+
 }
