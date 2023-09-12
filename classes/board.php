@@ -87,6 +87,45 @@ class board {
     }
 
     /**
+     * Gets the configuration for this board.
+     * @param int $id The board id.
+     * @param int $ownerid The user board to get notes from.
+     */
+    public static function get_configuration($id, $ownerid) {
+        global $DB, $USER;
+
+        $board = $DB->get_record('board', array('id' => $id));
+        $contextid = \context_module::instance(self::coursemodule_for_board($board)->id)->id;
+        $config = get_config('mod_board');
+
+        $conf = [
+            'board' => $board,
+            'contextid' => $contextid,
+            'isEditor' => self::board_is_editor($board->id),
+            'usersCanEdit' => self::board_users_can_edit($board->id),
+            'userId' => $USER->id,
+            'ownerId' => $ownerid,
+            'readonly' => (self::board_readonly($board->id) || !self::can_post($board->id, $USER->id, $ownerid)),
+            'columnicon' => $config->new_column_icon,
+            'noteicon' => $config->new_note_icon,
+            'mediaselection' => $config->media_selection,
+            'post_max_length' => $config->post_max_length,
+            'history_refresh' => $config->history_refresh,
+            'file' => [
+                'extensions' => explode(',', self::ACCEPTED_FILE_EXTENSIONS),
+                'size_min' => self::ACCEPTED_FILE_MIN_SIZE,
+                'size_max' => self::ACCEPTED_FILE_MAX_SIZE
+            ],
+            'ratingenabled' => self::board_rating_enabled($board->id),
+            'hideheaders' => self::board_hide_headers($board->id),
+            'sortby' => $board->sortby,
+            'colours' => self::get_column_colours(),
+            'enableblanktarget' => $board->enableblanktarget
+        ];
+
+        return $conf;
+    }
+    /**
      * Retrieves a record of the selected board.
      *
      * @param int $id

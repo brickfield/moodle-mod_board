@@ -149,11 +149,9 @@ const handleEditableAction = function(elem, callback, callBeforeOnKeyEditing) {
 /**
  * The default function of the module, which does the setup of the page.
  *
- * @param {object} board
- * @param {object} options
- * @param {number} contextid
+ * @param {object} settings
  */
-export default function(board, options, contextid) {
+export default function(settings) {
     // An array of strings to load as a batch later.
     // Not necessary, but used to load all the strings in one ajax call.
     var strings = {
@@ -202,6 +200,11 @@ export default function(board, options, contextid) {
         invalid_youtube_url: '',
     };
 
+    // Json decode the strings from the settings.
+    var options = JSON.parse(settings.settings) || {};
+    var board = options.board || {};
+    var contextid = options.contextid;
+
     const MEDIA_SELECTION_BUTTONS = 1,
           ATTACHMENT_VIDEO = 1,
           ATTACHMENT_IMAGE = 2,
@@ -209,6 +212,7 @@ export default function(board, options, contextid) {
           SORTBY_DATE = 1,
           SORTBY_RATING = 2,
           SORTBY_NONE = 3;
+
     var reloadTimer = null,
         lastHistoryId = null,
         isEditor = options.isEditor || false,

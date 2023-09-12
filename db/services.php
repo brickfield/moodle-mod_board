@@ -189,4 +189,15 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
+
+    'mod_board_get_configuration' => [
+        'classname'     => 'mod_board_external',
+        'methodname'    => 'get_configuration',
+        'classpath'     => 'mod/board/external.php',
+        'description'   => 'Get the board configuration',
+        'type'          => 'read',
+        'capabilities'  => '',
+        'ajax'          => true,
+        'loginrequired' => true,
+    ]
 ];
