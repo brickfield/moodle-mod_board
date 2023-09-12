@@ -189,7 +189,6 @@ export default function(board, options, contextid) {
         aria_addmedia: '',
         aria_addmedianew: '',
         aria_deleteattachment: '',
-        aria_lockcolumn: '',
         aria_postedit: '',
         aria_canceledit: '',
         aria_postnew: '',
@@ -376,12 +375,10 @@ export default function(board, options, contextid) {
             columnIdentifier = column.find('.mod_board_column_name').text(),
             newNoteString = strings.aria_newpost.replace('{column}', columnIdentifier),
             moveColumnString = strings.aria_movecolumn.replace('{column}', columnIdentifier),
-            deleteColumnString = strings.aria_deletecolumn.replace('{column}', columnIdentifier),
-            lockColumnString = strings.aria_lockcolumn.replace('{column}', columnIdentifier);
+            deleteColumnString = strings.aria_deletecolumn.replace('{column}', columnIdentifier);
         column.find('.newnote').attr('aria-label', newNoteString).attr('title', newNoteString);
         column.find('.mod_column_move').attr('aria-label', moveColumnString).attr('title', moveColumnString);
         column.find('.delete_column').attr('aria-label', deleteColumnString).attr('title', deleteColumnString);
-        column.find('.lock_column').attr('aria-label', lockColumnString).attr('title', lockColumnString);
 
         column.find(".board_note").each(function(index, note) {
             updateNoteAria($(note).data('ident'));
@@ -916,20 +913,33 @@ export default function(board, options, contextid) {
             column.addClass('mod_board_editablecolumn');
             const lockIcon = locked ? 'fa-lock' : 'fa-unlock';
             const lockElement = $(`<div class="icon fa ${lockIcon} lock_column" role="button" tabindex="0"></div>`);
+            const lockstring = locked ? 'aria_column_locked' : 'aria_column_unlocked';
+            getString(lockstring, 'mod_board', name).done(function(str) {
+                lockElement.attr('aria-label', str);
+                lockElement.attr('title', str);
+            });
 
             handleAction(lockElement, () => {
                 const lockColumn = column.attr('data-locked') !== 'true';
                 serviceCall('lock_column', {id: ident, status: lockColumn}, function(result) {
+                    const columnName = column.find('.mod_board_column_name').text();
                     if (result.status) {
                         if (lockColumn) {
                             lockElement.removeClass('fa-unlock').addClass('fa-lock');
                             column.attr('data-locked', 'true');
                             column.find('.board_button.newnote').addClass('d-none');
+                            getString('aria_column_locked', 'mod_board', columnName).done(function(str) {
+                                lockElement.attr('aria-label', str);
+                                lockElement.attr('title', str);
+                            });
                         } else {
                             lockElement.removeClass('fa-lock').addClass('fa-unlock');
                             column.attr('data-locked', 'false');
                             column.find('.board_button.newnote').removeClass('d-none');
-
+                            getString('aria_column_unlocked', 'mod_board', columnName).done(function(str) {
+                                lockElement.attr('aria-label', str);
+                                lockElement.attr('title', str);
+                            });
                         }
                         lastHistoryId = result.historyid;
                         updateSortable();
