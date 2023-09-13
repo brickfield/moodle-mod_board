@@ -329,6 +329,9 @@
     .modal-content .stretched-link::after {
         content: unset;
     }
+    .modal-footer [data-action="cancel"] {
+        order: 1;
+    }
 }
 .modtype_board div.flex-fill {
     width: 100%;

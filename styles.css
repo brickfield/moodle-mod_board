@@ -337,6 +337,10 @@
     content: unset;
 }
 
+.path-mod-board .modal-footer [data-action="cancel"] {
+    order: 1;
+}
+
 .modtype_board div.flex-fill {
     width: 100%;
 }
