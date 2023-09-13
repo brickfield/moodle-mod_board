@@ -382,6 +382,26 @@ class mod_board_external extends external_api {
                     $attachment['url'] = $data->linkurl ?? '';
                     break;
             }
+            // Check if heading and content and attachment are empty.
+            if (empty($data->heading) && empty($data->content) && empty($data->imagefile) && empty($attachment['url'])) {
+                $result = [
+                    'status' => false,
+                    'action' => 'none',
+                    'note' => [
+                        'id' => 0,
+                        'userid' => 0,
+                        'heading' => '',
+                        'content' => '',
+                        'type' => 0,
+                        'info' => '',
+                        'url' => '',
+                        'timecreated' => 0,
+                        'rating' => 0
+                    ],
+                    'historyid' => 0
+                ];
+                return $result;
+            }
 
             // Process either as an update or insert.
             if ($data->noteid) {

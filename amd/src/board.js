@@ -1643,7 +1643,7 @@ export default function(settings) {
 
                             modal.destroy();
                         } else {
-                            // TODO show error.
+                            modal.destroy();
                         }
                     });
 
