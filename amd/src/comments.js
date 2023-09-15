@@ -138,7 +138,10 @@ const init = () => {
 
         if (postCommentClick) {
             e.preventDefault();
-            saveComment(noteId, commentInput.innerHTML);
+            if (!postCommentClick.dataset.disabled) {
+                postCommentClick.dataset.disabled = 1;
+                saveComment(noteId, commentInput.innerHTML);
+            }
         }
         if (cancelCommentClick) {
             e.preventDefault();
@@ -147,7 +150,10 @@ const init = () => {
         }
         if (deleteCommentClick) {
             e.preventDefault();
-            deleteComment(noteId, deleteCommentClick.dataset.commentid);
+            if (!deleteCommentClick.dataset.disabled) {
+                deleteCommentClick.dataset.disabled = 1;
+                deleteComment(noteId, deleteCommentClick.dataset.commentid);
+            }
         }
         if (emojiClick) {
             e.preventDefault();
