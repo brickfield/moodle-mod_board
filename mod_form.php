@@ -164,9 +164,6 @@ class mod_board_mod_form extends moodleform_mod {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
-        if (!empty($data['groupmode']) && empty($data['groupingid'])) {
-            $errors['groupingid'] = get_string('groupingid_required', 'mod_board');
-        }
         if (($data['embed'] == 1) && ($data['singleusermode'] != board::SINGLEUSER_DISABLED)) {
             $errors['embed'] = get_string('singleusermodenotembed', 'mod_board');
         }
