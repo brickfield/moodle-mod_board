@@ -146,8 +146,6 @@ $string['event_move_note_desc'] = 'The user with id \'{$a->userid}\' moved board
 $string['event_rate_note'] = 'Post rated';
 $string['event_rate_note_desc'] = 'The user with id \'{$a->userid}\' rated board post with id \'{$a->objectid}\' to rating \'{$a->rating}\'.';
 
-$string['groupingid_required'] = 'A course grouping must be selected for this group mode.';
-
 $string['aria_newcolumn'] = 'Add new column';
 $string['aria_newpost'] = 'Add new post to column {column}';
 $string['aria_movecolumn'] = 'Move column {column}';
