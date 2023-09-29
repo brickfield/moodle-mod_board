@@ -544,6 +544,10 @@ class provider implements
             $notetitle = $note->heading;
         }
 
+        if (empty($notetitle)) {
+            $notetitle = get_string('noname', 'mod_board');
+        }
+
         return $notetitle;
     }
 
