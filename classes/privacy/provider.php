@@ -499,25 +499,27 @@ class provider implements
         // Keep track of the notes which have comments.
         $boardswithdata = [];
 
-        $comments = $DB->get_recordset_sql($sql, $params);
         $commentdata = [];
+        $commentsstring = trim(get_string('comments', 'mod_board', ''));
+        $commentstring = get_string('comment', 'mod_board');
+        $comments = $DB->get_recordset_sql($sql, $params);
         foreach ($comments as $comment) {
             $boardswithdata[$comment->boardid] = true;
             $context = \context::instance_by_id($mappings[$comment->boardid]);
 
-            $commentdata['ID' . $comment->commentid] = [
+            $commentdata = (object) [
                 'comment' => format_string($comment->comment, true),
                 'note id' => format_string($comment->id, true),
                 'notetitle' => format_string(static::get_note_title($comment)),
                 'deleted' => ($comment->cdeleted) ? get_string('yes') : get_string('no'),
                 'timecreated' => transform::datetime($comment->timecreated),
             ];
+            $commentarea = [];
+            $commentarea[] = $commentsstring;
+            $commentarea[] = $commentstring . ' ' . $comment->commentid;
+            // Store the comments content.
+            writer::with_context($context)->export_data($commentarea, (object) $commentdata);
         }
-        $commentarea = [get_string('comments', 'mod_board', '')];
-
-        // Store the comments content.
-        writer::with_context($context)
-            ->export_data($commentarea, (object) $commentdata);
 
         $comments->close();
 
