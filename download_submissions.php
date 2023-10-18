@@ -16,6 +16,7 @@
 
 /**
  * Downloads a user's board submissions.
+ *
  * @package     mod_board
  * @author      Karen Holland <karen@brickfieldlabs.ie>
  * @copyright   2021 Brickfield Education Labs <https://www.brickfield.ie/>
@@ -26,7 +27,7 @@ require('../../config.php');
 
 use mod_board\board;
 
-$id      = optional_param('id', 0, PARAM_INT); // Course Module ID.
+$id = optional_param('id', 0, PARAM_INT); // Course Module ID.
 $ownerid = optional_param('ownerid', 0, PARAM_INT); // The ID of the board owner.
 
 if (!$cm = get_coursemodule_from_id('board', $id)) {
@@ -41,7 +42,7 @@ $context = context_module::instance($cm->id);
 require_capability('mod/board:manageboard', $context);
 
 header('Content-Type: text/csv;charset=utf-8');
-header("Content-disposition: attachment; filename=\"" . strip_tags($board->name).'_userposts_'.date('YmdHis').'.csv' . "\"");
+header("Content-disposition: attachment; filename=\"" . strip_tags($board->name) . '_userposts_' . date('YmdHis') . '.csv' . "\"");
 header("Pragma: no-cache");
 header("Expires: 0");
 
@@ -52,19 +53,63 @@ $boarddata = board::board_get($board->id, $ownerid);
 
 $users = [];
 
-fputcsv($fp, [get_string('export_firstname', 'mod_board'), get_string('export_lastname', 'mod_board'),
-get_string('export_email', 'mod_board'), get_string('export_heading', 'mod_board'),
-get_string('export_content', 'mod_board'), get_string('export_info', 'mod_board'),
-get_string('export_url', 'mod_board'), get_string('export_timecreated', 'mod_board')]);
+// Gets the fields that have to be hidden
+$hiddenfields = array_map('trim', explode(',', $CFG->hiddenuserfields));
+$emailishidden = in_array('email', $hiddenfields);
 
-foreach ($boarddata as $columnid => $column) {
-    foreach ($column->notes as $noteid => $note) {
-        if (!isset($users[$note->userid])) {
-            $users[$note->userid] = $DB->get_record('user', array('id' => $note->userid));
+$includeeMail = false;
+if (get_config('mod_board', 'includeemailindownloadsubmissonsisemailnothidden')) {
+    if ($emailishidden) {
+        if (has_capability('moodle/user:viewhiddendetails', $context) OR has_capability('moodle/course:viewhiddenuserfields', $context)) {
+            $includeeMail = true;
         }
-        $user = $users[$note->userid];
-        fputcsv($fp, [$user->firstname, $user->lastname, $user->email, $note->heading, board::get_export_submission($note->content),
-        $note->info, $note->url, $note->timecreated ? userdate($note->timecreated) : null]);
+    } else {
+        // email is not hidden
+        $includeeMail = true;
+    }
+}
+
+if ($includeeMail) {
+    fputcsv($fp, [get_string('export_firstname', 'mod_board'),
+            get_string('export_lastname', 'mod_board'),
+            get_string('export_email', 'mod_board'),
+            get_string('export_heading', 'mod_board'),
+            get_string('export_content', 'mod_board'),
+            get_string('export_info', 'mod_board'),
+            get_string('export_url', 'mod_board'),
+            get_string('export_timecreated', 'mod_board')]);
+
+    foreach ($boarddata as $columnid => $column) {
+        foreach ($column->notes as $noteid => $note) {
+            if (!isset($users[$note->userid])) {
+                $users[$note->userid] = $DB->get_record('user', array('id' => $note->userid));
+            }
+            $user = $users[$note->userid];
+            fputcsv($fp,
+                    [$user->firstname, $user->lastname, $user->email, $note->heading, board::get_export_submission($note->content),
+                            $note->info, $note->url, $note->timecreated ? userdate($note->timecreated) : null]);
+        }
+    }
+} else {
+    fputcsv($fp, [get_string('export_firstname', 'mod_board'),
+            get_string('export_lastname', 'mod_board'),
+
+            get_string('export_heading', 'mod_board'),
+            get_string('export_content', 'mod_board'),
+            get_string('export_info', 'mod_board'),
+            get_string('export_url', 'mod_board'),
+            get_string('export_timecreated', 'mod_board')]);
+
+    foreach ($boarddata as $columnid => $column) {
+        foreach ($column->notes as $noteid => $note) {
+            if (!isset($users[$note->userid])) {
+                $users[$note->userid] = $DB->get_record('user', array('id' => $note->userid));
+            }
+            $user = $users[$note->userid];
+
+            fputcsv($fp, [$user->firstname, $user->lastname, $note->heading, board::get_export_submission($note->content),
+                    $note->info, $note->url, $note->timecreated ? userdate($note->timecreated) : null]);
+        }
     }
 }
 

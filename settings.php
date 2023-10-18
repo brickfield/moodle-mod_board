@@ -67,6 +67,13 @@ if ($ADMIN->fulltree) {
         '1'
     ));
 
+    $settings->add(new admin_setting_configcheckbox(
+            'mod_board/includeemailindownloadsubmissonsisemailnothidden',
+            get_string('includeemailindownloadsubmissonsisemailnothidden', 'mod_board'),
+            get_string('includeemailindownloadsubmissonsisemailnothidden_desc', 'mod_board'),
+            '1'
+    ));
+
     $settings->add(new admin_setting_configtext('mod_board/embed_width', get_string('embed_width', 'mod_board'),
                        get_string('embed_width_desc', 'mod_board'), '99%', PARAM_TEXT));
 
