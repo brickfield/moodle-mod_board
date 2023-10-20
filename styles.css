@@ -346,6 +346,10 @@
     word-break: break-word;
 }
 
+.path-mod-board .mod_board_comment_username {
+    margin-left: 10px;
+}
+
 .modtype_board div.flex-fill {
     width: 100%;
 }
@@ -363,3 +367,4 @@ iframe.mod_board-iframe {
 .pagelayout-embedded.path-mod-board .activity-header {
     display: none;
 }
+

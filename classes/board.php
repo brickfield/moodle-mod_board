@@ -113,6 +113,7 @@ class board {
                 'size_min' => self::ACCEPTED_FILE_MIN_SIZE,
                 'size_max' => self::ACCEPTED_FILE_MAX_SIZE
             ],
+            'showcommentusername' => self::board_show_commentusername($board->id),
             'ratingenabled' => self::board_rating_enabled($board->id),
             'hideheaders' => self::board_hide_headers($board->id),
             'sortby' => $board->sortby,
@@ -318,7 +319,6 @@ class board {
             AND {board_notes}.deleted = 0";
         return $DB->count_records_sql($sql, ['boardid' => $boardid]) > 0;
     }
-
 
     /**
      * Retrieves the board.
@@ -1145,6 +1145,23 @@ class board {
             'other' => array('columnid' => $columnid)
         ));
         $event->trigger();
+    }
+
+
+
+    /**
+     * Checks to see if showcommentusername has been enabled for the board.
+     *
+     * @param int $boardid
+     * @return bool
+     */
+    public static function board_show_commentusername($boardid) {
+        $board = static::get_board($boardid);
+        if (!$board) {
+            return false;
+        }
+
+        return !empty($board->showcommentusername);
     }
 
     /**
