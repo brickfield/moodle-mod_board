@@ -99,6 +99,11 @@ echo $OUTPUT->header();
 if ($board->enableblanktarget) {
     echo html_writer::tag('div', get_string('blanktargetenabled', 'mod_board'), ['class' => 'small']);
 }
+if ($board->showcommentusername) {
+    echo html_writer::tag('div', get_string('showcommentusernameenabled', 'mod_board'), ['class' => 'small']);
+} else {
+    echo html_writer::tag('div', get_string('showcommentusernamedisabled', 'mod_board'), ['class' => 'small']);
+}
 
 echo $OUTPUT->box_start('mod_introbox', 'group_menu');
 echo groups_print_activity_menu($cm, $pageurl, true);

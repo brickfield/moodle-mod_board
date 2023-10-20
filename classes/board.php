@@ -113,6 +113,7 @@ class board {
                 'size_min' => self::ACCEPTED_FILE_MIN_SIZE,
                 'size_max' => self::ACCEPTED_FILE_MAX_SIZE
             ],
+                'showcommentusername' => self::board_showcommentusername($board->id),
             'ratingenabled' => self::board_rating_enabled($board->id),
             'hideheaders' => self::board_hide_headers($board->id),
             'sortby' => $board->sortby,
@@ -1138,6 +1139,27 @@ class board {
         ));
         $event->trigger();
     }
+
+
+
+    /**
+     * Checks to see if showcommentusername has been enabled for the board.
+     *
+     * @param int $boardid
+     * @return bool
+     */
+    public static function board_showcommentusername($boardid) {
+        $board = static::get_board($boardid);
+        if (!$board) {
+            return false;
+        }
+
+        return !empty($board->showcommentusername);
+    }
+
+
+
+
 
     /**
      * Checks to see if the user can rate the note.

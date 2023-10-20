@@ -358,3 +358,7 @@ iframe.mod_board-iframe {
 .pagelayout-embedded.path-mod-board .activity-header {
     display: none;
 }
+
+.mod_board-comment-username {
+    margin-left: 10px;
+}

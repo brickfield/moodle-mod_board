@@ -70,6 +70,27 @@ class mod_board_mod_form extends moodleform_mod {
         $mform->addElement('filemanager', 'background_image',
                 get_string('background_image', 'mod_board'), null, $filemanageroptions);
 
+/*
+        $mform->addElement('checkbox', 'showcommentusername',
+                get_string('showcommentusername', 'mod_board'),
+                get_string('showcommentusername_desc', 'mod_board'));
+        $mform->setDefault('showcommentusername', 1);
+        $mform->setType('showcommentusername', PARAM_INT);
+*/
+
+        $mform->addElement('checkbox', 'showcommentusername', get_string('showcommentusername', 'mod_board'));
+        //$mform->addHelpButton('showcommentusername', 'showcommentusername', 'mod_board');
+        //$mform->setDefault('showcommentusername', 0);
+        $mform->setType('showcommentusername', PARAM_INT);
+
+
+
+
+
+
+
+
+
         $mform->addElement('select', 'addrating', get_string('addrating', 'mod_board'),
            array(
                 board::RATINGDISABLED => get_string('addrating_none', 'mod_board'),
