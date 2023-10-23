@@ -57,19 +57,19 @@ $users = [];
 $hiddenfields = array_map('trim', explode(',', $CFG->hiddenuserfields));
 $emailishidden = in_array('email', $hiddenfields);
 
-$includeeMail = false;
+$includeemail = false;
 if (get_config('mod_board', 'includeemailindownloadsubmissonsifemailnothidden')) {
     if ($emailishidden) {
         if (has_capability('moodle/user:viewhiddendetails', $context) OR has_capability('moodle/course:viewhiddenuserfields', $context)) {
-            $includeeMail = true;
+            $includeemail = true;
         }
     } else {
         // email is not hidden
-        $includeeMail = true;
+        $includeemail = true;
     }
 }
 
-if ($includeeMail) {
+if ($includeemail) {
     fputcsv($fp, [get_string('export_firstname', 'mod_board'),
             get_string('export_lastname', 'mod_board'),
             get_string('export_email', 'mod_board'),
