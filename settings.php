@@ -68,9 +68,9 @@ if ($ADMIN->fulltree) {
     ));
 
     $settings->add(new admin_setting_configcheckbox(
-            'mod_board/includeemailindownloadsubmissonsisemailnothidden',
-            get_string('includeemailindownloadsubmissonsisemailnothidden', 'mod_board'),
-            get_string('includeemailindownloadsubmissonsisemailnothidden_desc', 'mod_board'),
+            'mod_board/includeemailindownloadsubmissonsifemailnothidden',
+            get_string('includeemailindownloadsubmissonsifemailnothidden', 'mod_board'),
+            get_string('includeemailindownloadsubmissonsifemailnothidden_desc', 'mod_board'),
             '1'
     ));
 

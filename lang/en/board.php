@@ -235,5 +235,5 @@ $string['singleusermodenotembed'] = 'Board does not allow a single user board to
 $string['allowed_singleuser_modes'] = 'Enabled single user modes';
 $string['allowed_singleuser_modes_desc'] = 'Allow/Disallow usage of certain single user modes. Does not affect already created boards';
 
-$string['includeemailindownloadsubmissonsisemailnothidden'] = 'Include email in download';
-$string['includeemailindownloadsubmissonsisemailnothidden_desc'] = 'If the user has the capabilitys then the eMail is included in the downlod-file with the submissions.';
+$string['includeemailindownloadsubmissonsifemailnothidden'] = 'Include email in download';
+$string['includeemailindownloadsubmissonsifemailnothidden_desc'] = 'If email is not hidden or the email is hidden but the user has the capability to see email of other users then the email is included in the download-file with the submissions.';
