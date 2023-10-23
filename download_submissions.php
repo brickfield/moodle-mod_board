@@ -60,7 +60,7 @@ $emailishidden = in_array('email', $hiddenfields);
 $includeemail = false;
 if (get_config('mod_board', 'includeemailindownloadsubmissonsifemailnothidden')) {
     if ($emailishidden) {
-        if (has_capability('moodle/user:viewhiddendetails', $context) OR has_capability('moodle/course:viewhiddenuserfields', $context)) {
+        if (has_capability('moodle/user:viewhiddendetails', $context) || has_capability('moodle/course:viewhiddenuserfields', $context)) {
             $includeemail = true;
         }
     } else {
