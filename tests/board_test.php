@@ -447,7 +447,7 @@ class board_test extends \advanced_testcase {
             'intro' => '',
             'historyid' => 3,
             'background_color' => null,
-                'showcommentusername' => 0,
+            'showcommentusername' => 0,
             'addrating' => 3,
             'hideheaders' => 0,
             'sortby' => 2,

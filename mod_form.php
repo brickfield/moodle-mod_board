@@ -69,7 +69,7 @@ class mod_board_mod_form extends moodleform_mod {
         $filemanageroptions['subdirs'] = 0;
         $mform->addElement('filemanager', 'background_image',
                 get_string('background_image', 'mod_board'), null, $filemanageroptions);
-        
+
         $mform->addElement('advcheckbox', 'showcommentusername', get_string('showcommentusername', 'mod_board'));
         $mform->addHelpButton('showcommentusername', 'showcommentusername', 'mod_board');
         $mform->setDefault('showcommentusername', 1);

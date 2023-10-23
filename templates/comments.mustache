@@ -25,7 +25,7 @@
         "content": "This is a comment too",
         "date": "Wednesday, 2 January 2019, 12:00 AM",
         "comments": "Comment for testing",
-        "username": "Username of the autor of the Comment",
+        "commentusername": "Username of the autor of the Comment",
         "profilurl": "",
         "candelete": true,
         "showcommentusername": true
@@ -35,17 +35,14 @@
     <div class="comment border rounded border-light p-2 mb-2">
         <div class="comment-header d-flex small text-muted">
             <div class="mb-3">{{date}}</div>
-            <div class="mod_board-comment-username">
+            <div class="mod_board_comment_username">
                 {{#showcommentusername}}
                     {{#profilurl}}
-                        <a class="mod_boad-profilurl" href="{{profilurl}}">{{commentusername}}</a>
-                    {{/profilurl}}
-                    {{^profilurl}}
-                        {{commentusername}}
+                        <a class="mod_board_profilurl" href="{{profilurl}}">{{commentusername}}</a>
                     {{/profilurl}}
                 {{/showcommentusername}}
                 {{^showcommentusername}}
-                    (username wird aktuell nicht angezeigt)
+                    <!- (username hidden) -->
                 {{/showcommentusername}}
             </div>
             {{#candelete}}

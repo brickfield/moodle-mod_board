@@ -240,5 +240,3 @@ $string['showcommentusername_desc'] = 'If activated the username of a comment wi
 
 $string['showcommentusernameenabled'] = 'Show comment username is enabled.';
 $string['showcommentusernamedisabled'] = 'Show comment username is disabled but can be later activated to see the owner of comments.';
-
-

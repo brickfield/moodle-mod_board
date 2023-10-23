@@ -113,7 +113,7 @@ class board {
                 'size_min' => self::ACCEPTED_FILE_MIN_SIZE,
                 'size_max' => self::ACCEPTED_FILE_MAX_SIZE
             ],
-                'showcommentusername' => self::board_showcommentusername($board->id),
+            'showcommentusername' => self::board_show_commentusername($board->id),
             'ratingenabled' => self::board_rating_enabled($board->id),
             'hideheaders' => self::board_hide_headers($board->id),
             'sortby' => $board->sortby,
@@ -1148,7 +1148,7 @@ class board {
      * @param int $boardid
      * @return bool
      */
-    public static function board_showcommentusername($boardid) {
+    public static function board_show_commentusername($boardid) {
         $board = static::get_board($boardid);
         if (!$board) {
             return false;

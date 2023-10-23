@@ -702,43 +702,34 @@ class mod_board_external extends external_api {
         $canpost = has_capability('mod/board:postcomment', $context);
         $candeleteall = has_capability('mod/board:deleteallcomments', $context);
 
-        $notes = $DB->get_records('board_comments', ['noteid' => $params['noteid']], 'timecreated DESC');
-        // von der noteid = 2 (tabele comments)
-        // noteid wird ja schon der Funktion übergeben und ist schon verfügbar
-        $params['id'] = $noteid;
-        // in Tabelle board_notes nach columnid für id=noteid ermitteln
-        $column = $DB->get_record('board_notes', ['id' => $params['id']], 'columnid, ownerid');
-        // die columns id = 3 und die ownerid 3 (tabeller notes)
-        $params['id'] = $column->columnid;
-        $board = $DB->get_record('board_columns', ['id' => $params['id']], 'boardid');
+        // Find the columnid for the note with the given noteid.
+        $params['noteid'] = $noteid;
+        $column = $DB->get_record('board_notes', ['id' => $params['noteid']], 'columnid, ownerid');
+
+        // Find the boardid of the column.
+        $params['columnid'] = $column->columnid;
+        $board = $DB->get_record('board_columns', ['id' => $params['columnid']], 'boardid');
+
+        // $board->boardid Ownerid is not relevant but we use $column->ownerid.
         $configuration = board::get_configuration($board->boardid, $column->ownerid);
         $showcommentusername = $configuration['showcommentusername'];
 
+        $notecomments = $DB->get_records('board_comments', ['noteid' => $params['noteid']], 'timecreated DESC');
         $comments = [];
-        foreach ($notes as $note) {
+        foreach ($notecomments as $notecomment) {
             $comment = (object)[];
-            $comment->id = $note->id;
-            $comment->noteid = $note->noteid;
-            $comment->content = $note->content;
-            $comment->candelete = ($note->userid === $USER->id || $candeleteall) ? true : false;
-
-            // ToDo: How should we control $canseecommentusername? Use capability (eg mod_board:canseecommentusername)?
-            // Moodleadmin can deside if the username of comments can be shown and visible to other users.
-            // By default it should be deactivated because in previous versions usernames were no visible and maybe there are allready
-            // boards that where used explicit without showing the usernames of comments ("anonym comments")
-            // commentusernamecanbevisible can be set by config-global.php or
-            //$canseecommentusername = get_config('mod_board', 'commentusernamecanbevisible');
-            //$canseecommentusername = true;
-
+            $comment->id = $notecomment->id;
+            $comment->noteid = $notecomment->noteid;
+            $comment->content = $notecomment->content;
+            $comment->candelete = ($notecomment->userid === $USER->id || $candeleteall) ? true : false;
             $comment->showcommentusername = $showcommentusername;
 
             $commentusername = '';
             $profilurl = '';
-
             if ($showcommentusername) {
-                $user = \core_user::get_user($note->userid, 'username, firstname, lastname');
+                $user = \core_user::get_user($notecomment->userid, 'username, firstname, lastname');
                 $commentusername = $user->firstname . " " . $user->lastname;
-                $profilurl = '' . new moodle_url('/user/profile.php', array('id' => $note->userid));
+                $profilurl = '' . new moodle_url('/user/profile.php', array('id' => $notecomment->userid));
             } else {
                 $commentusername = '';
                 $profilurl = '';
@@ -747,7 +738,7 @@ class mod_board_external extends external_api {
             $comment->commentusername = $commentusername;
             $comment->profilurl = $profilurl;
 
-            $comment->date = userdate($note->timecreated);
+            $comment->date = userdate($notecomment->timecreated);
             $comments[] = $comment;
         }
 
@@ -780,7 +771,7 @@ class mod_board_external extends external_api {
                             'id' => new external_value(PARAM_INT, 'The comment id.'),
                             'noteid' => new external_value(PARAM_INT, 'The note id.'),
                             'candelete' => new external_value(PARAM_BOOL, 'Can delete the comment.'),
-                               'showcommentusername' => new external_value(PARAM_BOOL, 'showcommentusername.'),
+                            'showcommentusername' => new external_value(PARAM_BOOL, 'showcommentusername.'),
                             'commentusername' => new external_value(PARAM_TEXT, 'The username of the comment.'),
                             'profilurl' => new external_value(PARAM_TEXT, 'The profil url of the user.'),
                             'date' => new external_value(PARAM_TEXT, 'The date of the comment.'),
@@ -934,7 +925,6 @@ class mod_board_external extends external_api {
         return new external_function_parameters([
             'id' => new external_value(PARAM_INT, 'The board id', VALUE_REQUIRED),
             'ownerid' => new external_value(PARAM_INT, 'The ownerid', VALUE_DEFAULT, 0),
-                'showcommentusername' => new external_value(PARAM_BOOL, 'showcommentusername', VALUE_DEFAULT, false),
         ]);
     }
 
@@ -944,12 +934,11 @@ class mod_board_external extends external_api {
      * @param int $ownerid
      * @return array
      */
-    public static function get_configuration(int $id, int $ownerid, bool $showcommentusername): array {
+    public static function get_configuration(int $id, int $ownerid): array {
         // Validate recieved parameters.
         $params = self::validate_parameters(self::get_configuration_parameters(), [
             'id' => $id,
             'ownerid' => $ownerid,
-            'showcommentusername' => $showcommentusername
         ]);
 
         // Request and permission validation.
