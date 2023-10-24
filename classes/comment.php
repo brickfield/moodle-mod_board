@@ -208,6 +208,9 @@ class comment {
      * @return void
      */
     public static function board_add_comment_log($commentid, $context, $noteid, $content) {
+        if (!get_config('mod_board', 'addcommenttolog')) {
+            $content = '';
+        }
         $event = \mod_board\event\add_comment::create(array(
             'objectid' => $commentid,
             'context' => $context,

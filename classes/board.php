@@ -459,6 +459,9 @@ class board {
      * @return void
      */
     public static function board_add_column_log($boardid, $name, $columnid) {
+        if (!get_config('mod_board', 'addcolumnnametolog')) {
+            $name = '';
+        }
         $event = \mod_board\event\add_column::create(array(
             'objectid' => $columnid,
             'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
@@ -510,6 +513,9 @@ class board {
      * @return void
      */
     public static function board_update_column_log($boardid, $name, $columnid) {
+        if (!get_config('mod_board', 'addcolumnnametolog')) {
+            $name = '';
+        }
         $event = \mod_board\event\update_column::create(array(
             'objectid' => $columnid,
             'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
@@ -830,6 +836,15 @@ class board {
      * @return void
      */
     public static function board_add_note_log($boardid, $groupid, $heading, $content, $attachment, $columnid, $noteid) {
+        if (!get_config('mod_board', 'addnotetolog')) {
+            $content = '';
+        }
+        if (!get_config('mod_board', 'addheadingtolog')) {
+            $heading = '';
+        }
+        if (!get_config('mod_board', 'addattachmenttolog')) {
+            $attachment = '';
+        }
         $event = \mod_board\event\add_note::create(array(
             'objectid' => $noteid,
             'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
@@ -915,6 +930,15 @@ class board {
      * @return void
      */
     public static function board_update_note_log($boardid, $heading, $content, $attachment, $columnid, $noteid) {
+        if (!get_config('mod_board', 'addnotetolog')) {
+            $content = '';
+        }
+        if (!get_config('mod_board', 'addheadingtolog')) {
+            $heading = '';
+        }
+        if (!get_config('mod_board', 'addattachmenttolog')) {
+            $attachment = '';
+        }
         $event = \mod_board\event\update_note::create(array(
             'objectid' => $noteid,
             'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
@@ -1283,6 +1307,9 @@ class board {
      * @return void
      */
     public static function board_rate_note_log($boardid, $noteid, $rating) {
+        if (!get_config('mod_board', 'addratingtolog')) {
+            $rating = '';
+        }
         $event = \mod_board\event\rate_note::create(array(
             'objectid' => $noteid,
             'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
