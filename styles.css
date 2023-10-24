@@ -341,6 +341,11 @@
     order: 1;
 }
 
+.path-mod-board .cell {
+    max-width: 300px;
+    word-break: break-word;
+}
+
 .modtype_board div.flex-fill {
     width: 100%;
 }

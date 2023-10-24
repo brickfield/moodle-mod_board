@@ -23,12 +23,12 @@ namespace mod_board\event;
  * @copyright   2022 Brickfield Education Labs <https://www.brickfield.ie/>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class add_comment extends \core\event\base {
+class delete_comment extends \core\event\base {
     /**
      * Init function.
      */
     protected function init() {
-        $this->data['crud'] = 'c';
+        $this->data['crud'] = 'd';
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
         $this->data['objecttable'] = 'board';
     }
@@ -38,7 +38,7 @@ class add_comment extends \core\event\base {
      * @return \lang_string|string
      */
     public static function get_name() {
-        return get_string('event_add_comment', 'mod_board');
+        return get_string('event_delete_comment', 'mod_board');
     }
 
     /**
@@ -49,9 +49,8 @@ class add_comment extends \core\event\base {
         $obj = new \stdClass;
         $obj->userid = $this->userid;
         $obj->objectid = $this->objectid;
-        $obj->content = $this->other['content'];
         $obj->noteid = $this->other['noteid'];
-        return get_string('event_add_comment_desc', 'mod_board', $obj);
+        return get_string('event_delete_comment_desc', 'mod_board', $obj);
     }
 
     /**
@@ -59,35 +58,7 @@ class add_comment extends \core\event\base {
      * @return array
      */
     public function get_legacy_logdata() {
-        return array($this->courseid, 'mod_board', 'add_comment', null, $this->objectid,
-                     $this->other['content'], $this->other['noteid']);
-    }
-
-    /**
-     * This is used when restoring course logs where it is required that we
-     * map the objectid to it's new value in the new course.
-     *
-     * Does nothing in the base class except display a debugging message warning
-     * the user that the event does not contain the required functionality to
-     * map this information. For events that do not store an objectid this won't
-     * be called, so no debugging message will be displayed.
-     *
-     * @return string the name of the restore mapping the objectid links to
-     */
-    public static function get_objectid_mapping() {
-        return [
-            'db'        => 'board',
-            'restore'   => \core\event\base::NOT_MAPPED,
-        ];
-    }
-
-    /**
-     * The 'other' fields for this event do not need to mapped during backup and restore as they
-     * only contain test values, not IDs for anything on the course.
-     *
-     * @return array Empty array
-     */
-    public static function get_other_mapping(): array {
-        return [];
+        return array($this->courseid, 'mod_board', 'delete_comment', null, $this->objectid,
+            $this->other['noteid']);
     }
 }

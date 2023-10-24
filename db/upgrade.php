@@ -211,5 +211,29 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2022040109, 'board');
     }
 
+    if ($oldversion < 2022040110) {
+
+        // Define field deleted to be added to board_notes.
+        $table = new xmldb_table('board_notes');
+        $field = new xmldb_field('deleted', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'sortorder');
+
+        // Conditionally launch add field deleted.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field deleted to be added to board_comments.
+        $table = new xmldb_table('board_comments');
+        $field = new xmldb_field('deleted', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'timecreated');
+
+        // Conditionally launch add field deleted.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2022040110, 'board');
+    }
+
     return true;
 }

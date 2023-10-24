@@ -332,6 +332,7 @@ class provider implements
                 'mediatype' => format_string($note->type, true),
                 'mediainfo' => format_string($note->info, true),
                 'mediaurl' => format_string($note->url, true),
+                'deleted' => ($note->deleted) ? get_string('yes') : get_string('no'),
                 'timecreated' => transform::datetime($note->timecreated),
             ];
 
@@ -469,15 +470,15 @@ class provider implements
      *
      * @param   int         $userid The userid of the user whose data is to be exported.
      * @param   array       $mappings A list of mappings from boardid => contextid.
-     * @return  array       Which boards had ratings for them.
+     * @return  array       Which boards had comments for them.
      */
     protected static function export_comments_data(int $userid, array $mappings) {
         global $DB;
 
-        // Find all of the ratings for these boards.
+        // Find all of the comments for these boards.
         list($boardinsql, $boardparams) = $DB->get_in_or_equal(array_keys($mappings), SQL_PARAMS_NAMED);
         $sql = "SELECT
-                    n.*,
+                    bcm.id AS commentid, bcm.deleted AS cdeleted, n.*,
                     b.id AS boardid, bc.id AS columnid, bcm.content AS comment
                   FROM {board} b
                   JOIN {board_columns} bc ON bc.boardid = b.id
@@ -487,6 +488,7 @@ class provider implements
                    AND (
                         bcm.userid    = :userid
                    )
+              ORDER BY b.id, bc.id, n.id, bcm.id
         ";
 
         $params = [
@@ -494,9 +496,12 @@ class provider implements
         ];
         $params += $boardparams;
 
-        // Keep track of the boards which have data.
+        // Keep track of the notes which have comments.
         $boardswithdata = [];
 
+        $commentdata = [];
+        $commentsstring = trim(get_string('comments', 'mod_board', ''));
+        $commentstring = get_string('comment', 'mod_board');
         $comments = $DB->get_recordset_sql($sql, $params);
         foreach ($comments as $comment) {
             $boardswithdata[$comment->boardid] = true;
@@ -506,15 +511,14 @@ class provider implements
                 'comment' => format_string($comment->comment, true),
                 'note id' => format_string($comment->id, true),
                 'notetitle' => format_string(static::get_note_title($comment)),
+                'deleted' => ($comment->cdeleted) ? get_string('yes') : get_string('no'),
                 'timecreated' => transform::datetime($comment->timecreated),
             ];
-
-            $commentarea = static::get_export_area($comment, 'comments');
-
+            $commentarea = [];
+            $commentarea[] = $commentsstring;
+            $commentarea[] = $commentstring . ' ' . $comment->commentid;
             // Store the comments content.
-            writer::with_context($context)
-                ->export_data($commentarea, $commentdata);
-
+            writer::with_context($context)->export_data($commentarea, (object) $commentdata);
         }
 
         $comments->close();
@@ -540,6 +544,10 @@ class provider implements
             }
         } else {
             $notetitle = $note->heading;
+        }
+
+        if (empty($notetitle)) {
+            $notetitle = get_string('noname', 'mod_board');
         }
 
         return $notetitle;
@@ -590,6 +598,13 @@ class provider implements
         // Delete all board note ratings.
         $DB->delete_records_select(
             'board_note_ratings',
+            "noteid {$notesinsql}",
+            $notesinparams
+        );
+
+        // Delete all board comments.
+        $DB->delete_records_select(
+            'board_comments',
             "noteid {$notesinsql}",
             $notesinparams
         );
