@@ -247,8 +247,11 @@ $string['singleusermodenotembed'] = 'Board does not allow a single user board to
 $string['allowed_singleuser_modes'] = 'Enabled single user modes';
 $string['allowed_singleuser_modes_desc'] = 'Allow/Disallow usage of certain single user modes. Does not affect already created boards';
 
-$string['showauthorofcomment'] = 'Show author of comment';
-$string['showauthorofcomment_desc'] = 'If activated the author of a comment will be show for each comment.';
+$string['showauthorofcomment'] = 'Show author of comment on board to users';
+$string['showauthorofcomment_help'] = 'If activated the author of a comment will be show for each comment on the board.';
 
 $string['showauthorofcommentenabled'] = 'Show author of comment is enabled.';
 $string['showauthorofcommentdisabled'] = 'Show author of comment is disabled but can be later activated to see the owner of comments.';
+
+$string['allowshowauthorofcommentsonboard'] = 'Allow to activate to show author of comment on boards';
+$string['allowshowauthorofcommentsonboard_desc'] = 'If activated the board can be configured to show the author of a comment on the board or the comments can be hidden to students (Teacher can see owner of comments by using the export).';

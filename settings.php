@@ -67,6 +67,13 @@ if ($ADMIN->fulltree) {
         '1'
     ));
 
+    $settings->add(new admin_setting_configcheckbox(
+            'mod_board/allowshowauthorofcommentsonboard',
+            get_string('allowshowauthorofcommentsonboard', 'mod_board'),
+            get_string('allowshowauthorofcommentsonboard_desc', 'mod_board'),
+            '0'
+    ));
+
     $settings->add(new admin_setting_configtext('mod_board/embed_width', get_string('embed_width', 'mod_board'),
                        get_string('embed_width_desc', 'mod_board'), '99%', PARAM_TEXT));
 

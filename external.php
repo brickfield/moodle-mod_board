@@ -684,6 +684,7 @@ class mod_board_external extends external_api {
      */
     public static function get_comments($noteid) {
         global $DB, $USER;
+        $config = get_config('mod_board');
 
         $warnings = [];
         $arrayparams = array(
@@ -726,7 +727,7 @@ class mod_board_external extends external_api {
 
             $authorofcomment = '';
             $profilurl = '';
-            if ($showauthorofcomment) {
+            if ($config->allowshowauthorofcommentsonboard && $showauthorofcomment) {
                 $user = \core_user::get_user($notecomment->userid, 'username, firstname, lastname');
                 $authorofcomment = $user->firstname . " " . $user->lastname;
                 $profilurl = '' . new moodle_url('/user/profile.php', array('id' => $notecomment->userid));
