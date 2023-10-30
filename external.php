@@ -712,7 +712,7 @@ class mod_board_external extends external_api {
 
         // $board->boardid Ownerid is not relevant but we use $column->ownerid.
         $configuration = board::get_configuration($board->boardid, $column->ownerid);
-        $showcommentusername = $configuration['showcommentusername'];
+        $showauthorofcomment = $configuration['showauthorofcomment'];
 
         $notecomments = $DB->get_records('board_comments', ['noteid' => $params['noteid'], 'deleted' => 0], 'timecreated DESC');
         $comments = [];
@@ -722,20 +722,20 @@ class mod_board_external extends external_api {
             $comment->noteid = $notecomment->noteid;
             $comment->content = $notecomment->content;
             $comment->candelete = ($notecomment->userid === $USER->id || $candeleteall) ? true : false;
-            $comment->showcommentusername = $showcommentusername;
+            $comment->showauthorofcomment = $showauthorofcomment;
 
-            $commentusername = '';
+            $authorofcomment = '';
             $profilurl = '';
-            if ($showcommentusername) {
+            if ($showauthorofcomment) {
                 $user = \core_user::get_user($notecomment->userid, 'username, firstname, lastname');
-                $commentusername = $user->firstname . " " . $user->lastname;
+                $authorofcomment = $user->firstname . " " . $user->lastname;
                 $profilurl = '' . new moodle_url('/user/profile.php', array('id' => $notecomment->userid));
             } else {
-                $commentusername = '';
+                $authorofcomment = '';
                 $profilurl = '';
             }
 
-            $comment->commentusername = $commentusername;
+            $comment->authorofcomment = $authorofcomment;
             $comment->profilurl = $profilurl;
 
             $comment->date = userdate($notecomment->timecreated);
@@ -771,8 +771,8 @@ class mod_board_external extends external_api {
                             'id' => new external_value(PARAM_INT, 'The comment id.'),
                             'noteid' => new external_value(PARAM_INT, 'The note id.'),
                             'candelete' => new external_value(PARAM_BOOL, 'Can delete the comment.'),
-                            'showcommentusername' => new external_value(PARAM_BOOL, 'showcommentusername.'),
-                            'commentusername' => new external_value(PARAM_TEXT, 'The username of the comment.'),
+                            'showauthorofcomment' => new external_value(PARAM_BOOL, 'showauthorofcomment.'),
+                            'authorofcomment' => new external_value(PARAM_TEXT, 'The author of the comment.'),
                             'profilurl' => new external_value(PARAM_TEXT, 'The profil url of the user.'),
                             'date' => new external_value(PARAM_TEXT, 'The date of the comment.'),
                             'content' => new external_value(PARAM_RAW, 'The content of the comment.')

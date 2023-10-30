@@ -70,10 +70,10 @@ class mod_board_mod_form extends moodleform_mod {
         $mform->addElement('filemanager', 'background_image',
                 get_string('background_image', 'mod_board'), null, $filemanageroptions);
 
-        $mform->addElement('advcheckbox', 'showcommentusername', get_string('showcommentusername', 'mod_board'));
-        $mform->addHelpButton('showcommentusername', 'showcommentusername', 'mod_board');
-        $mform->setDefault('showcommentusername', 1);
-        $mform->setType('showcommentusername', PARAM_INT);
+        $mform->addElement('advcheckbox', 'showauthorofcomment', get_string('showauthorofcomment', 'mod_board'));
+        $mform->addHelpButton('showauthorofcomment', 'showauthorofcomment', 'mod_board');
+        $mform->setDefault('showauthorofcomment', 1);
+        $mform->setType('showauthorofcomment', PARAM_INT);
 
         $mform->addElement('select', 'addrating', get_string('addrating', 'mod_board'),
            array(

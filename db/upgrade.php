@@ -239,7 +239,7 @@ function xmldb_board_upgrade(int $oldversion) {
 
         // Define field sortorder to be added to board_notes.
         $table = new xmldb_table('board');
-        $field = new xmldb_field('showcommentusername', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'background_color');
+        $field = new xmldb_field('showauthorofcomment', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'background_color');
         
 	// Conditionally launch add field sortorder.
         if (!$dbman->field_exists($table, $field)) {

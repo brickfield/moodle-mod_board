@@ -247,8 +247,8 @@ $string['singleusermodenotembed'] = 'Board does not allow a single user board to
 $string['allowed_singleuser_modes'] = 'Enabled single user modes';
 $string['allowed_singleuser_modes_desc'] = 'Allow/Disallow usage of certain single user modes. Does not affect already created boards';
 
-$string['showcommentusername'] = 'Show comment username';
-$string['showcommentusername_desc'] = 'If activated the username of a comment will be show for each comment.';
+$string['showauthorofcomment'] = 'Show author of comment';
+$string['showauthorofcomment_desc'] = 'If activated the author of a comment will be show for each comment.';
 
-$string['showcommentusernameenabled'] = 'Show comment username is enabled.';
-$string['showcommentusernamedisabled'] = 'Show comment username is disabled but can be later activated to see the owner of comments.';
+$string['showauthorofcommentenabled'] = 'Show author of comment is enabled.';
+$string['showauthorofcommentdisabled'] = 'Show author of comment is disabled but can be later activated to see the owner of comments.';

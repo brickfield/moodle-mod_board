@@ -25,25 +25,25 @@
         "content": "This is a comment too",
         "date": "Wednesday, 2 January 2019, 12:00 AM",
         "comments": "Comment for testing",
-        "commentusername": "Username of the autor of the Comment",
+        "authorofcomment": "Username of the autor of the Comment",
         "profilurl": "",
         "candelete": true,
-        "showcommentusername": true
+        "showauthorofcomment": true
     }
 }}
 {{#comments}}
     <div class="comment border rounded border-light p-2 mb-2">
         <div class="comment-header d-flex small text-muted">
             <div class="mb-3">{{date}}</div>
-            <div class="mod_board_comment_username">
-                {{#showcommentusername}}
+            <div class="mod_board_comment_author">
+                {{#showauthorofcomment}}
                     {{#profilurl}}
-                        <a class="mod_board_profilurl" href="{{profilurl}}">{{commentusername}}</a>
+                        <a class="mod_board_profilurl" href="{{profilurl}}">{{authorofcomment}}</a>
                     {{/profilurl}}
-                {{/showcommentusername}}
-                {{^showcommentusername}}
-                    <!- (username hidden) -->
-                {{/showcommentusername}}
+                {{/showauthorofcomment}}
+                {{^showauthorofcomment}}
+                    <!- (author is hidden) -->
+                {{/showauthorofcomment}}
             </div>
             {{#candelete}}
                 <a href="#" data-action="deletecomment" class="btn btn-icon d-flex align-items-center justify-content-center icon-no-margin ml-auto" data-commentid="{{id}}">
