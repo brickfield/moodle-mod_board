@@ -177,16 +177,25 @@ class mod_board_mod_form extends moodleform_mod {
      * @return array Array of string IDs of added items, empty array if none
      */
     public function add_completion_rules() {
+        global $CFG;
+
         $mform =& $this->_form;
 
-        $group = [];
-        $group[] =& $mform->createElement('checkbox', 'completionnotesenabled', '', get_string('completionnotes', 'mod_board'));
-        $group[] =& $mform->createElement('text', 'completionnotes', '', ['size' => 3]);
-        $mform->setType('completionnotes', PARAM_INT);
-        $mform->addGroup($group, 'completionnotesgroup', get_string('completionnotesgroup', 'mod_board'), [' '], false);
-        $mform->disabledIf('completionnotes', 'completionnotesenabled', 'notchecked');
+        // Changes for Moodle 4.3 - MDL-78516.
+        if ($CFG->branch < 403) {
+            $suffix = '';
+        } else {
+            $suffix = $this->get_suffix();
+        }
 
-        return ['completionnotesgroup'];
+        $group = [];
+        $group[] =& $mform->createElement('checkbox', 'completionnotesenabled' . $suffix, '', get_string('completionnotes', 'mod_board'));
+        $group[] =& $mform->createElement('text', 'completionnotes' . $suffix, '', ['size' => 3]);
+        $mform->setType('completionnotes' . $suffix, PARAM_INT);
+        $mform->addGroup($group, 'completionnotesgroup' . $suffix, get_string('completionnotesgroup', 'mod_board'), [' '], false);
+        $mform->disabledIf('completionnotes' . $suffix, 'completionnotesenabled', 'notchecked');
+
+        return ['completionnotesgroup' . $suffix];
     }
 
     /**
