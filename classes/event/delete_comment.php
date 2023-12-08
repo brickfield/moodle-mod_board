@@ -52,13 +52,4 @@ class delete_comment extends \core\event\base {
         $obj->noteid = $this->other['noteid'];
         return get_string('event_delete_comment_desc', 'mod_board', $obj);
     }
-
-    /**
-     * Get legacy logdata.
-     * @return array
-     */
-    public function get_legacy_logdata() {
-        return array($this->courseid, 'mod_board', 'delete_comment', null, $this->objectid,
-            $this->other['noteid']);
-    }
 }
