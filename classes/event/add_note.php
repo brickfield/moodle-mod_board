@@ -59,15 +59,6 @@ class add_note extends \core\event\base {
     }
 
     /**
-     * Get legacy logdata.
-     * @return array
-     */
-    public function get_legacy_logdata() {
-        return array($this->courseid, 'mod_board', 'add_note', null, $this->objectid, $this->other['heading'],
-                     $this->other['content'], $this->other['attachment']);
-    }
-
-    /**
      * This is used when restoring course logs where it is required that we
      * map the objectid to it's new value in the new course.
      *

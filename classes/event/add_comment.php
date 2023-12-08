@@ -55,15 +55,6 @@ class add_comment extends \core\event\base {
     }
 
     /**
-     * Get legacy logdata.
-     * @return array
-     */
-    public function get_legacy_logdata() {
-        return array($this->courseid, 'mod_board', 'add_comment', null, $this->objectid,
-                     $this->other['content'], $this->other['noteid']);
-    }
-
-    /**
      * This is used when restoring course logs where it is required that we
      * map the objectid to it's new value in the new course.
      *
