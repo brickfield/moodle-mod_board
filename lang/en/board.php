@@ -246,3 +246,12 @@ $string['brickfieldlogo'] = 'Powered by Brickfield logo';
 $string['singleusermodenotembed'] = 'Board does not allow a single user board to be embedded. Please change your settings.';
 $string['allowed_singleuser_modes'] = 'Enabled single user modes';
 $string['allowed_singleuser_modes_desc'] = 'Allow/Disallow usage of certain single user modes. Does not affect already created boards';
+
+$string['showauthorofnoteinfoenabled'] = 'Show author of note is enabled.';
+$string['showauthorofnoteinfodisabled'] = 'Show author of note is disabled but can be later activated to see the owner of notes.';
+
+$string['showauthorofnote'] = 'Show author of notes.';
+$string['showauthorofnote_help'] = 'If activated, then the information, that authors of notes are displayed will be show above the board. If inactive, then the information "showauthorofnoteinfodisabled" is displayed to inform the user that the authot of a note might be visible if teacher later activates the feature.';
+
+$string['adminsetting:allowshowauthorofnoteonboard'] = 'Allow to activate to show author of note on boards';
+$string['adminsetting:allowshowauthorofnoteonboard_desc'] = 'If activated the board can be configured to show the author of a note on the board or the author can be hidden to students (Teacher can see owner of note by using the export).';

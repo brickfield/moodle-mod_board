@@ -169,6 +169,15 @@
     max-width: initial;
 }
 
+.mod_board .mod_board_note_content .mod_board_note_author .mod_board_note_author_firstname {
+    color: #12129a;
+}
+
+.mod_board .mod_board_note_content .mod_board_note_author .mod_board_note_author_lastname {
+    margin-left: 3px;
+    color: #12129a;
+}
+
 .mod_board .mod_board_rating {
     color: #333;
     margin-top: 10px;
