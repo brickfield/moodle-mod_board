@@ -711,7 +711,7 @@ class mod_board_external extends external_api {
         $params['columnid'] = $column->columnid;
         $board = $DB->get_record('board_columns', ['id' => $params['columnid']], 'boardid');
 
-        // $board->boardid Ownerid is not relevant but we use $column->ownerid.
+        // The ownerid of the board with $board->boardid is not relevant. We use $column->ownerid.
         $configuration = board::get_configuration($board->boardid, $column->ownerid);
         $showauthorofcomment = $configuration['showauthorofcomment'];
 

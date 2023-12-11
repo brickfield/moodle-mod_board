@@ -235,19 +235,19 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2022040110, 'board');
     }
 
-    if ($oldversion < 2022040111) {
+    if ($oldversion < 2022040113) {
 
         // Define field sortorder to be added to board_notes.
         $table = new xmldb_table('board');
         $field = new xmldb_field('showauthorofcomment', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'background_color');
-        
-	// Conditionally launch add field sortorder.
+
+        // Conditionally launch add field sortorder.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
         // Board savepoint reached.
-        upgrade_mod_savepoint(true, 2022040111, 'board');
+        upgrade_mod_savepoint(true, 2022040113, 'board');
     }
 
     return true;

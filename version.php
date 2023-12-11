@@ -25,7 +25,8 @@
 defined('MOODLE_INTERNAL') || die;
 
 $plugin->component = 'mod_board'; // Full name of the plugin (used for diagnostics).
-$plugin->version   = 2023101903; // The current module version Use 2022.04.01 as base for 4.00.
+// $plugin->version   = 2022040110; // The current module version Use 2022.04.01 as base for 4.00.
+$plugin->version   = 2022040113; // 2022040113 for developing the new feature "show author of note", should be adapted
 $plugin->requires  = 2022041900; // Moodle 4.00 and up.
 $plugin->release = '1.401.00 (Build 2022121200)';
 $plugin->maturity  = MATURITY_BETA;

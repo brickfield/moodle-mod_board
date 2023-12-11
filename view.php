@@ -81,7 +81,7 @@ if (($board->singleusermode != board::SINGLEUSER_DISABLED)
 $PAGE->requires->js_call_amd('mod_board/main', 'initialize',
     [
     'boardid' => $board->id,
-    'ownerid' => $ownerid
+    'ownerid' => $ownerid,
     ]
 );
 
@@ -155,7 +155,7 @@ if (($board->singleusermode == board::SINGLEUSER_PUBLIC || $board->singleusermod
             ['style' => 'display: block !important; width: 140px;']);
         $img .= html_writer::tag('span', get_string('opensinnewwindow', 'mod_board'), ['class' => 'sr-only']);
         echo html_writer::link('https://www.brickfield.ie/docs/mod_board/', $img, ['target' => '_blank',
-            'style' => 'margin-left: auto; margin-right: 90px; display: block !important; width: 140px;']);
+            'style' => 'margin-left: auto; margin-right: 90px; display: block !important; width: 140px;', ]);
     }
     echo '</div>';
 }

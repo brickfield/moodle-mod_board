@@ -77,9 +77,9 @@ class mod_board_mod_form extends moodleform_mod {
             $mform->addHelpButton('showauthorofcomment', 'showauthorofcomment', 'mod_board');
             $mform->setDefault('showauthorofcomment', 1);
             $mform->setType('showauthorofcomment', PARAM_INT);
-        } else {
-            // Hint: allowshowauthorofcommentsonboard is not allowed in this moodle. showauthorofcomment will be set to 0 by the default database column value.
         }
+        // Hint: No else if allowshowauthorofcommentsonboard is not allowed in this moodle.
+        // Showauthorofcomment will be set to 0 by the default database column value.
 
         $mform->addElement('select', 'addrating', get_string('addrating', 'mod_board'),
            array(
