@@ -100,23 +100,6 @@ if ($board->enableblanktarget) {
     echo html_writer::tag('div', get_string('blanktargetenabled', 'mod_board'), ['class' => 'small']);
 }
 
-
-$config = get_config('mod_board');
-$allowshowauthorofnoteonboard = isset($config->allowshowauthorofnoteonboard) ? $config->allowshowauthorofnoteonboard : false;
-
-if ($allowshowauthorofnoteonboard) {
-    echo html_writer::tag('div', 'In diesem Moodle ist die Anzeige von Autoren der Notizen erlaubt.', ['class' => 'small']);
-} else {
-    echo html_writer::tag('div', 'In diesem Moodle ist die Anzeige von Autoren der Notizen <b>NICHT</b> aktiviert.', ['class' => 'small']);
-}
-
-
-if ($board->showauthorofnote) {
-    echo html_writer::tag('div', get_string('showauthorofnoteinfoenabled', 'mod_board'), ['class' => 'small']);
-} else {
-    echo html_writer::tag('div', get_string('showauthorofnoteinfodisabled', 'mod_board'), ['class' => 'small']);
-}
-
 echo $OUTPUT->box_start('mod_introbox', 'group_menu');
 echo groups_print_activity_menu($cm, $pageurl, true);
 echo $OUTPUT->box_end();
@@ -159,6 +142,22 @@ if (($board->singleusermode == board::SINGLEUSER_PUBLIC || $board->singleusermod
         $extrabackground = "background:url({$url}) no-repeat center center; -webkit-background-size: cover;
         -moz-background-size: cover; -o-background-size: cover; background-size: cover;";
     }
+
+    $config = get_config('mod_board');
+    $allowshowauthorofnoteonboard = isset($config->allowshowauthorofnoteonboard) ? $config->allowshowauthorofnoteonboard : false;
+
+    if ($allowshowauthorofnoteonboard) {
+        echo html_writer::tag('div', get_string('allowshowauthorofnoteonboardenabled', 'mod_board'), ['class' => 'mod_board_allowshowauthorofnoteonboardenabled']);
+    } else {
+        echo html_writer::tag('div',  get_string('allowshowauthorofnoteonboarddisabled', 'mod_board'), ['class' => 'mod_board_allowshowauthorofnoteonboarddisabled']);
+    }
+
+    if ($board->showauthorofnote) {
+        echo html_writer::tag('div', get_string('showauthorofnoteinfoenabled', 'mod_board'), ['class' => 'mod_board_showauthorofnoteinfoenabled']);
+    } else {
+        echo html_writer::tag('div', get_string('showauthorofnoteinfodisabled', 'mod_board'), ['class' => 'mod_board_showauthorofnoteinfodisabled']);
+    }
+
     echo '<div class="mod_board_wrapper">';
     echo '<div class="mod_board flex-fill" style="' . $extrabackground . '"></div>';
     if (has_capability('mod/board:manageboard', $context)) {

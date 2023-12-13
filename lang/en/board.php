@@ -255,3 +255,6 @@ $string['showauthorofnote_help'] = 'If activated, then the information, that aut
 
 $string['adminsetting:allowshowauthorofnoteonboard'] = 'Allow to activate to show author of note on boards';
 $string['adminsetting:allowshowauthorofnoteonboard_desc'] = 'If activated the board can be configured to show the author of a note on the board or the author can be hidden to students (Teacher can see owner of note by using the export).';
+
+$string['allowshowauthorofnoteonboardenabled'] = 'This moodle <b>DOES</b> support to show author of notes.';
+$string['allowshowauthorofnoteonboarddisabled'] = 'This moodle does <b>NOT</b> support to show author of notes.';

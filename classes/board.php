@@ -400,7 +400,7 @@ class board {
         static::clear_history();
         return $columns;
     }
-    
+
     /**
      * Retrieves the boards history.
      *
