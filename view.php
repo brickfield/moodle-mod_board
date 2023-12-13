@@ -146,16 +146,12 @@ if (($board->singleusermode == board::SINGLEUSER_PUBLIC || $board->singleusermod
     $config = get_config('mod_board');
     $allowshowauthorofnoteonboard = isset($config->allowshowauthorofnoteonboard) ? $config->allowshowauthorofnoteonboard : false;
 
-    if ($allowshowauthorofnoteonboard) {
-        echo html_writer::tag('div', get_string('allowshowauthorofnoteonboardenabled', 'mod_board'), ['class' => 'mod_board_allowshowauthorofnoteonboardenabled']);
-    } else {
-        echo html_writer::tag('div',  get_string('allowshowauthorofnoteonboarddisabled', 'mod_board'), ['class' => 'mod_board_allowshowauthorofnoteonboarddisabled']);
-    }
-
-    if ($board->showauthorofnote) {
-        echo html_writer::tag('div', get_string('showauthorofnoteinfoenabled', 'mod_board'), ['class' => 'mod_board_showauthorofnoteinfoenabled']);
-    } else {
-        echo html_writer::tag('div', get_string('showauthorofnoteinfodisabled', 'mod_board'), ['class' => 'mod_board_showauthorofnoteinfodisabled']);
+    if ($allowshowauthorofnoteonboard ) {
+        if ($board->showauthorofnote) {
+            echo html_writer::tag('div', get_string('showauthorofnoteinfoenabled', 'mod_board'), ['class' => 'mod_board_showauthorofnoteinfoenabled']);
+        } else {
+            echo html_writer::tag('div', get_string('showauthorofnoteinfodisabled', 'mod_board'), ['class' => 'mod_board_showauthorofnoteinfodisabled']);
+        }
     }
 
     echo '<div class="mod_board_wrapper">';
