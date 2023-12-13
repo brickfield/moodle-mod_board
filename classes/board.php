@@ -16,8 +16,12 @@
 
 namespace mod_board;
 
+use tool_brickfield\local\areas\core_course\fullname;
+use core_user;
+
 /**
  * The main board class functions.
+ *
  * @package     mod_board
  * @author      Jay Churchward <jay@brickfieldlabs.ie>
  * @copyright   2021 Brickfield Education Labs <https://www.brickfield.ie/>
@@ -101,8 +105,7 @@ class board {
             'isEditor' => self::board_is_editor($board->id),
             'usersCanEdit' => self::board_users_can_edit($board->id),
             'userId' => $USER->id,
-            'firstname' => $USER->firstname,
-            'lastname' => $USER->lastname,
+            'userFullname' => fullname($USER),
             'ownerId' => $ownerid,
             'readonly' => (self::board_readonly($board->id) || !self::can_post($board->id, $USER->id, $ownerid)),
             'columnicon' => $config->new_column_icon,
@@ -115,6 +118,7 @@ class board {
                 'size_min' => self::ACCEPTED_FILE_MIN_SIZE,
                 'size_max' => self::ACCEPTED_FILE_MAX_SIZE
             ],
+            'allowshowauthorofnoteonboard' => isset($config->allowshowauthorofnoteonboard) ? $config->allowshowauthorofnoteonboard : false,
             'showauthorofnote' => self::board_show_authorofnote($board->id),
             'ratingenabled' => self::board_rating_enabled($board->id),
             'hideheaders' => self::board_hide_headers($board->id),
@@ -377,14 +381,14 @@ class board {
                                             'id, userid, heading, content, type, info, url, timecreated, sortorder');
 
             // Add the name of the author of a note to the note-object.
+            $config = get_config('mod_board');
+            $allowshowauthorofnoteonboard = isset($config->allowshowauthorofnoteonboard) ? $config->allowshowauthorofnoteonboard : false;
             foreach ($column->notes as $colid => $note) {
-                if (self::board_show_authorofnote($board->id)) {
-                    $authorofnote = static::get_authorofnote($note->userid);
-                    $note->firstname = $authorofnote['firstname'];
-                    $note->lastname = $authorofnote['lastname'];
+                if ($allowshowauthorofnoteonboard && self::board_show_authorofnote($board->id)) {
+                    $user = core_user::get_user($note->userid);
+                    $note->fullname = fullname($user);;
                 } else {
-                    $note->firstname = '';
-                    $note->lastname = '';
+                    $note->fullname = '';
                 }
             }
 
@@ -396,22 +400,7 @@ class board {
         static::clear_history();
         return $columns;
     }
-
-    /**
-     * Gets the author/user (including firstname and lastname) of a note.
-     *
-     * @param int $userid The userid of the author of a note.
-     * @return array
-     */
-    public static function get_authorofnote($userid): array {
-        global $DB;
-        $user = $DB->get_record('user', ['id' => $userid], 'firstname, lastname');
-        $authorofnote = [];
-        $authorofnote['firstname'] = $user->firstname;
-        $authorofnote['lastname'] = $user->lastname;
-        return $authorofnote;
-    }
-
+    
     /**
      * Retrieves the boards history.
      *

@@ -218,13 +218,13 @@ export default function(settings) {
         isEditor = options.isEditor || false,
         usersCanEdit = options.usersCanEdit,
         userId = parseInt(options.userId) || -1,
-        userFirstname = options.firstname,
-        userLastname = options.lastname,
+        userFullname = options.userFullname,
         ownerId = parseInt(options.ownerId),
         mediaSelection = options.mediaselection || MEDIA_SELECTION_BUTTONS,
         editingNote = 0,
         isReadOnlyBoard = options.readonly || false,
         showauthorofnote = options.showauthorofnote || false,
+        allowshowauthorofnoteonboard = options.allowshowauthorofnoteonboard || false,
         ratingenabled = options.ratingenabled,
         sortby = options.sortby || SORTBY_DATE,
         editModal = null,
@@ -756,7 +756,7 @@ export default function(settings) {
      * @param {string} heading
      * @param {string} content
      * @param {object} attachment
-     * @param {object} owner
+     * @param {object} owner the owner of the note containing the userid as id and the owner fullname
      * @param {number} sortorder
      * @param {string} rating
      */
@@ -804,25 +804,19 @@ export default function(settings) {
             noteAriaText = $('<div class="note_ariatext hidden" role="heading" aria-level="4" tabindex="0"></div>'),
             attachmentPreview = $('<div class="mod_board_preview"></div>');
 
-        if (showauthorofnote) {
-            let firstname = '';
-            let lastname = '';
+        if (allowshowauthorofnoteonboard == true && showauthorofnote == true) {
+            let fullname = '';
             if (ismynote) {
                 // Use the Name of the user itself. We do not need to get this information from somewhere else.
-                firstname = userFirstname;
-                lastname = userLastname;
+                fullname = userFullname;
             } else {
-                firstname = owner.firstname;
-                lastname = owner.lastname;
+                fullname = owner.fullname;
             }
 
             noteAuthorusername = '<div class="mod_board_note_author">' +
-                    '<i class="fa fa-user" title="' + firstname + ' ' + lastname + '"></i> ' +
-                    '<span class="mod_board_note_author_firstname">' +
-                        firstname +
-                    '</span>' +
-                    '<span class="mod_board_note_author_lastname">' +
-                        lastname +
+                    '<i class="fa fa-user" title="' + fullname + '"></i> ' +
+                    '<span class="mod_board_note_author_fullname">' +
+                        fullname +
                     '</span>' +
                 '</div>' ;
         }
@@ -1047,7 +1041,7 @@ export default function(settings) {
                 newNoteButton.addClass('d-none');
             }
             handleAction(columnNewContent.find('.newnote'), function() {
-                // We do not need to add firstname and lasname because we use ismynote and actual board user.
+                // We do not need to add fullname to the owner because we use ismynote and the fullname of the actual board user.
                 addNote(ident, 0, null, null, null, {id: userId}, 0, 0);
             });
         }
@@ -1065,7 +1059,7 @@ export default function(settings) {
 
                 addNote(ident, notes[index].id, notes[index].heading, notes[index].content,
                     {type: notes[index].type, info: notes[index].info, url: notes[index].url},
-                    {id: notes[index].userid,  firstname: notes[index].firstname,  lastname: notes[index].lastname},
+                    {id: notes[index].userid,  fullname: notes[index].fullname},
                     sortorder, notes[index].rating);
             }
         }

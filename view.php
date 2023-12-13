@@ -100,6 +100,17 @@ if ($board->enableblanktarget) {
     echo html_writer::tag('div', get_string('blanktargetenabled', 'mod_board'), ['class' => 'small']);
 }
 
+
+$config = get_config('mod_board');
+$allowshowauthorofnoteonboard = isset($config->allowshowauthorofnoteonboard) ? $config->allowshowauthorofnoteonboard : false;
+
+if ($allowshowauthorofnoteonboard) {
+    echo html_writer::tag('div', 'In diesem Moodle ist die Anzeige von Autoren der Notizen erlaubt.', ['class' => 'small']);
+} else {
+    echo html_writer::tag('div', 'In diesem Moodle ist die Anzeige von Autoren der Notizen <b>NICHT</b> aktiviert.', ['class' => 'small']);
+}
+
+
 if ($board->showauthorofnote) {
     echo html_writer::tag('div', get_string('showauthorofnoteinfoenabled', 'mod_board'), ['class' => 'small']);
 } else {
