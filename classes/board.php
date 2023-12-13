@@ -77,6 +77,8 @@ class board {
     /** @var int Value for the singleusermode setting in public mode*/
     const SINGLEUSER_PUBLIC = 2;
 
+     static $alluserids = [];
+
     /**
      * Retrieves the course module for the board
      *
@@ -380,13 +382,17 @@ class board {
             $column->notes = $DB->get_records('board_notes', $params, 'sortorder',
                                             'id, userid, heading, content, type, info, url, timecreated, sortorder');
 
-            // Add the name of the author of a note to the note-object.
             $config = get_config('mod_board');
             $allowshowauthorofnoteonboard = isset($config->allowshowauthorofnoteonboard) ? $config->allowshowauthorofnoteonboard : false;
+            // Add fullname of author to each note if author of should be visible.
             foreach ($column->notes as $colid => $note) {
                 if ($allowshowauthorofnoteonboard && self::board_show_authorofnote($board->id)) {
-                    $user = core_user::get_user($note->userid);
-                    $note->fullname = fullname($user);;
+                    // Only add missing userids and fullnames to reduce calls of get_user().
+                    if (!self::$alluserids[$note->userid]) {
+                        $user = core_user::get_user($note->userid);
+                        self::$alluserids[$note->userid] = fullname($user);
+                    }
+                    $note->fullname =self::$alluserids[$note->userid];
                 } else {
                     $note->fullname = '';
                 }
