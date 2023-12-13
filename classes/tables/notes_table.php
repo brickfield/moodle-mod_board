@@ -46,7 +46,7 @@ class notes_table extends table_sql {
      */
     public function __construct($cmid, $boardid, $groupid, $ownerid, $includedeleted) {
         parent::__construct('mod_board_notes_table');
-
+        $context = \context_module::instance($cmid);
         // Get the construct paramaters and add them to the export url.
         $exportparams = [
             'id' => $cmid,
@@ -58,8 +58,28 @@ class notes_table extends table_sql {
         $exporturl = new moodle_url('/mod/board/export.php', $exportparams);
         $this->define_baseurl($exporturl);
 
+        // Gets the fields that have to be hidden
+        $hiddenfields = array_map('trim', explode(',', get_config('moodle', 'hiddenuserfields')));
+        $emailishidden = in_array('email', $hiddenfields);
+
+        $includeeMail = false;
+        if (get_config('mod_board', 'includeemailindownloadsubmissonsifemailnothidden') == true) {
+            if ($emailishidden) {
+                if (has_capability('moodle/user:viewhiddendetails', $context) || has_capability('moodle/course:viewhiddenuserfields', $context)) {
+                    $includeeMail = true;
+                }
+            } else {
+                // email is not hidden
+                $includeeMail = true;
+            }
+        }
+
         // Define the list of columns to show.
-        $columns = array('firstname', 'lastname', 'email', 'heading', 'content', 'info', 'url', 'timecreated', 'deleted');
+        if ($includeeMail) {
+            $columns = array('firstname', 'lastname', 'email', 'heading', 'content', 'info', 'url', 'timecreated', 'deleted');
+        } else {
+            $columns = array('firstname', 'lastname', 'heading', 'content', 'info', 'url', 'timecreated', 'deleted');
+        }
         $this->define_columns($columns);
 
         // Define the titles of columns to show in header.
@@ -70,8 +90,13 @@ class notes_table extends table_sql {
 
         // Define the SQL used to get the data.
         $this->sql = (object)[];
-        $this->sql->fields = 'bn.id, u.firstname, u.lastname, u.email, bn.heading, bn.content, bn.info, bn.url, bn.timecreated,
+        if ($includeeMail) {
+            $this->sql->fields = 'bn.id, u.firstname, u.lastname, u.email, bn.heading, bn.content, bn.info, bn.url, bn.timecreated,
             bn.deleted';
+        } else {
+            $this->sql->fields = 'bn.id, u.firstname, u.lastname, bn.heading, bn.content, bn.info, bn.url, bn.timecreated,
+            bn.deleted';
+        }
         $this->sql->from = '{board_columns} bc
         JOIN {board_notes} bn ON bn.columnid = bc.id JOIN {user} u ON u.id = bn.ownerid';
         $this->sql->where = 'bc.boardid = :boardid';
