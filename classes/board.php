@@ -77,7 +77,7 @@ class board {
     /** @var int Value for the singleusermode setting in public mode*/
     const SINGLEUSER_PUBLIC = 2;
 
-     static $alluserids = [];
+    static $alluserids = [];
 
     /**
      * Retrieves the course module for the board
@@ -440,8 +440,20 @@ class board {
                 $params['ownerid'] = $ownerid;
             }
         }
-
-        return $DB->get_records_select('board_history', $condition, $params);
+        $history_items = $DB->get_records_select('board_history', $condition, $params);
+        // Add fullname to each item in history if author should be displayed.
+        $config = get_config('mod_board');
+        $allowshowauthorofnoteonboard = isset($config->allowshowauthorofnoteonboard) ? $config->allowshowauthorofnoteonboard : false;
+        if ($allowshowauthorofnoteonboard && self::board_show_authorofnote($board->id)) {
+            foreach ($history_items as $history_item) {
+                if (!self::$alluserids[$history_item->userid]) {
+                    $user = core_user::get_user($history_item->userid);
+                    self::$alluserids[$history_item->userid] = fullname($user);
+                }
+                $history_item->fullname =self::$alluserids[$history_item->userid];
+            }
+        }
+        return $history_items;
     }
 
     /**

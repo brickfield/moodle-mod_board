@@ -1171,12 +1171,14 @@ export default function(settings) {
 
                 var data = JSON.parse(item.content);
                 if (item.action == 'add_note') {
+                    // This is called on a board if someone else has added a note in a different browser.
                     let sortorder = sortby == 3 ? data.sortorder : data.timecreated;
                     addNote(data.columnid, data.id, data.heading, data.content, data.attachment,
-                        {id: item.userid}, sortorder, data.rating);
+                        {id: item.userid , fullname: item.userid + " " + item.fullname}, sortorder, data.rating);
                     updateNoteAria(data.id);
                     sortNotes($('.board_column[data-ident=' + data.columnid + '] .board_column_content'));
                 } else if (item.action == 'update_note') {
+                    // This is called on a board if someone else has updated a note in a different browser.
                     let note = getNote(data.id),
                         formModal = editModal,
                         historyData = data;

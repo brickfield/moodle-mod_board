@@ -75,6 +75,7 @@ class mod_board_external extends external_api {
                     'boardid' => new external_value(PARAM_INT, 'boardid'),
                     'action' => new external_value(PARAM_TEXT, 'action'),
                     'userid' => new external_value(PARAM_INT, 'userid'),
+                    'fullname' => new external_value(PARAM_TEXT, 'user fullname', VALUE_DEFAULT, ''),
                     'content' => new external_value(PARAM_RAW, 'content')
                 )
             )
