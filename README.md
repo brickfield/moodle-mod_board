@@ -47,6 +47,9 @@ maintenance of the plugin - please contact [support@brickfield.ie](mailto:suppor
 This module uses code derived from ["jquery.editable.amd.js"](https://github.com/victorjonsson/jquery-editable/).
 This code written by [Victor Jonsson](http://victorjonsson.se/) is licensed under [GNU GPLv2](http://www.gnu.org/licenses/gpl-2.0.html).
 
+### Icon design ###
+Many thanks to [Stuart Lamour](https://github.com/stuartlamour) for our new board icon!
+
 ## Documentation ##
 All public documentation for this plugin will be maintained at the
 [Brickfield site](https://brickfield.ie/docs/mod_board).
