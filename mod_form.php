@@ -70,6 +70,17 @@ class mod_board_mod_form extends moodleform_mod {
         $mform->addElement('filemanager', 'background_image',
                 get_string('background_image', 'mod_board'), null, $filemanageroptions);
 
+        $config = get_config('mod_board');
+        $allowshowauthorofcommentsonboard = $config->allowshowauthorofcommentsonboard;
+        if ($allowshowauthorofcommentsonboard) {
+            $mform->addElement('advcheckbox', 'showauthorofcomment', get_string('showauthorofcomment', 'mod_board'));
+            $mform->addHelpButton('showauthorofcomment', 'showauthorofcomment', 'mod_board');
+            $mform->setDefault('showauthorofcomment', 1);
+            $mform->setType('showauthorofcomment', PARAM_INT);
+        }
+        // Hint: No else if allowshowauthorofcommentsonboard is not allowed in this moodle.
+        // Showauthorofcomment will be set to 0 by the default database column value.
+
         $mform->addElement('select', 'addrating', get_string('addrating', 'mod_board'),
            array(
                 board::RATINGDISABLED => get_string('addrating_none', 'mod_board'),

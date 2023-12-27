@@ -684,6 +684,7 @@ class mod_board_external extends external_api {
      */
     public static function get_comments($noteid) {
         global $DB, $USER;
+        $config = get_config('mod_board');
 
         $warnings = [];
         $arrayparams = array(
@@ -702,15 +703,43 @@ class mod_board_external extends external_api {
         $canpost = has_capability('mod/board:postcomment', $context);
         $candeleteall = has_capability('mod/board:deleteallcomments', $context);
 
-        $notes = $DB->get_records('board_comments', ['noteid' => $params['noteid'], 'deleted' => 0], 'timecreated DESC');
+        // Find the columnid for the note with the given noteid.
+        $params['noteid'] = $noteid;
+        $column = $DB->get_record('board_notes', ['id' => $params['noteid']], 'columnid, ownerid');
+
+        // Find the boardid of the column.
+        $params['columnid'] = $column->columnid;
+        $board = $DB->get_record('board_columns', ['id' => $params['columnid']], 'boardid');
+
+        // The ownerid of the board with $board->boardid is not relevant. We use $column->ownerid.
+        $configuration = board::get_configuration($board->boardid, $column->ownerid);
+        $showauthorofcomment = $configuration['showauthorofcomment'];
+
+        $notecomments = $DB->get_records('board_comments', ['noteid' => $params['noteid'], 'deleted' => 0], 'timecreated DESC');
         $comments = [];
-        foreach ($notes as $note) {
+        foreach ($notecomments as $notecomment) {
             $comment = (object)[];
-            $comment->id = $note->id;
-            $comment->noteid = $note->noteid;
-            $comment->content = $note->content;
-            $comment->candelete = ($note->userid === $USER->id || $candeleteall) ? true : false;
-            $comment->date = userdate($note->timecreated);
+            $comment->id = $notecomment->id;
+            $comment->noteid = $notecomment->noteid;
+            $comment->content = $notecomment->content;
+            $comment->candelete = ($notecomment->userid === $USER->id || $candeleteall) ? true : false;
+            $comment->showauthorofcomment = $showauthorofcomment;
+
+            $authorofcomment = '';
+            $profilurl = '';
+            if ($config->allowshowauthorofcommentsonboard && $showauthorofcomment) {
+                $user = \core_user::get_user($notecomment->userid, 'username, firstname, lastname');
+                $authorofcomment = $user->firstname . " " . $user->lastname;
+                $profilurl = '' . new moodle_url('/user/profile.php', array('id' => $notecomment->userid));
+            } else {
+                $authorofcomment = '';
+                $profilurl = '';
+            }
+
+            $comment->authorofcomment = $authorofcomment;
+            $comment->profilurl = $profilurl;
+
+            $comment->date = userdate($notecomment->timecreated);
             $comments[] = $comment;
         }
 
@@ -743,6 +772,9 @@ class mod_board_external extends external_api {
                             'id' => new external_value(PARAM_INT, 'The comment id.'),
                             'noteid' => new external_value(PARAM_INT, 'The note id.'),
                             'candelete' => new external_value(PARAM_BOOL, 'Can delete the comment.'),
+                            'showauthorofcomment' => new external_value(PARAM_BOOL, 'showauthorofcomment.'),
+                            'authorofcomment' => new external_value(PARAM_TEXT, 'The author of the comment.'),
+                            'profilurl' => new external_value(PARAM_TEXT, 'The profil url of the user.'),
                             'date' => new external_value(PARAM_TEXT, 'The date of the comment.'),
                             'content' => new external_value(PARAM_RAW, 'The content of the comment.')
                         ]
