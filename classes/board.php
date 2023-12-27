@@ -16,8 +16,12 @@
 
 namespace mod_board;
 
+use tool_brickfield\local\areas\core_course\fullname;
+use core_user;
+
 /**
  * The main board class functions.
+ *
  * @package     mod_board
  * @author      Jay Churchward <jay@brickfieldlabs.ie>
  * @copyright   2021 Brickfield Education Labs <https://www.brickfield.ie/>
@@ -73,6 +77,8 @@ class board {
     /** @var int Value for the singleusermode setting in public mode*/
     const SINGLEUSER_PUBLIC = 2;
 
+    static $alluserids = [];
+
     /**
      * Retrieves the course module for the board
      *
@@ -101,6 +107,7 @@ class board {
             'isEditor' => self::board_is_editor($board->id),
             'usersCanEdit' => self::board_users_can_edit($board->id),
             'userId' => $USER->id,
+            'userFullname' => fullname($USER),
             'ownerId' => $ownerid,
             'readonly' => (self::board_readonly($board->id) || !self::can_post($board->id, $USER->id, $ownerid)),
             'columnicon' => $config->new_column_icon,
@@ -113,6 +120,8 @@ class board {
                 'size_min' => self::ACCEPTED_FILE_MIN_SIZE,
                 'size_max' => self::ACCEPTED_FILE_MAX_SIZE
             ],
+            'allowshowauthorofnoteonboard' => isset($config->allowshowauthorofnoteonboard) ? $config->allowshowauthorofnoteonboard : false,
+            'showauthorofnote' => self::board_show_authorofnote($board->id),
             'ratingenabled' => self::board_rating_enabled($board->id),
             'hideheaders' => self::board_hide_headers($board->id),
             'sortby' => $board->sortby,
@@ -372,6 +381,23 @@ class board {
 
             $column->notes = $DB->get_records('board_notes', $params, 'sortorder',
                                             'id, userid, heading, content, type, info, url, timecreated, sortorder');
+
+            $config = get_config('mod_board');
+            $allowshowauthorofnoteonboard = isset($config->allowshowauthorofnoteonboard) ? $config->allowshowauthorofnoteonboard : false;
+            // Add fullname of author to each note if author of should be visible.
+            foreach ($column->notes as $colid => $note) {
+                if ($allowshowauthorofnoteonboard && self::board_show_authorofnote($board->id)) {
+                    // Only add missing userids and fullnames to reduce calls of get_user().
+                    if (!self::$alluserids[$note->userid]) {
+                        $user = core_user::get_user($note->userid);
+                        self::$alluserids[$note->userid] = fullname($user);
+                    }
+                    $note->fullname =self::$alluserids[$note->userid];
+                } else {
+                    $note->fullname = '';
+                }
+            }
+
             foreach ($column->notes as $colid => $note) {
                 $note->rating = static::get_note_rating($note->id);
             }
@@ -414,8 +440,20 @@ class board {
                 $params['ownerid'] = $ownerid;
             }
         }
-
-        return $DB->get_records_select('board_history', $condition, $params);
+        $history_items = $DB->get_records_select('board_history', $condition, $params);
+        // Add fullname to each item in history if author should be displayed.
+        $config = get_config('mod_board');
+        $allowshowauthorofnoteonboard = isset($config->allowshowauthorofnoteonboard) ? $config->allowshowauthorofnoteonboard : false;
+        if ($allowshowauthorofnoteonboard && self::board_show_authorofnote($board->id)) {
+            foreach ($history_items as $history_item) {
+                if (!self::$alluserids[$history_item->userid]) {
+                    $user = core_user::get_user($history_item->userid);
+                    self::$alluserids[$history_item->userid] = fullname($user);
+                }
+                $history_item->fullname =self::$alluserids[$history_item->userid];
+            }
+        }
+        return $history_items;
     }
 
     /**
@@ -1145,6 +1183,21 @@ class board {
             'other' => array('columnid' => $columnid)
         ));
         $event->trigger();
+    }
+
+    /**
+     * Checks to see if showauthorofnote has been enabled for the board.
+     *
+     * @param int $boardid
+     * @return bool
+     */
+    public static function board_show_authorofnote($boardid) {
+        $board = static::get_board($boardid);
+        if (!$board) {
+            return false;
+        }
+
+        return !empty($board->showauthorofnote);
     }
 
     /**

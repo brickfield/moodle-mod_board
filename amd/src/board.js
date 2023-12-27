@@ -218,10 +218,13 @@ export default function(settings) {
         isEditor = options.isEditor || false,
         usersCanEdit = options.usersCanEdit,
         userId = parseInt(options.userId) || -1,
+        userFullname = options.userFullname,
         ownerId = parseInt(options.ownerId),
         mediaSelection = options.mediaselection || MEDIA_SELECTION_BUTTONS,
         editingNote = 0,
         isReadOnlyBoard = options.readonly || false,
+        showauthorofnote = options.showauthorofnote || false,
+        allowshowauthorofnoteonboard = options.allowshowauthorofnoteonboard || false,
         ratingenabled = options.ratingenabled,
         sortby = options.sortby || SORTBY_DATE,
         editModal = null,
@@ -753,7 +756,7 @@ export default function(settings) {
      * @param {string} heading
      * @param {string} content
      * @param {object} attachment
-     * @param {object} owner
+     * @param {object} owner the owner of the note containing the userid as id and the owner fullname
      * @param {number} sortorder
      * @param {string} rating
      */
@@ -795,12 +798,31 @@ export default function(settings) {
         var notecontent = $('<div class="mod_board_note_content"></div>'),
             notecontrols = $('<div class="mod_board_note_controls"></div>'),
             noteHeading = $('<div class="mod_board_note_heading" tabindex="0">' + (heading ? heading : '') + '</div>'),
+            noteAuthorusername = $(''),
             noteBorder = $('<div class="mod_board_note_border"></div>'),
             noteText = $('<div class="mod_board_note_text" tabindex="0">' + (content ? content : '') + '</div>'),
             noteAriaText = $('<div class="note_ariatext hidden" role="heading" aria-level="4" tabindex="0"></div>'),
             attachmentPreview = $('<div class="mod_board_preview"></div>');
 
+        if (allowshowauthorofnoteonboard == true && showauthorofnote == true) {
+            let fullname = '';
+            if (ismynote) {
+                // Use the Name of the user itself. We do not need to get this information from somewhere else.
+                fullname = userFullname;
+            } else {
+                fullname = owner.fullname;
+            }
+
+            noteAuthorusername = '<div class="mod_board_note_author">' +
+                    '<i class="fa fa-user" title="' + fullname + '"></i> ' +
+                    '<span class="mod_board_note_author_fullname">' +
+                        fullname +
+                    '</span>' +
+                '</div>' ;
+        }
+
         notecontent.append(noteHeading);
+        notecontent.append(noteAuthorusername);
         notecontent.append(noteBorder);
         notecontent.append(noteText);
         notecontent.append(noteAriaText);
@@ -1019,6 +1041,7 @@ export default function(settings) {
                 newNoteButton.addClass('d-none');
             }
             handleAction(columnNewContent.find('.newnote'), function() {
+                // We do not need to add fullname to the owner because we use ismynote and the fullname of the actual board user.
                 addNote(ident, 0, null, null, null, {id: userId}, 0, 0);
             });
         }
@@ -1033,9 +1056,11 @@ export default function(settings) {
         if (notes) {
             for (var index in notes) {
                 let sortorder = sortby == 3 ? notes[index].sortorder : notes[index].timecreated;
+
                 addNote(ident, notes[index].id, notes[index].heading, notes[index].content,
                     {type: notes[index].type, info: notes[index].info, url: notes[index].url},
-                    {id: notes[index].userid}, sortorder, notes[index].rating);
+                    {id: notes[index].userid,  fullname: notes[index].fullname},
+                    sortorder, notes[index].rating);
             }
         }
         sortNotes(columnContent);
@@ -1146,12 +1171,14 @@ export default function(settings) {
 
                 var data = JSON.parse(item.content);
                 if (item.action == 'add_note') {
+                    // This is called on a board if someone else has added a note in a different browser.
                     let sortorder = sortby == 3 ? data.sortorder : data.timecreated;
                     addNote(data.columnid, data.id, data.heading, data.content, data.attachment,
-                        {id: item.userid}, sortorder, data.rating);
+                        {id: item.userid , fullname: item.userid + " " + item.fullname}, sortorder, data.rating);
                     updateNoteAria(data.id);
                     sortNotes($('.board_column[data-ident=' + data.columnid + '] .board_column_content'));
                 } else if (item.action == 'update_note') {
+                    // This is called on a board if someone else has updated a note in a different browser.
                     let note = getNote(data.id),
                         formModal = editModal,
                         historyData = data;

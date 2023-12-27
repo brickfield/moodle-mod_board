@@ -81,7 +81,7 @@ if (($board->singleusermode != board::SINGLEUSER_DISABLED)
 $PAGE->requires->js_call_amd('mod_board/main', 'initialize',
     [
     'boardid' => $board->id,
-    'ownerid' => $ownerid
+    'ownerid' => $ownerid,
     ]
 );
 
@@ -142,6 +142,18 @@ if (($board->singleusermode == board::SINGLEUSER_PUBLIC || $board->singleusermod
         $extrabackground = "background:url({$url}) no-repeat center center; -webkit-background-size: cover;
         -moz-background-size: cover; -o-background-size: cover; background-size: cover;";
     }
+
+    $config = get_config('mod_board');
+    $allowshowauthorofnoteonboard = isset($config->allowshowauthorofnoteonboard) ? $config->allowshowauthorofnoteonboard : false;
+
+    if ($allowshowauthorofnoteonboard ) {
+        if ($board->showauthorofnote) {
+            echo html_writer::tag('div', get_string('showauthorofnoteinfoenabled', 'mod_board'), ['class' => 'mod_board_showauthorofnoteinfoenabled']);
+        } else {
+            echo html_writer::tag('div', get_string('showauthorofnoteinfodisabled', 'mod_board'), ['class' => 'mod_board_showauthorofnoteinfodisabled']);
+        }
+    }
+
     echo '<div class="mod_board_wrapper">';
     echo '<div class="mod_board flex-fill" style="' . $extrabackground . '"></div>';
     if (has_capability('mod/board:manageboard', $context)) {
@@ -150,7 +162,7 @@ if (($board->singleusermode == board::SINGLEUSER_PUBLIC || $board->singleusermod
             ['style' => 'display: block !important; width: 140px;']);
         $img .= html_writer::tag('span', get_string('opensinnewwindow', 'mod_board'), ['class' => 'sr-only']);
         echo html_writer::link('https://www.brickfield.ie/docs/mod_board/', $img, ['target' => '_blank',
-            'style' => 'margin-left: auto; margin-right: 90px; display: block !important; width: 140px;']);
+                'style' => 'margin-left: auto; margin-right: 90px; display: block !important; width: 140px;', ]);
     }
     echo '</div>';
 }

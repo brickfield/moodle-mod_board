@@ -75,6 +75,7 @@ class mod_board_external extends external_api {
                     'boardid' => new external_value(PARAM_INT, 'boardid'),
                     'action' => new external_value(PARAM_TEXT, 'action'),
                     'userid' => new external_value(PARAM_INT, 'userid'),
+                    'fullname' => new external_value(PARAM_TEXT, 'user fullname', VALUE_DEFAULT, ''),
                     'content' => new external_value(PARAM_RAW, 'content')
                 )
             )
@@ -129,6 +130,7 @@ class mod_board_external extends external_api {
                             array(
                                 'id' => new external_value(PARAM_INT, 'post id'),
                                 'userid' => new external_value(PARAM_INT, 'user id'),
+                                'fullname' => new external_value(PARAM_TEXT, 'user fullname', VALUE_DEFAULT, ''),
                                 'heading' => new external_value(PARAM_TEXT, 'post heading'),
                                 'content' => new external_value(PARAM_RAW, 'post content'),
                                 'type' => new external_value(PARAM_INT, 'type'),
