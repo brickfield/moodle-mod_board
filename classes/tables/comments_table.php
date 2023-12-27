@@ -48,6 +48,8 @@ class comments_table extends table_sql {
     public function __construct($cmid, $boardid, $groupid, $ownerid, $includedeleted) {
         global $DB;
         parent::__construct('mod_board_notes_table');
+        $allowaudit = get_config('mod_board', 'allowaudit');
+        $includedeleted =  $includedeleted && $allowaudit;
 
         // Get the construct paramaters and add them to the export url.
         $exportparams = [
@@ -61,7 +63,11 @@ class comments_table extends table_sql {
         $this->define_baseurl($exporturl);
 
         // Define the list of columns to show.
-        $columns = array('heading', 'firstname', 'lastname', 'content', 'timecreated', 'deleted');
+        if ($allowaudit == true) {
+            $columns = array('heading', 'firstname', 'lastname', 'content', 'timecreated', 'deleted');
+        } else {
+            $columns = array('heading', 'firstname', 'lastname', 'content', 'timecreated');
+        }
         $this->define_columns($columns);
 
         // Define the titles of columns to show in header.
@@ -76,8 +82,13 @@ class comments_table extends table_sql {
 
         // Define the SQL used to get the data.
         $this->sql = (object)[];
-        $this->sql->fields = 'c.id, bn.heading, u.firstname, u.lastname, c.content, c.timecreated,
+        if ($allowaudit == true) {
+            $this->sql->fields = 'c.id, bn.heading, u.firstname, u.lastname, c.content, c.timecreated,
             c.deleted, bn.info, bn.url, bn.content as pcontent, bn.type';
+        } else {
+            $this->sql->fields = 'c.id, bn.heading, u.firstname, u.lastname, c.content, c.timecreated,
+            bn.info, bn.url, bn.content as pcontent, bn.type';
+        }
         $this->sql->from = '{board_comments} c
             JOIN {board_notes} bn ON bn.id = c.noteid
             JOIN {user} u ON u.id = c.userid

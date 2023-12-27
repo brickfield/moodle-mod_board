@@ -195,7 +195,17 @@ class comment {
             return false;
         }
         self::board_delete_comment_log($this->id, $this->context, $this->noteid);
-        return $DB->update_record('board_comments', ['id' => $this->id, 'deleted' => 1]);
+
+        $allowaudit = get_config('mod_board', 'allowaudit');
+        if ($allowaudit == true) {
+            // Just update and set a deleted flag.
+            $delete = $DB->update_record('board_comments', ['id' => $this->id, 'deleted' => 1]);
+        } else {
+            $delete = $DB->delete_records('board_comments', ['id' => $this->id]);
+        }
+
+        return $delete;
+
     }
 
     /**

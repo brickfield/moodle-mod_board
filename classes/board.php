@@ -527,6 +527,8 @@ class board {
     public static function board_delete_column(int $id): array {
         global $DB, $USER;
 
+        $allowaudit = get_config('mod_board', 'allowaudit');
+
         static::require_capability_for_column($id);
 
         $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $id));
@@ -535,7 +537,14 @@ class board {
             $notes = $DB->get_records('board_notes', array('columnid' => $id));
             foreach ($notes as $noteid => $note) {
                 $DB->delete_records('board_note_ratings', array('noteid' => $note->id));
-                $DB->update_record('board_notes', array('id' => $note->id, 'deleted' => 1));
+
+                if ($allowaudit == true) {
+                    // Just update and set a deleted flag.
+                    $DB->update_record('board_notes', array('id' => $note->id, 'deleted' => 1));
+                } else {
+                    $DB->delete_records('board_notes', array('id' => $note->id));
+                }
+
                 static::delete_note_file($note->id);
             }
             $delete = $DB->delete_records('board_columns', array('id' => $id));
@@ -960,7 +969,14 @@ class board {
             }
 
             $transaction = $DB->start_delegated_transaction();
-            $delete = $DB->update_record('board_notes', array('id' => $id, 'deleted' => 1));
+            $allowaudit = get_config('mod_board', 'allowaudit');
+            if ($allowaudit == true) {
+                // Just update and set a deleted flag.
+                $delete = $DB->update_record('board_notes', array('id' => $id, 'deleted' => 1));
+            } else {
+                $delete = $DB->delete_records('board_notes', array('id' => $id));
+            }
+
             $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'delete_note',
                 'ownerid' => 0, 'content' => json_encode(array('id' => $id, 'columnid' => $columnid)),
                 'userid' => $USER->id, 'timecreated' => time()));

@@ -246,3 +246,6 @@ $string['brickfieldlogo'] = 'Powered by Brickfield logo';
 $string['singleusermodenotembed'] = 'Board does not allow a single user board to be embedded. Please change your settings.';
 $string['allowed_singleuser_modes'] = 'Enabled single user modes';
 $string['allowed_singleuser_modes_desc'] = 'Allow/Disallow usage of certain single user modes. Does not affect already created boards';
+
+$string['allowaudit'] = 'Allow Audit';
+$string['allowaudit_desc'] = 'If activated deleted notes or comments will only be marked as deleted but will still be stored in order to support an audit of board.';
