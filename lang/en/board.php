@@ -115,6 +115,8 @@ $string['acceptedfiletypeforcontent_desc'] = 'Select the filetypes for content t
 
 $string['export'] = 'Export';
 $string['export_board'] = 'Export Board';
+$string['export_userprofilefields'] = 'Export userprofilefields';
+$string['export_userprofilefields_desc'] = 'Comma separated list of userprofilefields that should be included in export.<br>By default: firstname,lastname,email. (Grade uses by default: firstname,lastname,idnumber,institution,department,email)<br>Respects the capability viewhiddenuserfields, so if email is hidden it might not be included in export.<br>Maybe you want to add idnumber instead of email to this list.';
 $string['export_submissions'] = 'Export Submissions';
 $string['export_firstname'] = 'Firstname';
 $string['export_lastname'] = 'Lastname';
@@ -246,6 +248,3 @@ $string['brickfieldlogo'] = 'Powered by Brickfield logo';
 $string['singleusermodenotembed'] = 'Board does not allow a single user board to be embedded. Please change your settings.';
 $string['allowed_singleuser_modes'] = 'Enabled single user modes';
 $string['allowed_singleuser_modes_desc'] = 'Allow/Disallow usage of certain single user modes. Does not affect already created boards';
-
-$string['includeemailindownloadsubmissonsifemailnothidden'] = 'Include email in download';
-$string['includeemailindownloadsubmissonsifemailnothidden_desc'] = 'If the user has the capabilitys then the eMail is included in the downlod-file with the submissions.';
