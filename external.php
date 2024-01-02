@@ -45,10 +45,10 @@ class mod_board_external extends external_api {
      * Function board_history,
      * @param int $id
      * @param int $ownerid
-     * @param int $since
+     * @param int|null $since
      * @return array
      */
-    public static function board_history(int $id, int $ownerid, int $since): array {
+    public static function board_history(int $id, int $ownerid, ?int $since): array {
         // Validate recieved parameters.
         $params = self::validate_parameters(self::board_history_parameters(), [
             'id' => $id,
