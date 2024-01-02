@@ -386,10 +386,10 @@ class board {
      *
      * @param int $boardid
      * @param int $ownerid
-     * @param int $since
+     * @param int|null $since
      * @return array
      */
-    public static function board_history(int $boardid, int $ownerid, int $since): array {
+    public static function board_history(int $boardid, int $ownerid, ?int $since): array {
         global $DB;
 
         static::require_capability_for_board_view($boardid);
@@ -402,8 +402,13 @@ class board {
 
         static::clear_history();
 
-        $condition = "boardid=:boardid AND id > :since";
-        $params = array('boardid' => $boardid, 'since' => $since);
+        $condition = "boardid = :boardid";
+        $params = array('boardid' => $boardid);
+
+        if ($since !== null) {
+            $condition .= " AND id > :since";
+            $params['since'] = $since;
+        }
         if (!empty($groupid)) {
             $condition .= " AND groupid=:groupid";
             $params['groupid'] = $groupid;
