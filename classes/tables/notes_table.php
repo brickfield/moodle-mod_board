@@ -76,13 +76,7 @@ class notes_table extends table_sql {
 
         // Define the titles of columns to show in header.
         $headers = array_map(function($column) {
-            if ($column == 'heading') {
-                // The word 'heading' is not included in core langfile, so we use langfile included in board plugin.
-                return get_string('export_' . $column, 'board');
-            } else {
-                // Read the string from the moodle core langfile if possible.
-                return new \lang_string($column);
-            }
+            return get_string('export_' . $column, 'board');
         }, $columns);
         $this->define_headers($headers);
 
@@ -128,13 +122,13 @@ class notes_table extends table_sql {
         $fields = array();
         require_once($CFG->dirroot.'/user/lib.php');                // Loads user_get_default_fields()
         require_once($CFG->dirroot.'/user/profile/lib.php');        // Loads constants, such as PROFILE_VISIBLE_ALL
-        $userdefaultfields = self::user_get_default_fields();
+        $userexportablefields = ['firstname', 'lastname', 'email', 'id'];
         // Sets the list of profile fields.
         $userprofilefields = array_map('trim', explode(',', get_config('mod_board', 'export_userprofilefields')));
         if (!empty($userprofilefields)) {
             foreach ($userprofilefields as $field) {
                 $field = trim($field);
-                if (in_array($field, $hiddenfields) || !in_array($field, $userdefaultfields)) {
+                if (in_array($field, $hiddenfields) || !in_array($field, $userexportablefields)) {
                     continue;
                 }
                 $obj = new \stdClass();
@@ -172,24 +166,6 @@ class notes_table extends table_sql {
         }
 
         return $fields;
-    }
-
-    /**
-     * This code is copied from the grading.
-     * Returns the list of default 'displayable' fields
-     *
-     * Contains database field names but also names used to generate information, such as enrolledcourses
-     *
-     * @return array of user fields
-     */
-    public static function user_get_default_fields() {
-        return array( 'id', 'username', 'fullname', 'firstname', 'lastname', 'email',
-                'address', 'phone1', 'phone2', 'department',
-                'institution', 'interests', 'firstaccess', 'lastaccess', 'auth', 'confirmed',
-                'idnumber', 'lang', 'theme', 'timezone', 'mailformat', 'description', 'descriptionformat',
-                'city', 'country', 'profileimageurlsmall', 'profileimageurl', 'customfields',
-                'groups', 'roles', 'preferences', 'enrolledcourses', 'suspended', 'lastcourseaccess'
-        );
     }
 
     /**

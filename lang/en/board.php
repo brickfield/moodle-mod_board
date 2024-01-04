@@ -116,10 +116,11 @@ $string['acceptedfiletypeforcontent_desc'] = 'Select the filetypes for content t
 $string['export'] = 'Export';
 $string['export_board'] = 'Export Board';
 $string['export_userprofilefields'] = 'Export userprofilefields';
-$string['export_userprofilefields_desc'] = 'Comma separated list of userprofilefields that should be included in export.<br>By default: firstname,lastname,email. (Grade uses by default: firstname,lastname,idnumber,institution,department,email)<br>Respects the capability viewhiddenuserfields, so if email is hidden it might not be included in export.<br>Maybe you want to add idnumber instead of email to this list.';
+$string['export_userprofilefields_desc'] = 'Comma separated list of userprofilefields that should be included in export.<br>By default: firstname,lastname,email. Supported exportable fields are: firstname, lastname, email, id = userid.<br>Respects the capability viewhiddenuserfields, so if email is hidden it might not be included in export.<br>Maybe you want to add idnumber instead of email to this list.';
 $string['export_submissions'] = 'Export Submissions';
 $string['export_firstname'] = 'Firstname';
 $string['export_lastname'] = 'Lastname';
+$string['export_id'] = 'Userid';
 $string['export_email'] = 'Email';
 $string['export_heading'] = 'Post Heading';
 $string['export_content'] = 'Text';
