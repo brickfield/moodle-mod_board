@@ -133,36 +133,36 @@ if ($ADMIN->fulltree) {
             'mod_board/addcolumnnametolog',
             get_string('addcolumnnametolog', 'mod_board'),
             get_string('addcolumnnametolog_desc', 'mod_board'),
-            '0'
+            '1'
     ));
     $settings->add(new admin_setting_configcheckbox(
             'mod_board/addnotetolog',
             get_string('addnotetolog', 'mod_board'),
             get_string('addnotetolog_desc', 'mod_board'),
-            '0'
+            '1'
     ));
     $settings->add(new admin_setting_configcheckbox(
             'mod_board/addcommenttolog',
             get_string('addcommenttolog', 'mod_board'),
             get_string('addcommenttolog_desc', 'mod_board'),
-            '0'
+            '1'
     ));
     $settings->add(new admin_setting_configcheckbox(
             'mod_board/addheadingtolog',
             get_string('addheadingtolog', 'mod_board'),
             get_string('addheadingtolog_desc', 'mod_board'),
-            '0'
+            '1'
     ));
     $settings->add(new admin_setting_configcheckbox(
             'mod_board/addattachmenttolog',
             get_string('addattachmenttolog', 'mod_board'),
             get_string('addattachmenttolog_desc', 'mod_board'),
-            '0'
+            '1'
     ));
     $settings->add(new admin_setting_configcheckbox(
             'mod_board/addratingtolog',
             get_string('addratingtolog', 'mod_board'),
             get_string('addratingtolog_desc', 'mod_board'),
-            '0'
+            '1'
     ));
 }
