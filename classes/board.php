@@ -91,7 +91,7 @@ class board {
     public static function get_configuration($id, $ownerid) {
         global $DB, $USER;
 
-        $board = $DB->get_record('board', array('id' => $id));
+        $board = $DB->get_record('board', ['id' => $id]);
         $contextid = \context_module::instance(self::coursemodule_for_board($board)->id)->id;
         $config = get_config('mod_board');
 
@@ -111,13 +111,13 @@ class board {
             'file' => [
                 'extensions' => self::get_accepted_file_extensions(),
                 'size_min' => self::ACCEPTED_FILE_MIN_SIZE,
-                'size_max' => self::ACCEPTED_FILE_MAX_SIZE
+                'size_max' => self::ACCEPTED_FILE_MAX_SIZE,
             ],
             'ratingenabled' => self::board_rating_enabled($board->id),
             'hideheaders' => self::board_hide_headers($board->id),
             'sortby' => $board->sortby,
             'colours' => self::get_column_colours(),
-            'enableblanktarget' => $board->enableblanktarget
+            'enableblanktarget' => $board->enableblanktarget,
         ];
 
         return $conf;
@@ -146,7 +146,7 @@ class board {
      */
     public static function get_board($id) {
         global $DB;
-        return $DB->get_record('board', array('id' => $id));
+        return $DB->get_record('board', ['id' => $id]);
     }
 
     /**
@@ -157,7 +157,7 @@ class board {
      */
     public static function get_column($id) {
         global $DB;
-        return $DB->get_record('board_columns', array('id' => $id));
+        return $DB->get_record('board_columns', ['id' => $id]);
     }
 
     /**
@@ -168,7 +168,7 @@ class board {
      */
     public static function get_note($id) {
         global $DB;
-        return $DB->get_record('board_notes', array('id' => $id, 'deleted' => 0));
+        return $DB->get_record('board_notes', ['id' => $id, 'deleted' => 0]);
     }
 
     /**
@@ -179,7 +179,7 @@ class board {
      */
     public static function get_note_rating($noteid) {
         global $DB;
-        return $DB->count_records('board_note_ratings', array('noteid' => $noteid));
+        return $DB->count_records('board_note_ratings', ['noteid' => $noteid]);
     }
 
     /**
@@ -284,7 +284,7 @@ class board {
         global $DB;
 
         return $DB->delete_records_select('board_history', 'timecreated < :timecreated',
-                                        array('timecreated' => time() - 60)); // 1 minute history
+                                        ['timecreated' => time() - 60]); // 1 minute history
     }
 
     /**
@@ -332,14 +332,14 @@ class board {
 
         static::require_capability_for_board_view($boardid);
 
-        if (!$board = $DB->get_record('board', array('id' => $boardid))) {
+        if (!$board = $DB->get_record('board', ['id' => $boardid])) {
             return [];
         }
 
         $groupid = groups_get_activity_group(static::coursemodule_for_board(static::get_board($boardid)), true) ?: null;
         $hideheaders = static::board_hide_headers($boardid);
 
-        $columns = $DB->get_records('board_columns', array('boardid' => $boardid), 'sortorder, id', 'id, name, locked');
+        $columns = $DB->get_records('board_columns', ['boardid' => $boardid], 'sortorder, id', 'id, name, locked');
         $columnindex = 0;
 
         if ($board->singleusermode == static::SINGLEUSER_PRIVATE) {
@@ -361,7 +361,7 @@ class board {
             if ($hideheaders) {
                 $column->name = ++$columnindex;
             }
-            $params = array('columnid' => $columnid, 'deleted' => 0);
+            $params = ['columnid' => $columnid, 'deleted' => 0];
             if (!empty($groupid)) {
                 $params['groupid'] = $groupid;
             }
@@ -394,7 +394,7 @@ class board {
 
         static::require_capability_for_board_view($boardid);
 
-        if (!$board = $DB->get_record('board', array('id' => $boardid))) {
+        if (!$board = $DB->get_record('board', ['id' => $boardid])) {
             return [];
         }
 
@@ -403,7 +403,7 @@ class board {
         static::clear_history();
 
         $condition = "boardid = :boardid";
-        $params = array('boardid' => $boardid);
+        $params = ['boardid' => $boardid];
 
         if ($since !== null) {
             $condition .= " AND id > :since";
@@ -441,18 +441,18 @@ class board {
 
         $maxsortorder = $DB->get_field('board_columns', 'MAX(sortorder)', ['boardid' => $boardid]);
 
-        $columnid = $DB->insert_record('board_columns', array('boardid' => $boardid, 'name' => $name,
-            'sortorder' => $maxsortorder + 1));
-        $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'add_column',
-            'ownerid' => 0, 'userid' => $USER->id, 'content' => json_encode(array('id' => $columnid, 'name' => $name)),
-            'timecreated' => time()));
-        $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
+        $columnid = $DB->insert_record('board_columns', ['boardid' => $boardid, 'name' => $name,
+            'sortorder' => $maxsortorder + 1]);
+        $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => 'add_column',
+            'ownerid' => 0, 'userid' => $USER->id, 'content' => json_encode(['id' => $columnid, 'name' => $name]),
+            'timecreated' => time()]);
+        $DB->update_record('board', ['id' => $boardid, 'historyid' => $historyid]);
         $transaction->allow_commit();
 
         static::board_add_column_log($boardid, $name, $columnid);
 
         static::clear_history();
-        return array('id' => $columnid, 'historyid' => $historyid);
+        return ['id' => $columnid, 'historyid' => $historyid];
     }
 
     /**
@@ -464,11 +464,11 @@ class board {
      * @return void
      */
     public static function board_add_column_log($boardid, $name, $columnid) {
-        $event = \mod_board\event\add_column::create(array(
+        $event = \mod_board\event\add_column::create([
             'objectid' => $columnid,
             'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
-            'other' => array('name' => $name)
-        ));
+            'other' => ['name' => $name],
+        ]);
         $event->trigger();
     }
 
@@ -486,14 +486,14 @@ class board {
 
         static::require_capability_for_column($id);
 
-        $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $id));
+        $boardid = $DB->get_field('board_columns', 'boardid', ['id' => $id]);
         if ($boardid) {
             $transaction = $DB->start_delegated_transaction();
-            $update = $DB->update_record('board_columns', array('id' => $id, 'name' => $name));
-            $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'update_column',
-                'ownerid' => 0, 'userid' => $USER->id, 'content' => json_encode(array('id' => $id, 'name' => $name)),
-                'timecreated' => time()));
-            $DB->update_record('board', array('id' => $id, 'historyid' => $historyid));
+            $update = $DB->update_record('board_columns', ['id' => $id, 'name' => $name]);
+            $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => 'update_column',
+                'ownerid' => 0, 'userid' => $USER->id, 'content' => json_encode(['id' => $id, 'name' => $name]),
+                'timecreated' => time()]);
+            $DB->update_record('board', ['id' => $id, 'historyid' => $historyid]);
             $transaction->allow_commit();
 
             static::board_update_column_log($boardid, $name, $id);
@@ -503,7 +503,7 @@ class board {
         }
 
         static::clear_history();
-        return array('status' => $update, 'historyid' => $historyid);
+        return ['status' => $update, 'historyid' => $historyid];
     }
 
     /**
@@ -515,11 +515,11 @@ class board {
      * @return void
      */
     public static function board_update_column_log($boardid, $name, $columnid) {
-        $event = \mod_board\event\update_column::create(array(
+        $event = \mod_board\event\update_column::create([
             'objectid' => $columnid,
             'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
-            'other' => array('name' => $name)
-        ));
+            'other' => ['name' => $name],
+        ]);
         $event->trigger();
     }
 
@@ -534,20 +534,20 @@ class board {
 
         static::require_capability_for_column($id);
 
-        $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $id));
+        $boardid = $DB->get_field('board_columns', 'boardid', ['id' => $id]);
         if ($boardid) {
             $transaction = $DB->start_delegated_transaction();
-            $notes = $DB->get_records('board_notes', array('columnid' => $id));
+            $notes = $DB->get_records('board_notes', ['columnid' => $id]);
             foreach ($notes as $noteid => $note) {
-                $DB->delete_records('board_note_ratings', array('noteid' => $note->id));
-                $DB->update_record('board_notes', array('id' => $note->id, 'deleted' => 1));
+                $DB->delete_records('board_note_ratings', ['noteid' => $note->id]);
+                $DB->update_record('board_notes', ['id' => $note->id, 'deleted' => 1]);
                 static::delete_note_file($note->id);
             }
-            $delete = $DB->delete_records('board_columns', array('id' => $id));
-            $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'delete_column',
-                'ownerid' => 0, 'content' => json_encode(array('id' => $id)),
-                'userid' => $USER->id, 'timecreated' => time()));
-            $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
+            $delete = $DB->delete_records('board_columns', ['id' => $id]);
+            $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => 'delete_column',
+                'ownerid' => 0, 'content' => json_encode(['id' => $id]),
+                'userid' => $USER->id, 'timecreated' => time()]);
+            $DB->update_record('board', ['id' => $boardid, 'historyid' => $historyid]);
             $transaction->allow_commit();
 
             static::board_delete_column_log($boardid, $id);
@@ -557,7 +557,7 @@ class board {
         }
 
         static::clear_history();
-        return array('status' => $delete, 'historyid' => $historyid);
+        return ['status' => $delete, 'historyid' => $historyid];
     }
 
     /**
@@ -571,13 +571,13 @@ class board {
         global $DB, $USER;
 
         static::require_capability_for_column($id);
-        $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $id));
+        $boardid = $DB->get_field('board_columns', 'boardid', ['id' => $id]);
 
         $result = $DB->set_field('board_columns', 'locked', $locked, ['id' => $id]);
-        $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'lock_column',
-                                        'content' => json_encode(array('id' => $id, 'locked' => $locked)),
-                                        'userid' => $USER->id, 'timecreated' => time()));
-        return array('status' => $result, 'historyid' => $historyid);
+        $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => 'lock_column',
+                                        'content' => json_encode(['id' => $id, 'locked' => $locked]),
+                                        'userid' => $USER->id, 'timecreated' => time()]);
+        return ['status' => $result, 'historyid' => $historyid];
     }
 
     /**
@@ -588,10 +588,10 @@ class board {
      * @return void
      */
     public static function board_delete_column_log($boardid, $columnid) {
-        $event = \mod_board\event\delete_column::create(array(
+        $event = \mod_board\event\delete_column::create([
             'objectid' => $columnid,
-            'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id)
-        ));
+            'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
+        ]);
         $event->trigger();
     }
 
@@ -604,7 +604,7 @@ class board {
     public static function require_capability_for_note($id) {
         global $DB, $USER;
 
-        if (!$note = $DB->get_record('board_notes', array('id' => $id))) {
+        if (!$note = $DB->get_record('board_notes', ['id' => $id])) {
             return false;
         }
 
@@ -640,7 +640,7 @@ class board {
             'component' => 'mod_board',
             'filearea'  => 'images',
             'itemid'    => $noteid,
-            'filepath'  => '/'
+            'filepath'  => '/',
         ];
     }
 
@@ -781,28 +781,28 @@ class board {
             $url = !empty($type) ? mb_substr($attachment['url'], 0, static::LENGTH_URL) : null;
 
             $notecreated = time();
-            $noteid = $DB->insert_record('board_notes', array('groupid' => $groupid, 'columnid' => $columnid, 'ownerid' => $ownerid,
+            $noteid = $DB->insert_record('board_notes', ['groupid' => $groupid, 'columnid' => $columnid, 'ownerid' => $ownerid,
                 'heading' => $heading, 'content' => $content, 'type' => $type, 'info' => $info,
                 'url' => $url, 'userid' => $USER->id, 'timecreated' => $notecreated,
-                'sortorder' => $countnotes, 'deleted' => 0));
+                'sortorder' => $countnotes, 'deleted' => 0]);
 
             $attachment = static::board_note_update_attachment($noteid, $attachment);
             $url = $attachment['url'];
-            $DB->update_record('board_notes', array('id' => $noteid, 'url' => $url));
+            $DB->update_record('board_notes', ['id' => $noteid, 'url' => $url]);
 
-            $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'groupid' => $groupid,
+            $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'groupid' => $groupid,
                 'action' => 'add_note', 'ownerid' => $ownerid, 'userid' => $USER->id,
-                'content' => json_encode(array('id' => $noteid, 'columnid' => $columnid,
+                'content' => json_encode(['id' => $noteid, 'columnid' => $columnid,
                 'heading' => $heading, 'content' => $content,
-                'attachment' => array('type' => $type, 'info' => $info, 'url' => $url), 'rating' => 0,
-                'timecreated' => $notecreated, 'sortorder' => $countnotes)),
-                'timecreated' => time()));
+                'attachment' => ['type' => $type, 'info' => $info, 'url' => $url], 'rating' => 0,
+                'timecreated' => $notecreated, 'sortorder' => $countnotes]),
+                'timecreated' => time()]);
 
-            $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
+            $DB->update_record('board', ['id' => $boardid, 'historyid' => $historyid]);
             $transaction->allow_commit();
 
-            $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-            $board = $DB->get_record('board', array('id' => $boardid), '*', MUST_EXIST);
+            $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
+            $board = $DB->get_record('board', ['id' => $boardid], '*', MUST_EXIST);
             $completion = new \completion_info($course);
             if ($completion->is_enabled($cm) && $board->completionnotes) {
                 $completion->update_state($cm);
@@ -819,7 +819,7 @@ class board {
         }
 
         static::clear_history();
-        return array('status' => !empty($note), 'note' => $note, 'historyid' => $historyid);
+        return ['status' => !empty($note), 'note' => $note, 'historyid' => $historyid];
     }
 
     /**
@@ -835,12 +835,12 @@ class board {
      * @return void
      */
     public static function board_add_note_log($boardid, $groupid, $heading, $content, $attachment, $columnid, $noteid) {
-        $event = \mod_board\event\add_note::create(array(
+        $event = \mod_board\event\add_note::create([
             'objectid' => $noteid,
             'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
-            'other' => array('groupid' => $groupid, 'columnid' => $columnid, 'heading' => $heading,
-                            'content' => $content, 'attachment' => $attachment)
-        ));
+            'other' => ['groupid' => $groupid, 'columnid' => $columnid, 'heading' => $heading,
+                            'content' => $content, 'attachment' => $attachment],
+        ]);
         $event->trigger();
     }
 
@@ -865,7 +865,7 @@ class board {
 
         $note = static::get_note($id);
         $columnid = $note->columnid;
-        $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $columnid));
+        $boardid = $DB->get_field('board_columns', 'boardid', ['id' => $columnid]);
 
         if (!empty($note->groupid)) {
             static::require_access_for_group($note->groupid, $boardid);
@@ -884,14 +884,14 @@ class board {
             $info = !empty($type) ? mb_substr(s($attachment['info']), 0, static::LENGTH_INFO) : null;
             $url = !empty($type) ? mb_substr($attachment['url'], 0, static::LENGTH_URL) : null;
 
-            $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'update_note',
-                'ownerid' => $ownerid, 'userid' => $USER->id, 'content' => json_encode(array('id' => $id,
+            $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => 'update_note',
+                'ownerid' => $ownerid, 'userid' => $USER->id, 'content' => json_encode(['id' => $id,
                 'columnid' => $columnid, 'heading' => $heading, 'content' => $content,
-                'attachment' => array('type' => $type, 'info' => $info, 'url' => $url))),
-                'timecreated' => time()));
-            $update = $DB->update_record('board_notes', array('id' => $id, 'heading' => $heading, 'content' => $content,
-                'type' => $type, 'info' => $info, 'url' => $url));
-            $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
+                'attachment' => ['type' => $type, 'info' => $info, 'url' => $url]]),
+                'timecreated' => time()]);
+            $update = $DB->update_record('board_notes', ['id' => $id, 'heading' => $heading, 'content' => $content,
+                'type' => $type, 'info' => $info, 'url' => $url]);
+            $DB->update_record('board', ['id' => $boardid, 'historyid' => $historyid]);
 
             $transaction->allow_commit();
 
@@ -905,7 +905,7 @@ class board {
         }
 
         static::clear_history();
-        return array('status' => $update, 'note' => $note, 'historyid' => $historyid);
+        return ['status' => $update, 'note' => $note, 'historyid' => $historyid];
     }
 
     /**
@@ -920,11 +920,11 @@ class board {
      * @return void
      */
     public static function board_update_note_log($boardid, $heading, $content, $attachment, $columnid, $noteid) {
-        $event = \mod_board\event\update_note::create(array(
+        $event = \mod_board\event\update_note::create([
             'objectid' => $noteid,
             'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
-            'other' => array('columnid' => $columnid, 'heading' => $heading, 'content' => $content, 'attachment' => $attachment)
-        ));
+            'other' => ['columnid' => $columnid, 'heading' => $heading, 'content' => $content, 'attachment' => $attachment],
+        ]);
         $event->trigger();
     }
 
@@ -942,7 +942,7 @@ class board {
         $note = static::get_note($id);
         $sortorder = $note->sortorder;
         $columnid = $note->columnid;
-        $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $columnid));
+        $boardid = $DB->get_field('board_columns', 'boardid', ['id' => $columnid]);
 
         if (!empty($note->groupid)) {
             static::require_access_for_group($note->groupid, $boardid);
@@ -954,28 +954,28 @@ class board {
 
         if ($columnid && $boardid) {
 
-            $deleteratings = $DB->delete_records('board_note_ratings', array('noteid' => $note->id));
+            $deleteratings = $DB->delete_records('board_note_ratings', ['noteid' => $note->id]);
             static::delete_note_file($note->id);
 
             // Delete all note comments.
-            $commentrecords = $DB->get_records('board_comments', array('noteid' => $note->id));
+            $commentrecords = $DB->get_records('board_comments', ['noteid' => $note->id]);
             foreach ($commentrecords as $commentrecord) {
                 $comment = new \mod_board\comment(['commentid' => $commentrecord->id]);
                 $comment->delete();
             }
 
             $transaction = $DB->start_delegated_transaction();
-            $delete = $DB->update_record('board_notes', array('id' => $id, 'deleted' => 1));
-            $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'delete_note',
-                'ownerid' => 0, 'content' => json_encode(array('id' => $id, 'columnid' => $columnid)),
-                'userid' => $USER->id, 'timecreated' => time()));
+            $delete = $DB->update_record('board_notes', ['id' => $id, 'deleted' => 1]);
+            $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => 'delete_note',
+                'ownerid' => 0, 'content' => json_encode(['id' => $id, 'columnid' => $columnid]),
+                'userid' => $USER->id, 'timecreated' => time()]);
 
             $sql = "UPDATE {board_notes} bn
                        SET sortorder = sortorder - 1
                      WHERE sortorder > :sortorder AND columnid = :columnid";
             $DB->execute($sql, ['sortorder' => $sortorder, 'columnid' => $columnid]);
 
-            $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
+            $DB->update_record('board', ['id' => $boardid, 'historyid' => $historyid]);
             $transaction->allow_commit();
 
             static::board_delete_note_log($boardid, $columnid, $id);
@@ -984,7 +984,7 @@ class board {
             $historyid = 0;
         }
         static::clear_history();
-        return array('status' => $delete, 'historyid' => $historyid);
+        return ['status' => $delete, 'historyid' => $historyid];
     }
 
     /**
@@ -996,11 +996,11 @@ class board {
      * @return void
      */
     public static function board_delete_note_log($boardid, $columnid, $noteid) {
-        $event = \mod_board\event\delete_note::create(array(
+        $event = \mod_board\event\delete_note::create([
             'objectid' => $noteid,
             'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
-            'other' => array('columnid' => $columnid)
-        ));
+            'other' => ['columnid' => $columnid],
+        ]);
         $event->trigger();
     }
 
@@ -1062,7 +1062,7 @@ class board {
         global $DB, $USER;
 
         $note = static::get_note($id);
-        $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $columnid));
+        $boardid = $DB->get_field('board_columns', 'boardid', ['id' => $columnid]);
 
         if (!static::board_users_can_edit($boardid) && $USER->id != $note->userid) {
             static::require_capability_for_column($note->columnid);
@@ -1072,17 +1072,17 @@ class board {
 
             $transaction = $DB->start_delegated_transaction();
 
-            $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => 'delete_note',
-                'content' => json_encode(array('id' => $note->id, 'columnid' => $note->columnid)),
-                'ownerid' => $ownerid, 'userid' => $USER->id, 'timecreated' => time()));
-            $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'groupid' => $note->groupid,
+            $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => 'delete_note',
+                'content' => json_encode(['id' => $note->id, 'columnid' => $note->columnid]),
+                'ownerid' => $ownerid, 'userid' => $USER->id, 'timecreated' => time()]);
+            $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'groupid' => $note->groupid,
                 'action' => 'add_note', 'userid' => $note->userid, 'ownerid' => $ownerid,
-                'content' => json_encode(array('id' => $note->id, 'columnid' => $columnid,
+                'content' => json_encode(['id' => $note->id, 'columnid' => $columnid,
                 'heading' => $note->heading, 'content' => $note->content,
-                'attachment' => array('type' => $note->type, 'info' => $note->info,
-                'url' => $note->url), 'timecreated' => $note->timecreated,
-                'rating' => static::get_note_rating($note->id), 'sortorder' => $sortorder)),
-                'timecreated' => time()));
+                'attachment' => ['type' => $note->type, 'info' => $note->info,
+                'url' => $note->url], 'timecreated' => $note->timecreated,
+                'rating' => static::get_note_rating($note->id), 'sortorder' => $sortorder]),
+                'timecreated' => time()]);
             // Checking if we move the note up or down.
             $ismovingup = $note->sortorder < $sortorder;
             $ismovingdown = $note->sortorder > $sortorder;
@@ -1123,7 +1123,7 @@ class board {
             $note->sortorder = $sortorder;
             $move = $DB->update_record('board_notes', $note);
 
-            $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
+            $DB->update_record('board', ['id' => $boardid, 'historyid' => $historyid]);
             $transaction->allow_commit();
 
             static::board_move_note_log($boardid, $columnid, $id);
@@ -1132,7 +1132,7 @@ class board {
             $historyid = 0;
         }
         static::clear_history();
-        return array('status' => $move, 'historyid' => $historyid);
+        return ['status' => $move, 'historyid' => $historyid];
     }
 
     /**
@@ -1144,11 +1144,11 @@ class board {
      * @return void
      */
     public static function board_move_note_log($boardid, $columnid, $noteid) {
-        $event = \mod_board\event\move_note::create(array(
+        $event = \mod_board\event\move_note::create([
             'objectid' => $noteid,
             'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
-            'other' => array('columnid' => $columnid)
-        ));
+            'other' => ['columnid' => $columnid],
+        ]);
         $event->trigger();
     }
 
@@ -1161,7 +1161,7 @@ class board {
     public static function board_can_rate_note(int $noteid): array {
         global $DB, $USER;
 
-        $hasrated = $DB->record_exists('board_note_ratings', array('userid' => $USER->id, 'noteid' => $noteid));
+        $hasrated = $DB->record_exists('board_note_ratings', ['userid' => $USER->id, 'noteid' => $noteid]);
 
         $result = ['canrate' => false, 'hasrated' => $hasrated];
 
@@ -1251,21 +1251,21 @@ class board {
 
         if ($note) {
             $transaction = $DB->start_delegated_transaction();
-            $hasrating = $DB->record_exists('board_note_ratings', array('userid' => $USER->id, 'noteid' => $noteid));
+            $hasrating = $DB->record_exists('board_note_ratings', ['userid' => $USER->id, 'noteid' => $noteid]);
             $action = $hasrating ? 'delete_note_rating' : 'add_note_rating';
             if ($hasrating) {
-                $DB->delete_records('board_note_ratings', array('userid' => $USER->id, 'noteid' => $noteid));
+                $DB->delete_records('board_note_ratings', ['userid' => $USER->id, 'noteid' => $noteid]);
             } else {
-                $DB->insert_record('board_note_ratings', array('userid' => $USER->id, 'noteid' => $noteid,
-                    'timecreated' => time()));
+                $DB->insert_record('board_note_ratings', ['userid' => $USER->id, 'noteid' => $noteid,
+                    'timecreated' => time()]);
             }
             $rate = true;
             $rating = static::get_note_rating($noteid);
-            $historyid = $DB->insert_record('board_history', array('boardid' => $boardid, 'action' => $action,
-                                            'content' => json_encode(array('id' => $note->id, 'rating' => $rating)),
-                                            'userid' => $USER->id, 'timecreated' => time()));
+            $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => $action,
+                                            'content' => json_encode(['id' => $note->id, 'rating' => $rating]),
+                                            'userid' => $USER->id, 'timecreated' => time()]);
 
-            $DB->update_record('board', array('id' => $boardid, 'historyid' => $historyid));
+            $DB->update_record('board', ['id' => $boardid, 'historyid' => $historyid]);
 
             $transaction->allow_commit();
 
@@ -1276,7 +1276,7 @@ class board {
             $historyid = 0;
         }
         static::clear_history();
-        return array('status' => $rate, 'rating' => $rating, 'historyid' => $historyid);
+        return ['status' => $rate, 'rating' => $rating, 'historyid' => $historyid];
     }
 
     /**
@@ -1288,11 +1288,11 @@ class board {
      * @return void
      */
     public static function board_rate_note_log($boardid, $noteid, $rating) {
-        $event = \mod_board\event\rate_note::create(array(
+        $event = \mod_board\event\rate_note::create([
             'objectid' => $noteid,
             'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
-            'other' => array('rating' => $rating)
-        ));
+            'other' => ['rating' => $rating],
+        ]);
         $event->trigger();
     }
 
@@ -1376,7 +1376,7 @@ class board {
      * @return string
      */
     public static function get_export_note($note) {
-        $breaks = array("<br />", "<br>", "<br/>");
+        $breaks = ["<br />", "<br>", "<br/>"];
 
         $rowstring = '';
         if (!empty($note->heading)) {
@@ -1403,7 +1403,7 @@ class board {
      * @return array|string|string[]
      */
     public static function get_export_submission(string $content) {
-        $breaks = array("<br />", "<br>", "<br/>");
+        $breaks = ["<br />", "<br>", "<br/>"];
         return str_ireplace($breaks, "\n", $content);
     }
 
@@ -1423,7 +1423,7 @@ class board {
             'accepted_types' => $extensions,
             'maxfiles' => 1,
             'subdirs' => 0,
-            'maxbytes' => self::ACCEPTED_FILE_MAX_SIZE
+            'maxbytes' => self::ACCEPTED_FILE_MAX_SIZE,
         ];
     }
 

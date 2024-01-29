@@ -39,7 +39,7 @@ class mod_board_mod_form extends moodleform_mod {
         require_once('classes/board.php');
 
         $mform->addElement('header', 'general', get_string('general', 'form'));
-        $mform->addElement('text', 'name', get_string('name'), array('size' => '50'));
+        $mform->addElement('text', 'name', get_string('name'), ['size' => '50']);
         if (!empty($CFG->formatstringstriptags)) {
             $mform->setType('name', PARAM_TEXT);
         } else {
@@ -51,7 +51,7 @@ class mod_board_mod_form extends moodleform_mod {
 
         $mform->addElement('header', 'board', get_string('boardsettings', 'mod_board'));
 
-        $mform->addElement('text', 'background_color', get_string('background_color', 'mod_board'), array('size' => '50'));
+        $mform->addElement('text', 'background_color', get_string('background_color', 'mod_board'), ['size' => '50']);
         $mform->setType('background_color', PARAM_TEXT);
         $mform->addRule('background_color', get_string('maximumchars', '', 9), 'maxlength', 9, 'client');
         $mform->addHelpButton('background_color', 'background_color', 'mod_board');
@@ -62,7 +62,7 @@ class mod_board_mod_form extends moodleform_mod {
             return '.' . $extension;
         }, $extensions);
 
-        $filemanageroptions = array();
+        $filemanageroptions = [];
         $filemanageroptions['accepted_types'] = $extensions;
         $filemanageroptions['maxbytes'] = 0;
         $filemanageroptions['maxfiles'] = 1;
@@ -71,12 +71,12 @@ class mod_board_mod_form extends moodleform_mod {
                 get_string('background_image', 'mod_board'), null, $filemanageroptions);
 
         $mform->addElement('select', 'addrating', get_string('addrating', 'mod_board'),
-           array(
+           [
                 board::RATINGDISABLED => get_string('addrating_none', 'mod_board'),
                 board::RATINGBYSTUDENTS => get_string('addrating_students', 'mod_board'),
                 board::RATINGBYTEACHERS => get_string('addrating_teachers', 'mod_board'),
-                board::RATINGBYALL => get_string('addrating_all', 'mod_board')
-            )
+                board::RATINGBYALL => get_string('addrating_all', 'mod_board'),
+            ]
         );
         $mform->setType('addrating', PARAM_INT);
 
@@ -84,11 +84,11 @@ class mod_board_mod_form extends moodleform_mod {
         $mform->setType('hideheaders', PARAM_INT);
 
         $mform->addElement('select', 'sortby', get_string('sortby', 'mod_board'),
-           array(
+           [
                 board::SORTBYNONE => get_string('sortbynone', 'mod_board'),
                 board::SORTBYDATE => get_string('sortbydate', 'mod_board'),
-                board::SORTBYRATING => get_string('sortbyrating', 'mod_board')
-            )
+                board::SORTBYRATING => get_string('sortbyrating', 'mod_board'),
+            ]
         );
         $mform->setType('sortby', PARAM_INT);
 
@@ -100,12 +100,12 @@ class mod_board_mod_form extends moodleform_mod {
         $modesallow = [
             board::SINGLEUSER_PRIVATE => $allowprivate,
             board::SINGLEUSER_PUBLIC => $allowpublic,
-            board::SINGLEUSER_DISABLED => "1"
+            board::SINGLEUSER_DISABLED => "1",
         ];
         $allowedsumodes = array_filter([
             board::SINGLEUSER_DISABLED => get_string('singleusermodenone', 'mod_board'),
             board::SINGLEUSER_PRIVATE => get_string('singleusermodeprivate', 'mod_board'),
-            board::SINGLEUSER_PUBLIC => get_string('singleusermodepublic', 'mod_board')
+            board::SINGLEUSER_PUBLIC => get_string('singleusermodepublic', 'mod_board'),
             ], function($mode) use ($modesallow) {
                 return $modesallow[$mode];
             }, ARRAY_FILTER_USE_KEY
@@ -147,7 +147,7 @@ class mod_board_mod_form extends moodleform_mod {
     public function data_preprocessing(&$defaultvalues) {
         $draftitemid = file_get_submitted_draft_itemid('background_image');
         file_prepare_draft_area($draftitemid, $this->context->id, 'mod_board', 'background', 0,
-            array('subdirs' => 0, 'maxfiles' => 1));
+            ['subdirs' => 0, 'maxfiles' => 1]);
         $defaultvalues['background_image'] = $draftitemid;
 
         $defaultvalues['postbyenabled'] = !empty($defaultvalues['postby']);

@@ -26,7 +26,7 @@ require('../../config.php');
 
 $id = required_param('id', PARAM_INT); // Course id.
 
-$course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
+$course = $DB->get_record('course', ['id' => $id], '*', MUST_EXIST);
 
 require_course_login($course, true);
 $PAGE->set_pagelayout('incourse');
@@ -37,7 +37,7 @@ $strname         = get_string('name');
 $strintro        = get_string('moduleintro');
 $strlastmodified = get_string('lastmodified');
 
-$PAGE->set_url('/mod/board/index.php', array('id' => $course->id));
+$PAGE->set_url('/mod/board/index.php', ['id' => $course->id]);
 $PAGE->set_title($course->shortname.': '.$strboards);
 $PAGE->set_heading($course->fullname);
 $PAGE->navbar->add($strboards);
@@ -55,11 +55,11 @@ $table->attributes['class'] = 'generaltable mod_index';
 
 if ($usesections) {
     $strsectionname = get_string('sectionname', 'format_'.$course->format);
-    $table->head  = array ($strsectionname, $strname, $strintro);
-    $table->align = array ('center', 'left', 'left');
+    $table->head  = [$strsectionname, $strname, $strintro];
+    $table->align = ['center', 'left', 'left'];
 } else {
-    $table->head  = array ($strlastmodified, $strname, $strintro);
-    $table->align = array ('left', 'left', 'left');
+    $table->head  = [$strlastmodified, $strname, $strintro];
+    $table->align = ['left', 'left', 'left'];
 }
 
 $modinfo = get_fast_modinfo($course);
@@ -83,10 +83,10 @@ foreach ($boards as $board) {
 
     $class = $board->visible ? '' : 'class="dimmed"'; // Hidden modules are dimmed.
 
-    $table->data[] = array (
+    $table->data[] = [
         $printsection,
         "<a $class href=\"view.php?id=$cm->id\">".format_string($board->name)."</a>",
-        format_module_intro('board', $board, $cm->id));
+        format_module_intro('board', $board, $cm->id)];
 }
 
 echo html_writer::table($table);

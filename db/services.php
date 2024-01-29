@@ -199,5 +199,5 @@ $functions = [
         'capabilities'  => '',
         'ajax'          => true,
         'loginrequired' => true,
-    ]
+    ],
 ];
