@@ -285,7 +285,9 @@
             width: auto;
         }
 
-        &.wrapper_youtube {
+        &.wrapper_youtube,
+        &.wrapper_peertube,
+        &.wrapper_pod {
             padding-top: 0;
             position: relative;
             padding-bottom: 56.25%;

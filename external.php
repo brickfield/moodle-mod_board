@@ -382,6 +382,14 @@ class mod_board_external extends external_api {
                     $attachment['info'] = $data->linktitle ?? '';
                     $attachment['url'] = $data->linkurl ?? '';
                     break;
+                case 7:
+                    $attachment['info'] = $data->peertubetitle ?? '';
+                    $attachment['url'] = board::peertube_check_whitelist($data->peertubeurl) ?? '';
+                    break;
+                case 8:
+                    $attachment['info'] = $data->podtitle ?? '';
+                    $attachment['url'] = board::pod_check_whitelist($data->podurl) ?? '';
+                    break; 
             }
             // Check if heading and content and attachment are empty.
             if (empty($data->heading) && empty($data->content) && empty($data->imagefile) && empty($attachment['url'])) {

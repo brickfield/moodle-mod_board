@@ -14,6 +14,8 @@ On the board activity, students can:
   * Add a link.
   * Upload an image.
   * Embed a Youtube video.
+  * Embed a Peertube video.
+  * Embed a Pod video.
 * Edit or Delete one of their posts.
 * Add optional comments to posts.
 

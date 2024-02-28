@@ -59,19 +59,20 @@ class note_form extends \moodleform {
         $mform->setType('content', PARAM_TEXT);
         $mform->addRule('content', get_string('maximumchars', '', $maxlen), 'maxlength', $maxlen, 'client');
 
+        $options = [
+            0 => get_string('option_empty', 'mod_board'),
+            2 => get_string('option_image', 'mod_board'),
+            3 => get_string('option_link', 'mod_board'),
+        ];
+
         if ($config->allowyoutube) {
-            $options = [
-                0 => get_string('option_empty', 'mod_board'),
-                1 => get_string('option_youtube', 'mod_board'),
-                2 => get_string('option_image', 'mod_board'),
-                3 => get_string('option_link', 'mod_board'),
-            ];
-        } else {
-            $options = [
-                0 => get_string('option_empty', 'mod_board'),
-                2 => get_string('option_image', 'mod_board'),
-                3 => get_string('option_link', 'mod_board'),
-            ];
+            $options[1] = get_string('option_youtube', 'mod_board');
+        }
+        if ($config->allowpeertube) {
+            $options[7] = get_string('option_peertube', 'mod_board');
+        }
+        if ($config->allowpod) {
+            $options[8] = get_string('option_pod', 'mod_board');
         }
 
         $attr = ['class' => 'mod_board_type'];
@@ -82,6 +83,12 @@ class note_form extends \moodleform {
                     <div class="mod_board_attachment_button image_button fa fa-picture-o" role="button" tabindex="0"></div>';
         if ($config->allowyoutube) {
             $html .= '<div class="mod_board_attachment_button youtube_button fa fa-youtube" role="button" tabindex="0"></div>';
+        }
+        if ($config->allowpeertube) {
+            $html .= '<div class="mod_board_attachment_button peertube_button" role="button" tabindex="0"></div>';
+        }
+        if ($config->allowpod) {
+            $html .= '<div class="mod_board_attachment_button pod_button" role="button" tabindex="0"></div>';
         }
         $html .= '</div>';
 
@@ -116,6 +123,36 @@ class note_form extends \moodleform {
             $mform->setType('youtubeurl', PARAM_URL);
             $mform->hideIf('youtubeurl', 'mediatype', 'neq', 1);
             $mform->addRule('youtubeurl', get_string('maximumchars', '', $maxlenurl), 'maxlength', $maxlenurl, 'client');
+        }
+        
+        if ($config->allowpeertube) {
+            // peerTube video.
+            $options = ['maxlength' => $maxleninfo, 'placeholder' => get_string('option_peertube_info', 'mod_board')];
+            $mform->addElement('text', 'peertubetitle', get_string('option_peertube_info', 'mod_board'), $options);
+            $mform->setType('peertubetitle', PARAM_TEXT);
+            $mform->hideIf('peertubetitle', 'mediatype', 'neq', 7);
+            $mform->addRule('peertubetitle', get_string('maximumchars', '', $maxleninfo), 'maxlength', $maxleninfo, 'client');
+
+            $options = ['maxlength' => $maxlenurl, 'placeholder' => get_string('option_peertube_url', 'mod_board')];
+            $mform->addElement('text', 'peertubeurl', get_string('option_peertube_url', 'mod_board'), $options);
+            $mform->setType('peertubeurl', PARAM_URL);
+            $mform->hideIf('peertubeurl', 'mediatype', 'neq', 7);
+            $mform->addRule('peertubeurl', get_string('maximumchars', '', $maxlenurl), 'maxlength', $maxlenurl, 'client');
+        }
+
+        if ($config->allowpod) {
+            // pod video.
+            $options = ['maxlength' => $maxleninfo, 'placeholder' => get_string('option_pod_info', 'mod_board')];
+            $mform->addElement('text', 'podtitle', get_string('option_pod_info', 'mod_board'), $options);
+            $mform->setType('podtitle', PARAM_TEXT);
+            $mform->hideIf('podtitle', 'mediatype', 'neq', 8);
+            $mform->addRule('podtitle', get_string('maximumchars', '', $maxleninfo), 'maxlength', $maxleninfo, 'client');
+
+            $options = ['maxlength' => $maxlenurl, 'placeholder' => get_string('option_pod_url', 'mod_board')];
+            $mform->addElement('text', 'podurl', get_string('option_pod_url', 'mod_board'), $options);
+            $mform->setType('podurl', PARAM_URL);
+            $mform->hideIf('podurl', 'mediatype', 'neq', 8);
+            $mform->addRule('podurl', get_string('maximumchars', '', $maxlenurl), 'maxlength', $maxlenurl, 'client');
         }
 
         // Image file.
