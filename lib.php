@@ -325,6 +325,14 @@ function mod_board_output_fragment_note_form($args) {
                 $formdata['linktitle'] = $note->info;
                 $formdata['linkurl'] = $note->url;
                 break;
+            case 7:
+                $formdata['peertubetitle'] = $note->info;
+                $formdata['peertubeurl'] = ($note->url == 'NOT_WHITELISTED' ? '' : $note->url);
+                break;
+            case 8:
+                $formdata['podtitle'] = $note->info;
+                $formdata['podurl'] = ($note->url == 'NOT_WHITELISTED' ? '' : $note->url);
+                break;
         }
     } else {
         $itemid = 0;

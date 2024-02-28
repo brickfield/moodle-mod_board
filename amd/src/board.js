@@ -174,6 +174,8 @@ export default function(settings) {
         modal_title_new: '',
         modal_title_edit: '',
         option_youtube: '',
+        option_peertube: '',
+        option_pod: '',
         option_image: '',
         option_link: '',
 
@@ -198,6 +200,10 @@ export default function(settings) {
         invalid_file_size_max: '',
 
         invalid_youtube_url: '',
+        invalid_peertube_url: '',
+        invalid_pod_url: '',
+        not_whitelisted_peertube_url: '',
+        not_whitelisted_pod_url: '',
     };
 
     // Json decode the strings from the settings.
@@ -209,6 +215,8 @@ export default function(settings) {
           ATTACHMENT_VIDEO = 1,
           ATTACHMENT_IMAGE = 2,
           ATTACHMENT_LINK = 3,
+          ATTACHMENT_PEERTUBE = 7,
+          ATTACHMENT_POD = 8,
           SORTBY_DATE = 1,
           SORTBY_RATING = 2,
           SORTBY_NONE = 3;
@@ -658,6 +666,8 @@ export default function(settings) {
             case "1": return 'youtube';
             case "2": return 'image';
             case "3": return 'link';
+            case "7": return 'peertube';
+            case "8": return 'pod';
             default: return null;
         }
     };
@@ -676,6 +686,48 @@ export default function(settings) {
             return null;
         }
         return `https://www.youtube-nocookie.com/embed/${videoID[2]}`;
+    };
+
+    /**
+     * This parses a peertube video ID from a URL. We can use this ID to
+     * construct the embed URL.
+     * @param {string} url The URL entered to the modal.
+     * @returns {string | null} The peertube embed URL or null.
+     */
+    const getPeertubeEmbedUrl = (url) => {
+        let regexVideo =
+/https:\/\/((?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9])\/w\/([a-zA-Z0-9]{22})/;
+        let regexPlaylist =
+/https:\/\/((?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9])\/w\/p\/([a-zA-Z0-9]{22})/;
+
+        let videoID = url.match(regexVideo);
+        if (!videoID || videoID[1] === undefined ||  videoID[2] === undefined) {
+            // let's try with the playlist
+            let videoID = url.match(regexPlaylist);
+            if (!videoID || videoID[1] === undefined ||  videoID[2] === undefined) {
+                return null;
+            }
+            return `https://${videoID[1]}/video-playlists/embed/${videoID[2]}`;
+        }
+        return `https://${videoID[1]}/videos/embed/${videoID[2]}`;
+    };
+
+    /**
+     * This parses a pod video ID from a URL. We can use this ID to
+     * construct the embed URL.
+     * @param {string} url The URL entered to the modal.
+     * @returns {string | null} The pod embed URL or null.
+     */
+    const getPodEmbedUrl = (url) => {
+        let regexVideo =
+/(https:\/\/(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]\/(?:[a-zA-Z0-9-]{0,61}\/)?video\/(?:[a-zA-Z0-9-]+)(|\/[a-zA-Z0-9-]+))[^"]*/;
+
+        let videoID = url.match(regexVideo);
+        if (!videoID || videoID[1] === undefined) {
+            return null;
+        } else {
+            return `${videoID[1]}`;
+        }
     };
 
     /**
@@ -698,6 +750,8 @@ export default function(settings) {
         }
 
         elem.removeClass('wrapper_youtube');
+        elem.removeClass('wrapper_peertube');
+        elem.removeClass('wrapper_pod');
         elem.removeClass('wrapper_image');
         elem.removeClass('wrapper_url');
         if (attachment.filename && parseInt(attachment.type) == ATTACHMENT_IMAGE) { // Before uploading
@@ -733,6 +787,42 @@ export default function(settings) {
                              (attachment.info || attachment.url) + '</a>');
                     elem.addClass('wrapper_url');
                     elem.show();
+                break;
+                case ATTACHMENT_PEERTUBE: { // Peertube
+                    if (attachment.url == 'NOT_WHITELISTED') {
+                        elem.html(strings.not_whitelisted_peertube_url);
+                    } else {
+                        let url = getPeertubeEmbedUrl(attachment.url);
+                        if (url === null) {
+                            elem.html(strings.invalid_peertube_url);
+                        } else {
+                            elem.html('<iframe src="' + url +
+                        '" class="mod_board_preview_element" frameborder="0" allow="accelerometer; autoplay; clipboard-write;' +
+                        'encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><a href="#" ' +
+                        'class="stretched-link" aria-hidden="true"></a>');
+                            elem.addClass('wrapper_peertube').addClass('position-relative');
+                        }
+                    }
+                    elem.show();
+                }
+                break;
+                case ATTACHMENT_POD: { // Pod
+                    if (attachment.url == 'NOT_WHITELISTED') {
+                        elem.html(strings.not_whitelisted_pod_url);
+                    } else {
+                        let url = getPodEmbedUrl(attachment.url);
+                        if (url === null) {
+                            elem.html(strings.invalid_pod_url);
+                        } else {
+                            elem.html('<iframe src="' + url +
+                        '?is_iframe=true" class="mod_board_preview_element" frameborder="0" allow="accelerometer; autoplay; clipboard-write;' +
+                        'encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><a href="#" ' +
+                        'class="stretched-link" aria-hidden="true"></a>');
+                            elem.addClass('wrapper_pod').addClass('position-relative');
+                        }
+                    }
+                    elem.show();
+                }
                 break;
                 default:
                     elem.html('');
@@ -1479,6 +1569,8 @@ export default function(settings) {
             addYoutube,
             addImage,
             addLink,
+            addPeertube,
+            addPod,
             postButton,
             cancelButton,
             modalRoot = modal.getRoot();
@@ -1495,6 +1587,10 @@ export default function(settings) {
                 columnIdentifier).replace('{post}', noteIdentifier);
             addLink = strings.aria_addmedia.replace('{type}', strings.option_link).replace('{column}',
                 columnIdentifier).replace('{post}', noteIdentifier);
+            addPeertube = strings.aria_addmedia.replace('{type}', strings.option_peertube).replace('{column}',
+                columnIdentifier).replace('{post}', noteIdentifier);
+            addPod = strings.aria_addmedia.replace('{type}', strings.option_pod).replace('{column}',
+                columnIdentifier).replace('{post}', noteIdentifier);
         } else {
             // Note is new.
             postButton = strings.aria_postnew.replace('{column}', columnIdentifier);
@@ -1503,6 +1599,10 @@ export default function(settings) {
                 columnIdentifier);
             addImage = strings.aria_addmedianew.replace('{type}', strings.option_image).replace('{column}', columnIdentifier);
             addLink = strings.aria_addmedianew.replace('{type}', strings.option_link).replace('{column}', columnIdentifier);
+            addPeertube = strings.aria_addmedianew.replace('{type}', strings.option_peertube).replace('{column}',
+                columnIdentifier);
+            addPod = strings.aria_addmedianew.replace('{type}', strings.option_pod).replace('{column}',
+                columnIdentifier);
         }
 
         if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
@@ -1512,6 +1612,10 @@ export default function(settings) {
             modalRoot.find('.mod_board_attachment_button.image_button').attr('title', addImage);
             modalRoot.find('.mod_board_attachment_button.link_button').attr('aria-label', addLink);
             modalRoot.find('.mod_board_attachment_button.link_button').attr('title', addLink);
+            modalRoot.find('.mod_board_attachment_button.peertube_button').attr('aria-label', addPeertube);
+            modalRoot.find('.mod_board_attachment_button.peertube_button').attr('title', addPeertube);
+            modalRoot.find('.mod_board_attachment_button.pod_button').attr('aria-label', addPod);
+            modalRoot.find('.mod_board_attachment_button.pod_button').attr('title', addPod);
         }
 
         let button = modalRoot.find(modal.getActionSelector('save'));
@@ -1657,10 +1761,14 @@ export default function(settings) {
                         ytButton = modal.getRoot().find('.mod_board_attachment_button.youtube_button'),
                         pictureButton = modal.getRoot().find('.mod_board_attachment_button.image_button'),
                         linkButton = modal.getRoot().find('.mod_board_attachment_button.link_button'),
+                        ptButton = modal.getRoot().find('.mod_board_attachment_button.peertube_button'),
+                        podButton = modal.getRoot().find('.mod_board_attachment_button.pod_button'),
                         updateMediaButtons = function() {
                             ytButton.removeClass('selected');
                             pictureButton.removeClass('selected');
                             linkButton.removeClass('selected');
+                            ptButton.removeClass('selected');
+                            podButton.removeClass('selected');
                             switch (mediaSelect.val()) {
                                 case ("1"):
                                     ytButton.addClass('selected');
@@ -1670,6 +1778,12 @@ export default function(settings) {
                                     break;
                                 case ("3"):
                                     linkButton.addClass('selected');
+                                    break;
+                                case ("7"):
+                                    ptButton.addClass('selected');
+                                    break;
+                                case ("8"):
+                                    podButton.addClass('selected');
                                     break;
                             }
                         };
@@ -1698,6 +1812,24 @@ export default function(settings) {
                             mediaSelect.val(0);
                         } else {
                             mediaSelect.val(3);
+                        }
+                        updateMediaButtons();
+                        mediaSelect[0].dispatchEvent(changeEvent);
+                    });
+                    handleAction(ptButton, function() {
+                        if (mediaSelect.val() === "7") {
+                            mediaSelect.val(0);
+                        } else {
+                            mediaSelect.val(7);
+                        }
+                        updateMediaButtons();
+                        mediaSelect[0].dispatchEvent(changeEvent);
+                    });
+                    handleAction(podButton, function() {
+                        if (mediaSelect.val() === "8") {
+                            mediaSelect.val(0);
+                        } else {
+                            mediaSelect.val(8);
                         }
                         updateMediaButtons();
                         mediaSelect[0].dispatchEvent(changeEvent);

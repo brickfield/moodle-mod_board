@@ -67,6 +67,34 @@ if ($ADMIN->fulltree) {
         '1'
     ));
 
+    $settings->add(new admin_setting_configcheckbox(
+        'mod_board/allowpeertube',
+        get_string('allowpeertube', 'mod_board'),
+        get_string('allowpeertube_desc', 'mod_board'),
+        '1'
+    ));
+
+    $settings->add(new admin_setting_configcheckbox(
+        'mod_board/allowpod',
+        get_string('allowpod', 'mod_board'),
+        get_string('allowpod_desc', 'mod_board'),
+        '1'
+    ));
+
+    $settings->add(new admin_setting_configmixedhostiplist(
+        'mod_board/whitelistpeertube',
+        get_string('whitelistpeertube', 'mod_board'),
+        get_string('whitelistpeertube_desc', 'mod_board'),
+        ''
+    ));
+
+    $settings->add(new admin_setting_configmixedhostiplist(
+        'mod_board/whitelistpod',
+        get_string('whitelistpod', 'mod_board'),
+        get_string('whitelistpod_desc', 'mod_board'),
+        ''
+    ));
+
     $settings->add(new admin_setting_configtext('mod_board/embed_width', get_string('embed_width', 'mod_board'),
                        get_string('embed_width_desc', 'mod_board'), '99%', PARAM_TEXT));
 

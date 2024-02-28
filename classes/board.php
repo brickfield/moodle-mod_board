@@ -183,6 +183,66 @@ class board {
     }
 
     /**
+     * Apply the whitelist for peertube
+     *
+     * @param string url
+     * @return string The url if it passes the whitelist, else a specific string indicating the problem 
+     */
+    public static function peertube_check_whitelist($url) {
+        if (!$url) { return $url; }
+
+        $whitelist = get_config('mod_board', 'whitelistpeertube');
+        if (!$whitelist) {
+            return $url;
+        }
+
+        $whitelista = preg_split("/\r\n|\n|\r/", $whitelist);
+        if (!$whitelista || count($whitelista) == 0 || !isset($whitelista[0])) {
+            return $url;
+        }
+
+        $domains = implode('|', $whitelista);
+        $domains = str_replace('.', '\.', $domains);  
+        
+        if (preg_match('~https://('.$domains.')/w/([a-zA-Z0-9]{22})~is', $url)
+            || preg_match('~https://('.$domains.')/w/p/([a-zA-Z0-9]{22})~is', $url)) {
+            return $url;
+        } else {
+            return 'NOT_WHITELISTED';
+        } 
+        
+    }
+
+    /**
+     * Apply the whitelist for pod
+     *
+     * @param string url
+     * @return url
+     */
+    public static function pod_check_whitelist($url) {
+        if (!$url) { return $url; }
+
+        $whitelist = get_config('mod_board', 'whitelistpod');
+        if (!$whitelist) {
+            return $url;
+        }
+
+        $whitelista = preg_split("/\r\n|\n|\r/", $whitelist);
+        if (!$whitelista || count($whitelista) == 0 || !isset($whitelista[0])) {
+            return $url;
+        }
+
+        $domains = implode('|', $whitelista);
+        $domains = str_replace('.', '\.', $domains);  
+        if (preg_match('~(https://(?:'.$domains.')/(?:[a-zA-Z0-9-]{0,61}/)?video/(?:[a-zA-Z0-9-]+)(|/[a-zA-Z0-9-]+))[^"]*~is', $url)) {
+            return $url;
+        } else {
+            return 'NOT_WHITELISTED';
+        } 
+        return $url;
+    }
+
+    /**
      * Retrieves the context of the selected board.
      *
      * @param int $id
@@ -374,6 +434,12 @@ class board {
                                             'id, userid, heading, content, type, info, url, timecreated, sortorder');
             foreach ($column->notes as $colid => $note) {
                 $note->rating = static::get_note_rating($note->id);
+                if ($note->type == 7) {
+                    $note->url = static::peertube_check_whitelist($note->url);
+                } 
+                if ($note->type == 8) {
+                    $note->url = static::pod_check_whitelist($note->url);
+                }
             }
         }
 

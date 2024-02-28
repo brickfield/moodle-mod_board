@@ -292,7 +292,9 @@
     width: auto;
 }
 
-.path-mod-board .mod_board_preview.wrapper_youtube {
+.path-mod-board .mod_board_preview.wrapper_youtube,
+.path-mod-board .mod_board_preview.wrapper_peertube,
+.path-mod-board .mod_board_preview.wrapper_pod {
     padding-top: 0;
     position: relative;
     padding-bottom: 56.25%;
@@ -362,4 +364,22 @@ iframe.mod_board-iframe {
 
 .pagelayout-embedded.path-mod-board .activity-header {
     display: none;
+}
+
+.path-mod-board .peertube_button:before {
+    content: url([[pix:board|peertube]]);
+    display: inline-block;
+    width: 1em;
+    line-height: 1em;
+    overflow: hidden;
+    color: rgb(51, 51, 51);
+}
+
+.path-mod-board .pod_button:before {
+    content: url([[pix:board|pod]]);
+    display: inline-block;
+    width: 1em;
+    line-height: 1em;
+    overflow: hidden;
+    color: rgb(51, 51, 51);
 }
