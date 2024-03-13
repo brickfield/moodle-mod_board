@@ -40,7 +40,7 @@ has been received from Athlone Institute of Technology under the SATLE fund from
 National Forum, and also from UCL.
 
 ## Version support ##
-This plugin has been developed to work on Moodle releases 4.00, 4.01, and 4.02. Support for 4.03 will be forthcoming.
+This plugin has been developed to work on Moodle releases 4.00, 4.01, 4.02 and 4.03.
 
 ## Development ##
 This plugin has been developed and is maintained by Brickfield Education Labs.
