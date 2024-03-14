@@ -50,6 +50,10 @@ class board_table extends flexible_table {
         global $DB;
         parent::__construct('mod_board_table');
 
+        // Only include deleted notes if allowaudit is enabled;
+        $allowaudit = get_config('mod_board', 'allowaudit');
+        $includedeleted =  $includedeleted && $allowaudit;
+
         $this->boardid = $boardid;
         $this->groupid = $groupid;
         $this->includedeleted = $includedeleted;

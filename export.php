@@ -29,6 +29,8 @@ use mod_board\board;
 $id = optional_param('id', 0, PARAM_INT); // Course Module ID.
 $ownerid = optional_param('ownerid', 0, PARAM_INT); // The ID of the board owner.
 $includedeleted = optional_param('includedeleted', 0, PARAM_INT); // Whether to include deleted comments.
+$allowaudit = get_config('mod_board', 'allowaudit');
+$includedeleted =  $includedeleted && $allowaudit;
 $download = optional_param('download', '', PARAM_ALPHA);
 $tabletype = optional_param('tabletype', 'board', PARAM_ALPHA);
 $group = optional_param('group', 0, PARAM_INT);
@@ -90,14 +92,16 @@ if (!$table->is_downloading()) {
         }
     }
 
-    // Print the include deleted checkbox.
-    $includedeletedurl = new moodle_url($pageurl, ['includedeleted' => !$includedeleted]);
-    $onchangelocation = "window.location.href = '" . $includedeletedurl->out(false) . "';";
-    $includedeletedlabel = get_string('include_deleted', 'mod_board');
-    $includedeletedcheckbox = html_writer::checkbox('includedeleted', 1, $includedeleted, $includedeletedlabel,
-        ['id' => 'includedeleted', 'class' => 'custom-control-input', 'onChange' => $onchangelocation],
-        ['class' => 'custom-control-label']);
-    echo html_writer::div($includedeletedcheckbox, 'custom-control custom-checkbox mb-1');
+    // Print the include deleted checkbox if audit is allowed.
+    if ($allowaudit == true) {
+        $includedeletedurl = new moodle_url($pageurl, ['includedeleted' => !$includedeleted]);
+        $onchangelocation = "window.location.href = '" . $includedeletedurl->out(false) . "';";
+        $includedeletedlabel = get_string('include_deleted', 'mod_board');
+        $includedeletedcheckbox = html_writer::checkbox('includedeleted', 1, $includedeleted, $includedeletedlabel,
+                ['id' => 'includedeleted', 'class' => 'custom-control-input', 'onChange' => $onchangelocation],
+                ['class' => 'custom-control-label']);
+        echo html_writer::div($includedeletedcheckbox, 'custom-control custom-checkbox mb-1');
+    }
 }
 
 $table->display();

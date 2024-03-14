@@ -118,4 +118,11 @@ if ($ADMIN->fulltree) {
             board::SINGLEUSER_PUBLIC => get_string('singleusermodepublic', 'mod_board')
         ]
     ));
+
+    $settings->add(new admin_setting_configcheckbox(
+            'mod_board/allowaudit',
+            get_string('allowaudit', 'mod_board'),
+            get_string('allowaudit_desc', 'mod_board'),
+            '1'
+    ));
 }

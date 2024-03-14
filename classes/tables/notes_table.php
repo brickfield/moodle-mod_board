@@ -46,8 +46,11 @@ class notes_table extends table_sql {
      */
     public function __construct($cmid, $boardid, $groupid, $ownerid, $includedeleted) {
         parent::__construct('mod_board_notes_table');
+        // Only include deleted notes if allowaudit is enabled;
+        $allowaudit = get_config('mod_board', 'allowaudit');
+        $includedeleted =  $includedeleted && $allowaudit;
 
-        // Get the construct paramaters and add them to the export url.
+        // Get the construct parameters and add them to the export url.
         $exportparams = [
             'id' => $cmid,
             'group' => $groupid,
@@ -59,7 +62,11 @@ class notes_table extends table_sql {
         $this->define_baseurl($exporturl);
 
         // Define the list of columns to show.
-        $columns = array('firstname', 'lastname', 'email', 'heading', 'content', 'info', 'url', 'timecreated', 'deleted');
+        if ($allowaudit == true) {
+            $columns = array('firstname', 'lastname', 'email', 'heading', 'content', 'info', 'url', 'timecreated', 'deleted');
+        } else {
+            $columns = array('firstname', 'lastname', 'email', 'heading', 'content', 'info', 'url', 'timecreated');
+        }
         $this->define_columns($columns);
 
         // Define the titles of columns to show in header.
@@ -70,8 +77,12 @@ class notes_table extends table_sql {
 
         // Define the SQL used to get the data.
         $this->sql = (object)[];
-        $this->sql->fields = 'bn.id, u.firstname, u.lastname, u.email, bn.heading, bn.content, bn.info, bn.url, bn.timecreated,
+        if ($allowaudit == true) {
+            $this->sql->fields = 'bn.id, u.firstname, u.lastname, u.email, bn.heading, bn.content, bn.info, bn.url, bn.timecreated,
             bn.deleted';
+        } else {
+            $this->sql->fields = 'bn.id, u.firstname, u.lastname, u.email, bn.heading, bn.content, bn.info, bn.url, bn.timecreated';
+        }
         $this->sql->from = '{board_columns} bc
         JOIN {board_notes} bn ON bn.columnid = bc.id JOIN {user} u ON u.id = bn.ownerid';
         $this->sql->where = 'bc.boardid = :boardid';
