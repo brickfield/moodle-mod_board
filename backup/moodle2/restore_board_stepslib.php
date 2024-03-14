@@ -29,7 +29,7 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
      */
     protected function define_structure() {
 
-        $paths = array();
+        $paths = [];
         $userinfo = $this->get_setting_value('userinfo');
 
         $paths[] = new restore_path_element('board', '/activity/board');
@@ -152,19 +152,19 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
 
         // UPDATE note url to new context.
         $boardid = $this->get_new_parentid('board');
-        $board = $DB->get_record('board', array('id' => $boardid));
+        $board = $DB->get_record('board', ['id' => $boardid]);
         $cm = get_coursemodule_from_instance('board', $board->id, $board->course, false, MUST_EXIST);
         $context = context_module::instance($cm->id);
 
-        $columns = $DB->get_records('board_columns', array('boardid' => $boardid));
+        $columns = $DB->get_records('board_columns', ['boardid' => $boardid]);
         foreach ($columns as $columnid => $column) {
-            $notes = $DB->get_records('board_notes', array('columnid' => $columnid));
+            $notes = $DB->get_records('board_notes', ['columnid' => $columnid]);
             foreach ($notes as $noteid => $note) {
                 $pattern = '/pluginfile.php\/(\d+)\//i';
                 $replacement = 'pluginfile.php/'.$context->id.'/';
                 $url = preg_replace($pattern, $replacement, $note->url);
 
-                $DB->update_record('board_notes', array('id' => $noteid, 'url' => $url));
+                $DB->update_record('board_notes', ['id' => $noteid, 'url' => $url]);
             }
         }
     }

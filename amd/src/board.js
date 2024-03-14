@@ -469,7 +469,7 @@ export default function(settings) {
             strings.delete,
             strings.Cancel,
             function() {
-                serviceCall('delete_note', { id: ident }, function (result) {
+                serviceCall('delete_note', {id: ident}, function(result) {
                     if (result.status) {
                         lastHistoryId = result.historyid;
                         let note = getNote(ident);
@@ -1551,21 +1551,21 @@ export default function(settings) {
             removeOnClose: true
         }).then(function(modal) {
             // Use the body promise so we know body content is loaded.
-            modal.getBodyPromise().then(function () {
+            modal.getBodyPromise().then(function() {
                 let saveInProgress = false;
                 editModal = modal;
                 modal.setLarge();
                 modal.setSaveButtonText(strings.post_button_text);
                 modal.setButtonText('cancel', strings.cancel_button_text);
 
-                modal.getRoot().on(ModalEvents.hidden, function () {
+                modal.getRoot().on(ModalEvents.hidden, function() {
                     stopNoteEdit();
                     if (!note.data('ident')) {
                         note.remove();
                     }
                 });
 
-                modal.getRoot().on(ModalEvents.save, function (e) {
+                modal.getRoot().on(ModalEvents.save, function(e) {
                     e.preventDefault();
                     modal.getRoot().find('form').submit();
                 });
@@ -1573,7 +1573,7 @@ export default function(settings) {
                 var changeEvent = document.createEvent('HTMLEvents');
                 changeEvent.initEvent('change', true, true);
 
-                modal.getRoot().on('submit', 'form', function (e) {
+                modal.getRoot().on('submit', 'form', function(e) {
                     e.preventDefault();
 
                     // Prevent multiple form submissions from being sent.
@@ -1593,7 +1593,7 @@ export default function(settings) {
                     // Normally this would happen when the form is submitted, but
                     // since we aren't submitting the form normally we need to run client side
                     // validation.
-                    modal.getRoot().find(':input').each(function (index, element) {
+                    modal.getRoot().find(':input').each(function(index, element) {
                         element.dispatchEvent(changeEvent);
                     });
 
@@ -1612,7 +1612,7 @@ export default function(settings) {
                     }
 
                     var formData = JSON.stringify(modal.getRoot().find('form').serialize());
-                    serviceCall('submit_form', {contextid: contextid, jsonformdata: formData}, function (result) {
+                    serviceCall('submit_form', {contextid: contextid, jsonformdata: formData}, function(result) {
                         if (result.status) {
                             if (result.action == 'insert') {
                                 // Added a new note.
@@ -1747,7 +1747,7 @@ export default function(settings) {
             modal.setLarge();
             modal.show();
             // Handle hidden event.
-            modal.getRoot().on(ModalEvents.hidden, function () {
+            modal.getRoot().on(ModalEvents.hidden, function() {
                 // Destroy when hidden.
                 modal.destroy();
             });
@@ -1792,13 +1792,13 @@ export default function(settings) {
 
     // Get strings
     var stringsInfo = [];
-    for (var string in strings) {
+    for (let string in strings) {
         stringsInfo.push({key: string, component: 'mod_board'});
     }
 
     $.when(getStrings(stringsInfo)).done(function(results) {
         var index = 0;
-        for (string in strings) {
+        for (let string in strings) {
             strings[string] = results[index++];
         }
 

@@ -31,26 +31,26 @@ class backup_board_activity_structure_step extends backup_activity_structure_ste
 
         $userinfo = $this->get_setting_value('userinfo');
 
-        $board = new backup_nested_element('board', array('id'), array(
+        $board = new backup_nested_element('board', ['id'], [
             'course', 'name', 'timemodified', 'intro', 'introformat', 'historyid',
             'background_color', 'addrating', 'hideheaders', 'sortby', 'postby', 'userscanedit', 'singleusermode',
-            'completionnotes'));
+            'completionnotes']);
 
         $columns = new backup_nested_element('columns');
-        $column = new backup_nested_element('column', array('id'), array('boardid', 'name', 'sortorder'));
+        $column = new backup_nested_element('column', ['id'], ['boardid', 'name', 'sortorder']);
 
         $notes = new backup_nested_element('notes');
-        $note = new backup_nested_element('note', array('id'), array(
+        $note = new backup_nested_element('note', ['id'], [
             'columnid', 'ownerid', 'userid', 'groupid', 'content', 'heading', 'type', 'info', 'url', 'timecreated',
-            'sortorder', 'deleted'));
+            'sortorder', 'deleted']);
 
         $ratings = new backup_nested_element('ratings');
-        $rating = new backup_nested_element('rating', array('id'), array(
-            'noteid', 'userid', 'timecreated'));
+        $rating = new backup_nested_element('rating', ['id'], [
+            'noteid', 'userid', 'timecreated']);
 
         $comments = new backup_nested_element('comments');
-        $comment = new backup_nested_element('comment', array('id'), array(
-            'noteid', 'userid', 'content', 'timecreated', 'timemodified', 'deleted'));
+        $comment = new backup_nested_element('comment', ['id'], [
+            'noteid', 'userid', 'content', 'timecreated', 'timemodified', 'deleted']);
 
         $comments->add_child($comment);
         $note->add_child($comments);
@@ -64,13 +64,13 @@ class backup_board_activity_structure_step extends backup_activity_structure_ste
         $columns->add_child($column);
         $board->add_child($columns);
 
-        $board->set_source_table('board', array('id' => backup::VAR_ACTIVITYID));
-        $column->set_source_table('board_columns', array('boardid' => backup::VAR_PARENTID), 'id ASC');
+        $board->set_source_table('board', ['id' => backup::VAR_ACTIVITYID]);
+        $column->set_source_table('board_columns', ['boardid' => backup::VAR_PARENTID], 'id ASC');
 
         if ($userinfo) {
-            $note->set_source_table('board_notes', array('columnid' => backup::VAR_PARENTID), 'id ASC');
-            $rating->set_source_table('board_note_ratings', array('noteid' => backup::VAR_PARENTID), 'id ASC');
-            $comment->set_source_table('board_comments', array('noteid' => backup::VAR_PARENTID), 'id ASC');
+            $note->set_source_table('board_notes', ['columnid' => backup::VAR_PARENTID], 'id ASC');
+            $rating->set_source_table('board_note_ratings', ['noteid' => backup::VAR_PARENTID], 'id ASC');
+            $comment->set_source_table('board_comments', ['noteid' => backup::VAR_PARENTID], 'id ASC');
         }
 
         $comment->annotate_ids('user', 'userid');

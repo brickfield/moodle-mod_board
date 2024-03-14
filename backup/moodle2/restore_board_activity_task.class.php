@@ -46,10 +46,10 @@ class restore_board_activity_task extends restore_activity_task {
      * @return array
      */
     public static function define_decode_contents() {
-        $contents = array();
+        $contents = [];
 
-        $contents[] = new restore_decode_content('board', array('intro'), 'board');
-        $contents[] = new restore_decode_content('board_notes', array('content'), 'board_note');
+        $contents[] = new restore_decode_content('board', ['intro'], 'board');
+        $contents[] = new restore_decode_content('board_notes', ['content'], 'board_note');
 
         return $contents;
     }
@@ -71,6 +71,6 @@ class restore_board_activity_task extends restore_activity_task {
      * @return string[]
      */
     public function get_fileareas() {
-        return array('images', 'backgrond');
+        return ['images', 'backgrond'];
     }
 }
