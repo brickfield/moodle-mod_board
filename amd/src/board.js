@@ -1745,6 +1745,9 @@ export default function(settings) {
             body: modalBody,
         }).then(function(modal) {
             modal.setLarge();
+            getString('close_button_text', 'mod_board').done(function(str) {
+                modal.setButtonText('cancel', str);
+            });
             modal.show();
             // Handle hidden event.
             modal.getRoot().on(ModalEvents.hidden, function () {

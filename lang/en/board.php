@@ -48,6 +48,7 @@ $string['board_column_locked'] = 'This column is locked and cannot be edited.';
 $string['default_column_heading'] = 'Heading';
 $string['post_button_text'] = 'Post';
 $string['cancel_button_text'] = 'Cancel';
+$string['close_button_text'] = 'Close';
 $string['remove_note_title'] = 'Confirm';
 $string['remove_note_text'] = "Are you sure you want to delete this post and all the data it contains, as this will affect all other users as well?";
 $string['rate_note_title'] = "Confirm";
