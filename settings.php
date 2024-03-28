@@ -67,6 +67,13 @@ if ($ADMIN->fulltree) {
         '1'
     ));
 
+    $setting = new admin_setting_configtext('mod_board/export_userprofilefields',
+            new lang_string('export_userprofilefields', 'mod_board'),
+            new lang_string('export_userprofilefields_desc', 'mod_board'),
+            'firstname,lastname,email', PARAM_TEXT);
+    $setting->set_force_ltr(true);
+    $settings->add($setting);
+
     $settings->add(new admin_setting_configtext('mod_board/embed_width', get_string('embed_width', 'mod_board'),
                        get_string('embed_width_desc', 'mod_board'), '99%', PARAM_TEXT));
 

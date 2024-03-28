@@ -46,8 +46,8 @@ class notes_table extends table_sql {
      */
     public function __construct($cmid, $boardid, $groupid, $ownerid, $includedeleted) {
         parent::__construct('mod_board_notes_table');
-
-        // Get the construct paramaters and add them to the export url.
+        $context = \context_module::instance($cmid);
+        // Get the construct parameters and add them to the export url.
         $exportparams = [
             'id' => $cmid,
             'group' => $groupid,
@@ -59,7 +59,19 @@ class notes_table extends table_sql {
         $this->define_baseurl($exporturl);
 
         // Define the list of columns to show.
-        $columns = array('firstname', 'lastname', 'email', 'heading', 'content', 'info', 'url', 'timecreated', 'deleted');
+        $module = get_coursemodule_from_id('', $cmid, 0, false, MUST_EXIST);
+        $courseid = $module->course;
+        $fields = self::get_user_profile_fields($courseid, false);
+        $columns = [];
+        $userfields = '';
+        foreach ($fields as $field) {
+            // Needed headers in the table.
+            $columns[] = $field->shortname;
+            // Needed userdata to be included in the sql-statement.
+            $userfields .= ' u.' . $field->shortname . ', ';
+        }
+        $columns = array_merge($columns,  array('heading', 'content', 'info', 'url', 'timecreated', 'deleted'));
+
         $this->define_columns($columns);
 
         // Define the titles of columns to show in header.
@@ -70,8 +82,8 @@ class notes_table extends table_sql {
 
         // Define the SQL used to get the data.
         $this->sql = (object)[];
-        $this->sql->fields = 'bn.id, u.firstname, u.lastname, u.email, bn.heading, bn.content, bn.info, bn.url, bn.timecreated,
-            bn.deleted';
+        $this->sql->fields = 'bn.id, ' . $userfields . ' bn.heading, bn.content, bn.info, bn.url, bn.timecreated, bn.deleted';
+
         $this->sql->from = '{board_columns} bc
         JOIN {board_notes} bn ON bn.columnid = bc.id JOIN {user} u ON u.id = bn.ownerid';
         $this->sql->where = 'bc.boardid = :boardid';
@@ -87,6 +99,73 @@ class notes_table extends table_sql {
         if (!$includedeleted) {
             $this->sql->where .= ' AND bn.deleted = 0';
         }
+    }
+
+    /**
+     * This code is copied from the grading and has been adapted.
+     * Returns an array of user profile fields to be included in export
+     *
+     * @param int $courseid
+     * @param bool $includecustomfields
+     * @return array An array of stdClass instances with customid, shortname, datatype, default and fullname fields
+     */
+    public static function get_user_profile_fields($courseid, $includecustomfields = false) {
+        global $CFG, $DB;
+
+        // Gets the fields that have to be hidden.
+        $hiddenfields = array_map('trim', explode(',', $CFG->hiddenuserfields));
+        $context = \context_course::instance($courseid);
+        $canseehiddenfields = has_capability('moodle/course:viewhiddenuserfields', $context);
+        if ($canseehiddenfields) {
+            $hiddenfields = array();
+        }
+        $fields = array();
+        require_once($CFG->dirroot.'/user/lib.php');                // Loads user_get_default_fields()
+        require_once($CFG->dirroot.'/user/profile/lib.php');        // Loads constants, such as PROFILE_VISIBLE_ALL
+        $userexportablefields = ['firstname', 'lastname', 'email', 'id'];
+        // Sets the list of profile fields.
+        $userprofilefields = array_map('trim', explode(',', get_config('mod_board', 'export_userprofilefields')));
+        if (!empty($userprofilefields)) {
+            foreach ($userprofilefields as $field) {
+                $field = trim($field);
+                if (in_array($field, $hiddenfields) || !in_array($field, $userexportablefields)) {
+                    continue;
+                }
+                $obj = new \stdClass();
+                $obj->customid  = 0;
+                $obj->shortname = $field;
+                $obj->fullname  = get_string($field);
+                $fields[] = $obj;
+            }
+        }
+
+        // Sets the list of custom profile fields.
+        $customprofilefields = array_map('trim', explode(',', get_config('mod_board', 'export_customprofilefields')));
+        if ($includecustomfields && !empty($customprofilefields)) {
+            $customfields = profile_get_user_fields_with_data(0);
+
+            foreach ($customfields as $fieldobj) {
+                $field = (object)$fieldobj->get_field_config_for_external();
+                // Make sure we can display this custom field
+                if (!in_array($field->shortname, $customprofilefields)) {
+                    continue;
+                } else if (in_array($field->shortname, $hiddenfields)) {
+                    continue;
+                } else if ($field->visible != PROFILE_VISIBLE_ALL && !$canseehiddenfields) {
+                    continue;
+                }
+
+                $obj = new \stdClass();
+                $obj->customid  = $field->id;
+                $obj->shortname = $field->shortname;
+                $obj->fullname  = format_string($field->name);
+                $obj->datatype  = $field->datatype;
+                $obj->default   = $field->defaultdata;
+                $fields[] = $obj;
+            }
+        }
+
+        return $fields;
     }
 
     /**
