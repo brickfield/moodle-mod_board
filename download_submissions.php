@@ -57,13 +57,24 @@ get_string('export_email', 'mod_board'), get_string('export_heading', 'mod_board
 get_string('export_content', 'mod_board'), get_string('export_info', 'mod_board'),
 get_string('export_url', 'mod_board'), get_string('export_timecreated', 'mod_board')]);
 
+$context = \context_course::instance($course->id);
+$includeemail = false;
+if (has_capability('moodle/user:viewhiddendetails', $context) || has_capability('moodle/course:viewhiddenuserfields', $context)) {
+    $includeemail = true;
+}
+
 foreach ($boarddata as $columnid => $column) {
     foreach ($column->notes as $noteid => $note) {
         if (!isset($users[$note->userid])) {
             $users[$note->userid] = $DB->get_record('user', array('id' => $note->userid));
         }
+        if ($includeemail) {
+            $email = $user->email;
+        } else {
+            $email = '-';
+        }
         $user = $users[$note->userid];
-        fputcsv($fp, [$user->firstname, $user->lastname, $user->email, $note->heading, board::get_export_submission($note->content),
+        fputcsv($fp, [$user->firstname, $user->lastname, $email, $note->heading, board::get_export_submission($note->content),
         $note->info, $note->url, $note->timecreated ? userdate($note->timecreated) : null]);
     }
 }
