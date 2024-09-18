@@ -36,6 +36,9 @@ use moodle_url;
  */
 class notes_table extends table_sql {
 
+    /** @param bool $showemail Determine if the email should be displayed in the CSV export. */
+    private $showemail = false;
+
     /**
      * Constructor
      * @param int $cmid The course module id.
@@ -46,6 +49,14 @@ class notes_table extends table_sql {
      */
     public function __construct($cmid, $boardid, $groupid, $ownerid, $includedeleted) {
         parent::__construct('mod_board_notes_table');
+
+        // Set the showemail variable based on if the user has either capabilities.
+        $cm = get_coursemodule_from_id('board', $cmid);
+        $context = \context_course::instance($cm->course);
+        if (has_capability('moodle/user:viewhiddendetails', $context) ||
+            has_capability('moodle/course:viewhiddenuserfields', $context)) {
+            $this->showemail = true;
+        }
 
         // Get the construct paramaters and add them to the export url.
         $exportparams = [
@@ -111,6 +122,15 @@ class notes_table extends table_sql {
     public function other_cols($colname, $value) {
         if ($colname == 'timecreated') {
             return userdate($value->timecreated, get_string('strftimedatetimeshort', 'langconfig'));
+        }
+
+        // If the user does not posess either of the capabilities, display the email as a '-' instead of the email.
+        if ($colname == 'email') {
+            if ($this->showemail) {
+                return $value->email;
+            } else {
+                return '-';
+            }
         }
     }
 
