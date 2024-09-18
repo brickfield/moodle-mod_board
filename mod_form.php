@@ -83,6 +83,9 @@ class mod_board_mod_form extends moodleform_mod {
         $mform->addElement('checkbox', 'hideheaders', get_string('hideheaders', 'mod_board'));
         $mform->setType('hideheaders', PARAM_INT);
 
+        $mform->addElement('advcheckbox', 'hidename', get_string('hidename', 'mod_board'));
+        $mform->setType('hidename', PARAM_INT);
+
         $mform->addElement('select', 'sortby', get_string('sortby', 'mod_board'),
            array(
                 board::SORTBYNONE => get_string('sortbynone', 'mod_board'),

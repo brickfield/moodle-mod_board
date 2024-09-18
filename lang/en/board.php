@@ -36,6 +36,7 @@ $string['board:post'] = 'Manage own posts and potentially rate posts.';
 $string['board:manageboard'] = 'Manage columns and manage all posts.';
 $string['pluginadministration'] = 'Board module administration';
 $string['hideheaders'] = 'Hide column headers from students';
+$string['hidename'] = 'Hide embedded board name (needed on some themes)';
 $string['completiondetail:notes'] = 'Add notes: {$a}';
 $string['completionnotesgroup'] = 'Require notes';
 $string['completionnotes'] = 'Require students this number of notes to complete the activity';

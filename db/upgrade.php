@@ -235,5 +235,20 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2022040110, 'board');
     }
 
+    if ($oldversion < 2022040114) {
+
+        // Define field hidename to be added to board.
+        $table = new xmldb_table('board');
+        $field = new xmldb_field('hidename', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'name');
+
+        // Conditionally launch add field hidename.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2022040114, 'board');
+    }
+
     return true;
 }
