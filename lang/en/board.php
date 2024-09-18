@@ -26,7 +26,24 @@ defined('MOODLE_INTERNAL') || die;
 
 $string['pluginname'] = 'Board';
 $string['modulename'] = 'Board';
-$string['modulename_help'] = 'This is a new activity for Moodle that enables a teacher to create a new “postit” board.';
+$string['modulename_help'] = 'The board activity enables students to engage in discussions and thought-sharing anonymously, via a post-it board.
+
+Students can create posts to display content, such as text, images, URL links, or embedded videos.
+
+The teacher can create boards with a number of different configurations, including:
+
+* Rating posts.
+* Commenting on posts.
+* Group or single-user modes.
+* Completion options.
+* Teacher download options.
+
+Boards may be used
+
+* As introductions / icebreakers.
+* As crowdsourcing content.
+* As discussion whiteboards.
+* For teacher feedback on sessions.';
 $string['modulenameplural'] = 'Boards';
 $string['board:addinstance'] = 'Add a new board resource';
 $string['board:deleteallcomments'] = 'View and delete all comments on posts';
