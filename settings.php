@@ -119,10 +119,6 @@ if ($ADMIN->fulltree) {
         ]
     ));
 
-
-
-
-
     // Heading.
     $setting = new admin_setting_heading('mod_board/settings_heading_logging',
             get_string('settings_heading_logging', 'mod_board'),
@@ -131,38 +127,38 @@ if ($ADMIN->fulltree) {
 
     $settings->add(new admin_setting_configcheckbox(
             'mod_board/addcolumnnametolog',
-            get_string('addcolumnnametolog', 'mod_board'),
-            get_string('addcolumnnametolog_desc', 'mod_board'),
+            get_string('settings:addcolumnnametolog', 'mod_board'),
+            '',
             '1'
     ));
     $settings->add(new admin_setting_configcheckbox(
             'mod_board/addnotetolog',
-            get_string('addnotetolog', 'mod_board'),
-            get_string('addnotetolog_desc', 'mod_board'),
+            get_string('settings:addnotetolog', 'mod_board'),
+            '',
             '1'
     ));
     $settings->add(new admin_setting_configcheckbox(
             'mod_board/addcommenttolog',
-            get_string('addcommenttolog', 'mod_board'),
-            get_string('addcommenttolog_desc', 'mod_board'),
+            get_string('settings:addcommenttolog', 'mod_board'),
+            '',
             '1'
     ));
     $settings->add(new admin_setting_configcheckbox(
             'mod_board/addheadingtolog',
-            get_string('addheadingtolog', 'mod_board'),
-            get_string('addheadingtolog_desc', 'mod_board'),
+            get_string('settings:addheadingtolog', 'mod_board'),
+            '',
             '1'
     ));
     $settings->add(new admin_setting_configcheckbox(
             'mod_board/addattachmenttolog',
-            get_string('addattachmenttolog', 'mod_board'),
-            get_string('addattachmenttolog_desc', 'mod_board'),
+            get_string('settings:addattachmenttolog', 'mod_board'),
+            '',
             '1'
     ));
     $settings->add(new admin_setting_configcheckbox(
             'mod_board/addratingtolog',
-            get_string('addratingtolog', 'mod_board'),
-            get_string('addratingtolog_desc', 'mod_board'),
+            get_string('settings:addratingtolog', 'mod_board'),
+            '',
             '1'
     ));
 }
