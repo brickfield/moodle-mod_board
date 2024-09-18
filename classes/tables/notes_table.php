@@ -36,7 +36,7 @@ use moodle_url;
  */
 class notes_table extends table_sql {
 
-    /** @param bool $showemail Determine if the email should be displayed in the CSV export. */
+    /** @var bool $showemail Determine if the email should be displayed in the CSV export. */
     private $showemail = false;
 
     /**
