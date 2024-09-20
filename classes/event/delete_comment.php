@@ -58,7 +58,7 @@ class delete_comment extends \core\event\base {
      *
      * @return array|null
      */
-    protected function get_legacy_logdata() {
+    public function get_legacy_logdata() {
         return [$this->courseid, 'board', 'delete_comment', '', $this->objectid, $this->contextinstanceid];
     }
 }

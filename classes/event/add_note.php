@@ -91,7 +91,7 @@ class add_note extends \core\event\base {
      *
      * @return array|null
      */
-    protected function get_legacy_logdata() {
+    public function get_legacy_logdata() {
         return [$this->courseid, 'board', 'add_note', '', $this->objectid, $this->contextinstanceid];
     }
 }

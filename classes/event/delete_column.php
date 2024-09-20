@@ -85,7 +85,7 @@ class delete_column extends \core\event\base {
      *
      * @return array|null
      */
-    protected function get_legacy_logdata() {
+    public function get_legacy_logdata() {
         return [$this->courseid, 'board', 'delete_column', '', $this->objectid, $this->contextinstanceid];
     }
 }

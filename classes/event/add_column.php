@@ -86,7 +86,7 @@ class add_column extends \core\event\base {
      *
      * @return array|null
      */
-    protected function get_legacy_logdata() {
+    public function get_legacy_logdata() {
         return [$this->courseid, 'board', 'add_column', '', $this->objectid, $this->contextinstanceid];
     }
 }
