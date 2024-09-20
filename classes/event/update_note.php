@@ -84,4 +84,13 @@ class update_note extends \core\event\base {
     public static function get_other_mapping(): array {
         return [];
     }
+
+    /**
+     * Return the legacy event log data.
+     *
+     * @return array|null
+     */
+    protected function get_legacy_logdata() {
+        return [$this->courseid, 'board', 'update_note', '', $this->objectid, $this->contextinstanceid];
+    }
 }

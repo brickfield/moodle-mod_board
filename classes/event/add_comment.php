@@ -81,4 +81,13 @@ class add_comment extends \core\event\base {
     public static function get_other_mapping(): array {
         return [];
     }
+
+    /**
+     * Return the legacy event log data.
+     *
+     * @return array|null
+     */
+    protected function get_legacy_logdata() {
+        return [$this->courseid, 'board', 'add_comment', '', $this->objectid, $this->contextinstanceid];
+    }
 }
