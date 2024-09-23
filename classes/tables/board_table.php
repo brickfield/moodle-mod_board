@@ -38,6 +38,21 @@ use mod_board\board as board;
  */
 class board_table extends flexible_table {
 
+    /** @var int The board id. */
+    protected $boardid;
+
+    /** @var int The group id. */
+    protected $groupid;
+
+    /** @var int The owner id. */
+    protected $ownerid;
+
+    /** @var bool Include deleted notes. */
+    protected $includedeleted;
+
+    /** @var bool Is board rating enabled. */
+    protected $hasrating;
+
     /**
      * Constructor
      * @param int $cmid The course module id.
