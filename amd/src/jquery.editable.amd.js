@@ -1,3 +1,4 @@
+import jQuery from 'jquery';
 /*
 * jQuery plugin that makes elements editable
 *
@@ -10,6 +11,10 @@
 export default (function($, window) {
 
     'use strict';
+
+    if ($ === undefined) {
+        $ = jQuery;
+    }
 
     var $win = $(window), // Reference to window
 
