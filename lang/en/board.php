@@ -266,3 +266,12 @@ $string['brickfieldlogo'] = 'Powered by Brickfield logo';
 $string['singleusermodenotembed'] = 'Board does not allow a single user board to be embedded. Please change your settings.';
 $string['allowed_singleuser_modes'] = 'Enabled single user modes';
 $string['allowed_singleuser_modes_desc'] = 'Allow/Disallow usage of certain single user modes. Does not affect already created boards';
+
+$string['settings_heading_logging'] = 'Logging';
+$string['settings_heading_logging_info'] = 'By default, logging will contain content, such as the text of a note, comments, column names, and so on.<br>For data privacy purposes, logging may be configured to exclude some information that has been submitted by users.';
+$string['settings:addcommenttolog'] = 'Add comment to log';
+$string['settings:addcolumnnametolog'] = 'Add column name to log';
+$string['settings:addnotetolog'] = 'Add note to log';
+$string['settings:addheadingtolog'] = 'Add heading to log';
+$string['settings:addattachmenttolog'] = 'Add attachment to log';
+$string['settings:addratingtolog'] = 'Add rating to log';
