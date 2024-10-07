@@ -464,6 +464,9 @@ class board {
      * @return void
      */
     public static function board_add_column_log($boardid, $name, $columnid) {
+        if (!get_config('mod_board', 'addcolumnnametolog')) {
+            $name = '';
+        }
         $event = \mod_board\event\add_column::create([
             'objectid' => $columnid,
             'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
@@ -515,6 +518,9 @@ class board {
      * @return void
      */
     public static function board_update_column_log($boardid, $name, $columnid) {
+        if (!get_config('mod_board', 'addcolumnnametolog')) {
+            $name = '';
+        }
         $event = \mod_board\event\update_column::create([
             'objectid' => $columnid,
             'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
@@ -610,7 +616,7 @@ class board {
 
         $context = static::context_for_column($note->columnid);
         if ($context) {
-            require_capability('mod/board:view', $context);
+            require_capability('mod/board:post', $context);
 
             if ($USER->id != $note->userid) {
                 require_capability('mod/board:manageboard', $context);
@@ -751,7 +757,7 @@ class board {
 
         $context = static::context_for_column($columnid);
         if ($context) {
-            require_capability('mod/board:view', $context);
+            require_capability('mod/board:post', $context);
         }
 
         $heading = empty($heading) ? null : mb_substr($heading, 0, static::LENGTH_HEADING);
@@ -835,6 +841,15 @@ class board {
      * @return void
      */
     public static function board_add_note_log($boardid, $groupid, $heading, $content, $attachment, $columnid, $noteid) {
+        if (!get_config('mod_board', 'addnotetolog')) {
+            $content = '';
+        }
+        if (!get_config('mod_board', 'addheadingtolog')) {
+            $heading = '';
+        }
+        if (!get_config('mod_board', 'addattachmenttolog')) {
+            $attachment = '';
+        }
         $event = \mod_board\event\add_note::create([
             'objectid' => $noteid,
             'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
@@ -920,6 +935,15 @@ class board {
      * @return void
      */
     public static function board_update_note_log($boardid, $heading, $content, $attachment, $columnid, $noteid) {
+        if (!get_config('mod_board', 'addnotetolog')) {
+            $content = '';
+        }
+        if (!get_config('mod_board', 'addheadingtolog')) {
+            $heading = '';
+        }
+        if (!get_config('mod_board', 'addattachmenttolog')) {
+            $attachment = '';
+        }
         $event = \mod_board\event\update_note::create([
             'objectid' => $noteid,
             'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
@@ -1189,7 +1213,7 @@ class board {
         }
 
         $context = static::context_for_board($board->id);
-        if (!has_capability('mod/board:view', $context)) {
+        if (!has_capability('mod/board:post', $context)) {
             return $result;
         }
 
@@ -1288,6 +1312,9 @@ class board {
      * @return void
      */
     public static function board_rate_note_log($boardid, $noteid, $rating) {
+        if (!get_config('mod_board', 'addratingtolog')) {
+            $rating = '';
+        }
         $event = \mod_board\event\rate_note::create([
             'objectid' => $noteid,
             'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
@@ -1339,10 +1366,17 @@ class board {
      * a particular board.
      *
      * @param int $boardid
-     * @return void
+     * @return boolean
      */
     public static function board_users_can_edit($boardid) {
         global $DB;
+
+        $context = static::context_for_board($boardid);
+        if (!has_capability('mod/board:post', $context)) {
+            // The user is not allowed to post via capabilities.
+            return false;
+        }
+
         return $DB->get_field('board', 'userscanedit', ['id' => $boardid], IGNORE_MISSING);
     }
 
@@ -1510,7 +1544,8 @@ class board {
     public static function can_post(int $boardid, int $userid, int $ownerid): bool {
         global $USER;
 
-        if ($userid == $ownerid) {
+        $context = static::context_for_board($boardid);
+        if ($userid == $ownerid && has_capability('mod/board:post', $context)) {
             return true;
         }
         $board = static::get_board($boardid);

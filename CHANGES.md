@@ -1,5 +1,18 @@
 Release Notes
 
+_NOTE - This release will work on Moodle 4.00, 4.01, 4.02 & 4.03_
+
+##### 1.401.03 (Build 2022040112)
+
+New features / improvements:
+
+* Adding 4.03 support.
+
+Bug fixes:
+
+* Fix 4.03 default activity completion.
+* Fix 4.03 embed display.
+
 _NOTE - This release will work on Moodle 4.00, 4.01 & 4.02. (4.3 has not been released yet)_
 
 ##### 1.401.02 (Build 2022040111)

@@ -26,15 +26,34 @@ defined('MOODLE_INTERNAL') || die;
 
 $string['pluginname'] = 'Board';
 $string['modulename'] = 'Board';
-$string['modulename_help'] = 'This is a new activity for Moodle that enables a teacher to create a new “postit” board.';
+$string['modulename_help'] = 'The board activity enables students to engage in discussions and thought-sharing anonymously, via a post-it board.
+
+Students can create posts to display content, such as text, images, URL links, or embedded videos.
+
+The teacher can create boards with a number of different configurations, including:
+
+* Rating posts.
+* Commenting on posts.
+* Group or single-user modes.
+* Completion options.
+* Teacher download options.
+
+Boards may be used
+
+* As introductions / icebreakers.
+* As crowdsourcing content.
+* As discussion whiteboards.
+* For teacher feedback on sessions.';
 $string['modulenameplural'] = 'Boards';
 $string['board:addinstance'] = 'Add a new board resource';
 $string['board:deleteallcomments'] = 'View and delete all comments on posts';
 $string['board:postcomment'] = 'Create and view comments on posts';
-$string['board:view'] = 'View board content and manage own posts.';
+$string['board:view'] = 'View board content.';
+$string['board:post'] = 'Manage own posts and potentially rate posts.';
 $string['board:manageboard'] = 'Manage columns and manage all posts.';
 $string['pluginadministration'] = 'Board module administration';
 $string['hideheaders'] = 'Hide column headers from students';
+$string['hidename'] = 'Hide embedded board name (needed on some themes)';
 $string['completiondetail:notes'] = 'Add notes: {$a}';
 $string['completionnotesgroup'] = 'Require notes';
 $string['completionnotes'] = 'Require students this number of notes to complete the activity';
@@ -47,6 +66,7 @@ $string['board_column_locked'] = 'This column is locked and cannot be edited.';
 $string['default_column_heading'] = 'Heading';
 $string['post_button_text'] = 'Post';
 $string['cancel_button_text'] = 'Cancel';
+$string['close_button_text'] = 'Close';
 $string['remove_note_title'] = 'Confirm';
 $string['remove_note_text'] = "Are you sure you want to delete this post and all the data it contains, as this will affect all other users as well?";
 $string['rate_note_title'] = "Confirm";
@@ -105,6 +125,8 @@ $string['embed_width'] = 'Embed width';
 $string['embed_width_desc'] = 'Width to use for the iframe when embedding the board within the course. This should be a valid CSS value, e.g. px, rem, %, etc...';
 $string['embed_height'] = 'Embed height';
 $string['embed_height_desc'] = 'Height to use for the iframe when embedding the board within the course. This should be a valid CSS value, e.g. px, rem, %, etc...';
+$string['embed_allowed'] = 'Allow board embedding';
+$string['embed_allowed_desc'] = 'If activated, the board embedding feature is available in the activity settings.';
 
 $string['acceptedfiletypeforbackground'] = 'Accepted filetypes for background images.';
 $string['acceptedfiletypeforbackground_desc'] = 'Select the filetypes for background images to be supported.';
@@ -246,3 +268,12 @@ $string['brickfieldlogo'] = 'Powered by Brickfield logo';
 $string['singleusermodenotembed'] = 'Board does not allow a single user board to be embedded. Please change your settings.';
 $string['allowed_singleuser_modes'] = 'Enabled single user modes';
 $string['allowed_singleuser_modes_desc'] = 'Allow/Disallow usage of certain single user modes. Does not affect already created boards';
+
+$string['settings_heading_logging'] = 'Logging';
+$string['settings_heading_logging_info'] = 'By default, logging will contain content, such as the text of a note, comments, column names, and so on.<br>For data privacy purposes, logging may be configured to exclude some information that has been submitted by users.';
+$string['settings:addcommenttolog'] = 'Add comment to log';
+$string['settings:addcolumnnametolog'] = 'Add column name to log';
+$string['settings:addnotetolog'] = 'Add note to log';
+$string['settings:addheadingtolog'] = 'Add heading to log';
+$string['settings:addattachmenttolog'] = 'Add attachment to log';
+$string['settings:addratingtolog'] = 'Add rating to log';

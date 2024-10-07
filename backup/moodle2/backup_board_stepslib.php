@@ -34,7 +34,7 @@ class backup_board_activity_structure_step extends backup_activity_structure_ste
         $board = new backup_nested_element('board', ['id'], [
             'course', 'name', 'timemodified', 'intro', 'introformat', 'historyid',
             'background_color', 'addrating', 'hideheaders', 'sortby', 'postby', 'userscanedit', 'singleusermode',
-            'completionnotes']);
+            'completionnotes', 'embed']);
 
         $columns = new backup_nested_element('columns');
         $column = new backup_nested_element('column', ['id'], ['boardid', 'name', 'sortorder']);

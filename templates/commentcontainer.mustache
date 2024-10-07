@@ -22,6 +22,7 @@
     Example context (json):
     {
         "commentcount": 2,
+        "canpost": true,
         "comments": [
             {
                 "id": 1,
@@ -40,6 +41,7 @@
 }}
 <div class="comment mt-3 pt-3 border-top" data-region="commentbox" data-noteid="{{noteid}}">
     <h6 class="pl-2 mb-3">{{#str}}comments, mod_board, {{{commentcount}}}{{/str}}</h6>
+    {{#canpost}}
     <div class="d-flex mb-3 pl-2">
         <div class="comment-input w-100 border-bottom" contenteditable="true" data-region="commentinput" data-noteid="{{commentid}}" aria-label="{{#str}}addcomment, mod_board{{/str}}" ></div>
     </div>
@@ -69,6 +71,7 @@
             </button>
         </div>
     </div>
+    {{/canpost}}
     <div class="comments">
         {{> mod_board/comments}}
     </div>

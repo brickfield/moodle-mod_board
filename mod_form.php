@@ -128,8 +128,14 @@ class mod_board_mod_form extends moodleform_mod {
 
         $mform->addElement('advcheckbox', 'enableblanktarget', get_string('enableblanktarget', 'mod_board'));
         $mform->addHelpButton('enableblanktarget', 'enableblanktarget', 'mod_board');
-        // Embed board on the course, rather then give a link to it.
-        $mform->addElement('advcheckbox', 'embed', get_string('embedboard', 'mod_board'));
+
+        // Only add the embed setting, if embedding is allowed globally.
+        if (get_config('mod_board', 'embed_allowed')) {
+            // Embed board on the course, rather then give a link to it.
+            $mform->addElement('advcheckbox', 'embed', get_string('embedboard', 'mod_board'));
+
+            $mform->addElement('advcheckbox', 'hidename', get_string('hidename', 'mod_board'));
+        }
 
         $this->standard_coursemodule_elements();
 
@@ -164,8 +170,10 @@ class mod_board_mod_form extends moodleform_mod {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
-        if (($data['embed'] == 1) && ($data['singleusermode'] != board::SINGLEUSER_DISABLED)) {
-            $errors['embed'] = get_string('singleusermodenotembed', 'mod_board');
+        if (get_config('mod_board', 'embed_allowed')) {
+            if (($data['embed'] == 1) && ($data['singleusermode'] != board::SINGLEUSER_DISABLED)) {
+                $errors['embed'] = get_string('singleusermodenotembed', 'mod_board');
+            }
         }
 
         return $errors;
@@ -177,16 +185,25 @@ class mod_board_mod_form extends moodleform_mod {
      * @return array Array of string IDs of added items, empty array if none
      */
     public function add_completion_rules() {
+        global $CFG;
+
         $mform =& $this->_form;
 
-        $group = [];
-        $group[] =& $mform->createElement('checkbox', 'completionnotesenabled', '', get_string('completionnotes', 'mod_board'));
-        $group[] =& $mform->createElement('text', 'completionnotes', '', ['size' => 3]);
-        $mform->setType('completionnotes', PARAM_INT);
-        $mform->addGroup($group, 'completionnotesgroup', get_string('completionnotesgroup', 'mod_board'), [' '], false);
-        $mform->disabledIf('completionnotes', 'completionnotesenabled', 'notchecked');
+        // Changes for Moodle 4.3 - MDL-78516.
+        if ($CFG->branch < 403) {
+            $suffix = '';
+        } else {
+            $suffix = $this->get_suffix();
+        }
 
-        return ['completionnotesgroup'];
+        $group = [];
+        $group[] =& $mform->createElement('checkbox', 'completionnotesenabled' . $suffix, '', get_string('completionnotes', 'mod_board'));
+        $group[] =& $mform->createElement('text', 'completionnotes' . $suffix, '', ['size' => 3]);
+        $mform->setType('completionnotes' . $suffix, PARAM_INT);
+        $mform->addGroup($group, 'completionnotesgroup' . $suffix, get_string('completionnotesgroup', 'mod_board'), [' '], false);
+        $mform->disabledIf('completionnotes' . $suffix, 'completionnotesenabled', 'notchecked');
+
+        return ['completionnotesgroup' . $suffix];
     }
 
     /**
