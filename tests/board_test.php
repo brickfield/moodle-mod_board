@@ -30,9 +30,9 @@ use mod_board\completion\custom_completion;
  * @group mod_boards
  * @covers \mod_board\board;
  */
-class board_test extends \advanced_testcase {
+final class board_test extends \advanced_testcase {
 
-    public function test_coursemodule_for_board() {
+    public function test_coursemodule_for_board(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
@@ -42,7 +42,7 @@ class board_test extends \advanced_testcase {
         $this->assertEquals($result->instance, $board->id);
     }
 
-    public function test_get_board() {
+    public function test_get_board(): void {
         $this->resetAfterTest();
         $board = self::add_board(2);
         $output = board::get_board($board->id);
@@ -50,7 +50,7 @@ class board_test extends \advanced_testcase {
         $this->assertEquals($board->id, $output->id);
     }
 
-    public function test_get_column() {
+    public function test_get_column(): void {
         $this->resetAfterTest();
         $board = self::add_board(2);
         $column = self::add_column($board->id);
@@ -59,7 +59,7 @@ class board_test extends \advanced_testcase {
         $this->assertEquals($column->id, $output->id);
     }
 
-    public function test_get_note() {
+    public function test_get_note(): void {
         $this->resetAfterTest();
         $board = self::add_board(2);
         $column = self::add_column($board->id);
@@ -69,7 +69,7 @@ class board_test extends \advanced_testcase {
         $this->assertEquals($note->id, $output->id);
     }
 
-    public function test_get_note_rating() {
+    public function test_get_note_rating(): void {
         $this->resetAfterTest();
         $board = self::add_board(2);
         $column = self::add_column($board->id);
@@ -85,7 +85,7 @@ class board_test extends \advanced_testcase {
         $this->assertEquals(2, $output);
     }
 
-    public function test_context_for_board() {
+    public function test_context_for_board(): void {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();
         $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
@@ -94,7 +94,7 @@ class board_test extends \advanced_testcase {
         $this->assertEquals($board->cmid, $output->instanceid);
     }
 
-    public function test_context_for_column() {
+    public function test_context_for_column(): void {
         global $DB;
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();
@@ -105,7 +105,7 @@ class board_test extends \advanced_testcase {
         $this->assertEquals($board->cmid, $output->instanceid);
     }
 
-    public function test_clear_history() {
+    public function test_clear_history(): void {
         global $DB;
         $this->resetAfterTest();
         $board = self::add_board(1);
@@ -128,7 +128,7 @@ class board_test extends \advanced_testcase {
         $this->assertFalse($record);
     }
 
-    public function test_board_hide_headers() {
+    public function test_board_hide_headers(): void {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();
         $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
@@ -145,7 +145,7 @@ class board_test extends \advanced_testcase {
         $this->assertFalse($result);
     }
 
-    public function test_board_get() {
+    public function test_board_get(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
@@ -157,7 +157,7 @@ class board_test extends \advanced_testcase {
         $this->assertEquals($result[$column->id]->name, 'New Heading');
     }
 
-    public function test_board_history() {
+    public function test_board_history(): void {
         global $DB;
 
         $this->resetAfterTest();
@@ -181,7 +181,7 @@ class board_test extends \advanced_testcase {
         $this->assertEquals($result[$record->id]->boardid, $board->id);
     }
 
-    public function test_board_add_column() {
+    public function test_board_add_column(): void {
         global $DB;
 
         $this->resetAfterTest();
@@ -196,7 +196,7 @@ class board_test extends \advanced_testcase {
         $this->assertEquals($result['id'], $column->id);
     }
 
-    public function test_board_update_column() {
+    public function test_board_update_column(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
@@ -208,7 +208,7 @@ class board_test extends \advanced_testcase {
         $this->assertTrue($result['status']);
     }
 
-    public function test_board_delete_column() {
+    public function test_board_delete_column(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
@@ -220,7 +220,7 @@ class board_test extends \advanced_testcase {
         $this->assertTrue($result['status']);
     }
 
-    public function test_get_note_file() {
+    public function test_get_note_file(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
@@ -248,7 +248,7 @@ class board_test extends \advanced_testcase {
         $this->assertEmpty($result);
     }
 
-    public function test_board_note_update_attachment() {
+    public function test_board_note_update_attachment(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
@@ -269,7 +269,7 @@ class board_test extends \advanced_testcase {
         $this->assertEquals($result['url'], $attachment['url']);
     }
 
-    public function test_board_add_note() {
+    public function test_board_add_note(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
@@ -285,7 +285,7 @@ class board_test extends \advanced_testcase {
         $this->assertIsArray($result);
     }
 
-    public function test_board_update_note() {
+    public function test_board_update_note(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
@@ -302,7 +302,7 @@ class board_test extends \advanced_testcase {
         $this->assertIsArray($result);
     }
 
-    public function test_board_delete_note() {
+    public function test_board_delete_note(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
@@ -315,7 +315,7 @@ class board_test extends \advanced_testcase {
         $this->assertTrue($result['status']);
     }
 
-    public function test_board_move_note() {
+    public function test_board_move_note(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
@@ -329,7 +329,7 @@ class board_test extends \advanced_testcase {
         $this->assertTrue($result['status']);
     }
 
-    public function test_board_can_rate_note() {
+    public function test_board_can_rate_note(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
@@ -341,7 +341,7 @@ class board_test extends \advanced_testcase {
         $this->assertTrue($result['canrate']);
     }
 
-    public function test_board_rating_enabled() {
+    public function test_board_rating_enabled(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
@@ -356,7 +356,7 @@ class board_test extends \advanced_testcase {
     }
 
      // Undefined variable 'rate', it never gets defined if a valid note is passed in.
-    public function test_board_rate_note() {
+    public function test_board_rate_note(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
@@ -369,7 +369,7 @@ class board_test extends \advanced_testcase {
         $this->assertTrue($result['status']);
     }
 
-    public function test_board_is_editor() {
+    public function test_board_is_editor(): void {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();
         $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id, 'addrating' => 3]);
@@ -382,7 +382,7 @@ class board_test extends \advanced_testcase {
         $this->assertTrue($result);
     }
 
-    public function test_board_readonly() {
+    public function test_board_readonly(): void {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();
         $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id, 'addrating' => 3]);
@@ -402,7 +402,7 @@ class board_test extends \advanced_testcase {
      * Test updating activity completion when submitting 2 notes.
      * @covers \mod_board\completion\custom_completion;
      */
-    public function test_board_completion() {
+    public function test_board_completion(): void {
         global $CFG;
 
         $CFG->enablecompletion = 1;
@@ -441,7 +441,7 @@ class board_test extends \advanced_testcase {
      * @param int $courseid
      * @return false|mixed|\stdClass
      */
-    private static function add_board(int $courseid) {
+    private static function add_board(int $courseid): mixed {
         global $DB;
 
         $record = [
@@ -468,7 +468,7 @@ class board_test extends \advanced_testcase {
      * @param string $name
      * @return false|mixed|\stdClass
      */
-    private static function add_column(int $boardid, string $name = 'New Heading') {
+    private static function add_column(int $boardid, string $name = 'New Heading'): mixed {
         global $DB;
 
         $record = [
@@ -486,7 +486,7 @@ class board_test extends \advanced_testcase {
      * @param int $columnid
      * @return false|mixed|\stdClass
      */
-    private static function add_note(int $columnid) {
+    private static function add_note(int $columnid): mixed {
         global $DB;
 
         $record = [
@@ -508,7 +508,7 @@ class board_test extends \advanced_testcase {
      * @param string $url
      * @return false|mixed|\stdClass
      */
-    private static function add_note_file(int $columnid, string $url) {
+    private static function add_note_file(int $columnid, string $url): mixed {
         global $DB;
 
         $record = [
@@ -531,7 +531,7 @@ class board_test extends \advanced_testcase {
      * @param int $userid
      * @return false|mixed|\stdClass
      */
-    private static function add_note_rating(int $noteid, int $userid) {
+    private static function add_note_rating(int $noteid, int $userid): mixed {
         global $DB;
 
         $record = [
