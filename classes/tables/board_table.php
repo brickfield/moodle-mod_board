@@ -53,6 +53,9 @@ class board_table extends flexible_table {
     /** @var bool Is board rating enabled. */
     protected $hasrating;
 
+    /** @var array Holds additional prefernces of the board. */
+    protected $prefs;
+
     /**
      * Constructor
      * @param int $cmid The course module id.
