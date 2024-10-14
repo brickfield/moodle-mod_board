@@ -33,7 +33,7 @@ $ownerid = optional_param('ownerid', 0, PARAM_INT);  // Board owner ID.
 $embed   = optional_param('embed', 0, PARAM_INT);
 
 if ($b) {
-    if (!$board = $DB->get_record('board', array('id' => $b))) {
+    if (!$board = $DB->get_record('board', ['id' => $b])) {
         throw new \moodle_exception('invalidaccessparameter');
     }
     $cm = get_coursemodule_from_instance('board', $board->id, $board->course, false, MUST_EXIST);
@@ -42,13 +42,13 @@ if ($b) {
     if (!$cm = get_coursemodule_from_id('board', $id)) {
         throw new \moodle_exception('invalidcoursemodule');
     }
-    $board = $DB->get_record('board', array('id' => $cm->instance), '*', MUST_EXIST);
+    $board = $DB->get_record('board', ['id' => $cm->instance], '*', MUST_EXIST);
 }
 
 // Make sure the board history ID is set.
 $board->historyid = $board->historyid ?? 0;
 
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+$course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
 
 require_course_login($course, true, $cm);
 $context = context_module::instance($cm->id);
@@ -81,7 +81,7 @@ if (($board->singleusermode != board::SINGLEUSER_DISABLED)
 $PAGE->requires->js_call_amd('mod_board/main', 'initialize',
     [
     'boardid' => $board->id,
-    'ownerid' => $ownerid
+    'ownerid' => $ownerid,
     ]
 );
 

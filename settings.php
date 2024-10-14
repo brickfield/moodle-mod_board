@@ -38,10 +38,10 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configtext('mod_board/new_note_icon', get_string('new_note_icon', 'mod_board'),
                        get_string('new_note_icon_desc', 'mod_board'), 'fa-plus', PARAM_RAW_TRIMMED));
 
-    $options = array(
+    $options = [
         1 => get_string('media_selection_buttons', 'mod_board'),
-        2 => get_string('media_selection_dropdown', 'mod_board')
-    );
+        2 => get_string('media_selection_dropdown', 'mod_board'),
+    ];
     $settings->add(new admin_setting_configselect('mod_board/media_selection', get_string('media_selection', 'mod_board'),
                        get_string('media_selection_desc', 'mod_board'), 1, $options));
 
@@ -85,15 +85,15 @@ if ($ADMIN->fulltree) {
         'mod_board/acceptedfiletypeforbackground',
         get_string('acceptedfiletypeforbackground', 'mod_board'),
         get_string('acceptedfiletypeforbackground_desc', 'mod_board'),
-        array('jpg' => 1, 'jpeg' => 1, 'png' => 1, 'gif' => 1),
-        array(
+        ['jpg' => 1, 'jpeg' => 1, 'png' => 1, 'gif' => 1],
+        [
             'jpg'  => 'jpg',
             'jpeg' => 'jpeg',
             'png'  => 'png',
             'gif'  => 'gif',
             'bmp'  => 'bmp',
             'svg'  => 'svg',
-        )
+        ]
     ));
 
     // Accepted filetypes for content.
@@ -101,15 +101,15 @@ if ($ADMIN->fulltree) {
         'mod_board/acceptedfiletypeforcontent',
         get_string('acceptedfiletypeforcontent', 'mod_board'),
         get_string('acceptedfiletypeforcontent_desc', 'mod_board'),
-        array('jpg' => 1, 'jpeg' => 1, 'png' => 1, 'gif' => 1),
-        array(
+        ['jpg' => 1, 'jpeg' => 1, 'png' => 1, 'gif' => 1],
+        [
             'jpg'  => 'jpg',
             'jpeg' => 'jpeg',
             'png'  => 'png',
             'gif'  => 'gif',
             'bmp'  => 'bmp',
             'svg'  => 'svg',
-        )
+        ]
     ));
 
     $settings->add(new admin_setting_configmulticheckbox2(
@@ -118,11 +118,11 @@ if ($ADMIN->fulltree) {
         get_string('allowed_singleuser_modes_desc', 'mod_board'),
         [
             board::SINGLEUSER_PRIVATE => 1,
-            board::SINGLEUSER_PUBLIC => 1
+            board::SINGLEUSER_PUBLIC => 1,
         ],
         [
             board::SINGLEUSER_PRIVATE => get_string('singleusermodeprivate', 'mod_board'),
-            board::SINGLEUSER_PUBLIC => get_string('singleusermodepublic', 'mod_board')
+            board::SINGLEUSER_PUBLIC => get_string('singleusermodepublic', 'mod_board'),
         ]
     ));
 

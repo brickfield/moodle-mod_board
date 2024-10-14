@@ -36,8 +36,8 @@ $group = optional_param('group', 0, PARAM_INT);
 if (!$cm = get_coursemodule_from_id('board', $id)) {
     throw new \moodle_exception('invalidcoursemodule');
 }
-$board = $DB->get_record('board', array('id' => $cm->instance), '*', MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+$board = $DB->get_record('board', ['id' => $cm->instance], '*', MUST_EXIST);
+$course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
 
 require_course_login($course, true, $cm);
 $context = context_module::instance($cm->id);

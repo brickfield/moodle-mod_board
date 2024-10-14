@@ -73,7 +73,7 @@ class comment {
      *
      * @param array $attrs parameter for creating a comment indexed by attriute names.
      */
-    public function __construct($attrs = array()) {
+    public function __construct($attrs = []) {
         global $DB, $USER;
 
         $commentid = $attrs['commentid'];
@@ -115,9 +115,9 @@ class comment {
             return $this->context;
         }
 
-        $note = $DB->get_record('board_notes', array('id' => $this->noteid), '*', MUST_EXIST);
-        $column = $DB->get_record('board_columns', array('id' => $note->columnid), '*', MUST_EXIST);
-        $board = $DB->get_record('board', array('id' => $column->boardid), '*', MUST_EXIST);
+        $note = $DB->get_record('board_notes', ['id' => $this->noteid], '*', MUST_EXIST);
+        $column = $DB->get_record('board_columns', ['id' => $note->columnid], '*', MUST_EXIST);
+        $board = $DB->get_record('board', ['id' => $column->boardid], '*', MUST_EXIST);
 
         $cm = get_coursemodule_from_instance('board', $board->id, $board->course, false, MUST_EXIST);
 
@@ -211,11 +211,11 @@ class comment {
         if (!get_config('mod_board', 'addcommenttolog')) {
             $content = '';
         }
-        $event = \mod_board\event\add_comment::create(array(
+        $event = \mod_board\event\add_comment::create([
             'objectid' => $commentid,
             'context' => $context,
-            'other' => ['noteid' => $noteid, 'content' => $content]
-        ));
+            'other' => ['noteid' => $noteid, 'content' => $content],
+        ]);
         $event->trigger();
     }
 
@@ -228,11 +228,11 @@ class comment {
      * @return void
      */
     public static function board_delete_comment_log($commentid, $context, $noteid) {
-        $event = \mod_board\event\delete_comment::create(array(
+        $event = \mod_board\event\delete_comment::create([
             'objectid' => $commentid,
             'context' => $context,
-            'other' => ['noteid' => $noteid]
-        ));
+            'other' => ['noteid' => $noteid],
+        ]);
         $event->trigger();
     }
 }
