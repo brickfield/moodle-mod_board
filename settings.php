@@ -38,6 +38,13 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configtext('mod_board/new_note_icon', get_string('new_note_icon', 'mod_board'),
                        get_string('new_note_icon_desc', 'mod_board'), 'fa-plus', PARAM_RAW_TRIMMED));
 
+    $settings->add(new admin_setting_configcheckbox(
+        'mod_board/enableprivacystatement',
+        get_string('settings:enableprivacystatement', 'mod_board'),
+        get_string('settings:enableprivacystatement_desc', 'mod_board'),
+        '0'
+    ));
+
     $options = array(
         1 => get_string('media_selection_buttons', 'mod_board'),
         2 => get_string('media_selection_dropdown', 'mod_board')
