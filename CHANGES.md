@@ -1,5 +1,18 @@
 Release Notes
 
+_NOTE - This release will work on Moodle 4.04, & 4.05_
+
+##### 1.404.01 (Build 2024102001)
+
+New features / improvements:
+
+* Adding support for 404, and 405.
+* Adding improved activity icon for 404, and 405.
+
+Bug fixes:
+
+* Fix deprecated JS calls for 404.
+
 _NOTE - This release will work on Moodle 4.00, 4.01, 4.02 & 4.03_
 
 ##### 1.401.03 (Build 2022040112)
