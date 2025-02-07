@@ -2,6 +2,23 @@ Release Notes
 
 _NOTE - This release will work on Moodle 4.00, 4.01, 4.02 & 4.03_
 
+##### 1.401.04 (Build 2022040116)
+
+New features / improvements:
+
+* Adding configurable logging values.
+* Adding more complete activity description for activity chooser.
+* Ability to configure if embedded option is available or not.
+
+Bug fixes:
+
+* Fix hidden emails not showing without relevant permissions.
+* Fix description duplication on some themes.
+* Fix AMD bug with undefined $.
+* Fix table dynamic properties.
+
+_NOTE - This release will work on Moodle 4.00, 4.01, 4.02 & 4.03_
+
 ##### 1.401.03 (Build 2022040112)
 
 New features / improvements:

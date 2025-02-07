@@ -79,6 +79,24 @@ class board_table extends flexible_table {
      */
     protected $prefs;
 
+    /** @var int The board id. */
+    protected $boardid;
+
+    /** @var int The group id. */
+    protected $groupid;
+
+    /** @var int The owner id. */
+    protected $ownerid;
+
+    /** @var bool Include deleted notes. */
+    protected $includedeleted;
+
+    /** @var bool Is board rating enabled. */
+    protected $hasrating;
+
+    /** @var array Holds additional prefernces of the board. */
+    protected $prefs;
+
     /**
      * Constructor
      * @param int $cmid The course module id.

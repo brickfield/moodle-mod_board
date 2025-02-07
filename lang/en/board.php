@@ -277,3 +277,6 @@ $string['settings:addnotetolog'] = 'Add note to log';
 $string['settings:addheadingtolog'] = 'Add heading to log';
 $string['settings:addattachmenttolog'] = 'Add attachment to log';
 $string['settings:addratingtolog'] = 'Add rating to log';
+$string['settings:enableprivacystatement'] = 'Enable privacy statement';
+$string['settings:enableprivacystatement_desc'] = 'Show privacy statement as part of Board description.';
+$string['privacystatement'] = '<strong>Board Privacy Statement:</strong> Please note that editing teachers, and those with appropriate permissions, are able to view exported data as to which users have created these Board posts and comments.';

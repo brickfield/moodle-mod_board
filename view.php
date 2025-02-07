@@ -100,6 +100,10 @@ if ($board->enableblanktarget) {
     echo html_writer::tag('div', get_string('blanktargetenabled', 'mod_board'), ['class' => 'small']);
 }
 
+if (get_config('mod_board', 'enableprivacystatement')) {
+    echo html_writer::tag('div', get_string('privacystatement', 'mod_board'), ['class' => 'normal']);
+}
+
 echo $OUTPUT->box_start('mod_introbox', 'group_menu');
 echo groups_print_activity_menu($cm, $pageurl, true);
 echo $OUTPUT->box_end();
