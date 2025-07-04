@@ -1536,6 +1536,8 @@ export default function(settings) {
             columnIdentifier = column.find('.mod_board_column_name').text(),
             title;
 
+        columnIdentifier = encodeText(columnIdentifier);
+
         if (note.data('ident')) {
             noteId = note.data('ident');
             title = strings.modal_title_edit.replace('{column}', columnIdentifier);
