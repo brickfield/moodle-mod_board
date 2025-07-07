@@ -40,6 +40,7 @@ final class board_history extends external_api {
         return new external_function_parameters([
             'id' => new external_value(PARAM_INT, 'The board id', VALUE_REQUIRED),
             'ownerid' => new external_value(PARAM_INT, 'The board ownerid', VALUE_REQUIRED),
+            'groupid' => new external_value(PARAM_INT, 'The board ownerid', VALUE_REQUIRED),
             'since' => new external_value(PARAM_INT, 'The last historyid', VALUE_REQUIRED),
         ]);
     }
@@ -49,14 +50,16 @@ final class board_history extends external_api {
      *
      * @param int $id
      * @param int $ownerid
+     * @param int $groupid
      * @param int|null $since
      * @return array
      */
-    public static function execute(int $id, int $ownerid, ?int $since): array {
+    public static function execute(int $id, int $ownerid, int $groupid, ?int $since): array {
         // Validate received parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
             'id' => $id,
             'ownerid' => $ownerid,
+            'groupid' => $groupid,
             'since' => $since,
         ]);
 
@@ -64,7 +67,7 @@ final class board_history extends external_api {
         $context = board::context_for_board($params['id']);
         self::validate_context($context);
 
-        return board::board_history($params['id'], $params['ownerid'], $params['since']);
+        return board::board_history($params['id'], $params['ownerid'], $params['groupid'], $params['since']);
     }
 
     /**

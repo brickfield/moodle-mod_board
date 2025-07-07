@@ -87,33 +87,58 @@ class board {
      * Gets the configuration for this board.
      * @param int $id The board id.
      * @param int $ownerid The user board to get notes from.
+     * @param int $groupid Selected group
+     * @return array
      */
-    public static function get_configuration(int $id, int $ownerid): array {
+    public static function get_configuration(int $id, int $ownerid, int $groupid): array {
         global $DB, $USER;
 
         $board = $DB->get_record('board', ['id' => $id]);
-        $contextid = \context_module::instance(self::coursemodule_for_board($board)->id)->id;
+        $cm = static::coursemodule_for_board($board);
+        $context = \context_module::instance($cm->id);
         $config = get_config('mod_board');
+
+        $forcereadonly = false;
 
         if ($board->singleusermode == self::SINGLEUSER_DISABLED) {
             if ($ownerid) {
                 debugging('ownerid must be used only in single-user modes', DEBUG_DEVELOPER);
                 $ownerid = 0;
             }
+            $groupmode = groups_get_activity_groupmode($cm);
+            if ($groupmode == SEPARATEGROUPS) {
+                if (!$groupid) {
+                    // No posting for All groups in separate groups mode for now,
+                    // students would see comments and ratings from other groups.
+                    $forcereadonly = true;
+                }
+            } else if ($groupmode == VISIBLEGROUPS) {
+                if (!$groupid && !has_capability('mod/board:manageboard', $context)) {
+                    // Only managers can post for All groups.
+                    $forcereadonly = true;
+                }
+            } else {
+                $groupid = 0;
+            }
+
         } else {
             if (!$ownerid) {
                 debugging('ownerid is required in single-user modes', DEBUG_DEVELOPER);
+                $ownerid = $USER->id;
             }
+            // Groups are not used in single-user-mode apart from user selection.
+            $groupid = 0;
         }
 
         $conf = [
             'board' => $board,
-            'contextid' => $contextid,
+            'contextid' => $context->id,
             'isEditor' => self::board_is_editor($board->id),
             'usersCanEdit' => self::board_users_can_edit($board->id),
             'userId' => $USER->id,
             'ownerId' => $ownerid,
-            'readonly' => (self::board_readonly($board->id) || !self::can_post($board->id, $ownerid)),
+            'groupId' => $groupid,
+            'readonly' => ($forcereadonly || self::board_readonly($board->id, $groupid) || !self::can_post($board->id, $ownerid)),
             'columnicon' => $config->new_column_icon,
             'noteicon' => $config->new_note_icon,
             'mediaselection' => $config->media_selection,
@@ -266,19 +291,23 @@ class board {
      *
      * @param int $groupid
      * @param int $boardid
-     * @return mixed
+     * @return void
      */
-    public static function require_access_for_group($groupid, $boardid) {
+    public static function require_access_for_group(int $groupid, int $boardid) {
+        if (!$groupid) {
+            debugging('groupid expected', DEBUG_DEVELOPER);
+        }
+
         $cm = static::coursemodule_for_board(static::get_board($boardid));
         $context = \context_module::instance($cm->id);
 
         if (has_capability('mod/board:manageboard', $context)) {
-            return true;
+            return;
         }
 
         $groupmode = groups_get_activity_groupmode($cm);
-        if (!in_array($groupmode, [VISIBLEGROUPS, SEPARATEGROUPS])) {
-            return true;
+        if ($groupmode == NOGROUPS) {
+            return;
         }
 
         if (!static::can_access_group($groupid, $context)) {
@@ -388,9 +417,10 @@ class board {
      *
      * @param int $boardid
      * @param int $ownerid The user board to get notes from.
+     * @param int $groupid
      * @return array
      */
-    public static function board_get(int $boardid, int $ownerid = 0): array {
+    public static function board_get(int $boardid, int $ownerid, int $groupid): array {
         global $DB;
 
         static::require_capability_for_board_view($boardid);
@@ -398,23 +428,48 @@ class board {
         if (!$board = $DB->get_record('board', ['id' => $boardid])) {
             return [];
         }
+        $cm = static::coursemodule_for_board($board);
+        $context = \context_module::instance($cm->id);
 
         if ($board->singleusermode == self::SINGLEUSER_DISABLED) {
             if ($ownerid) {
                 debugging('ownerid must be used only in single-user modes', DEBUG_DEVELOPER);
             }
             $ownerid = null;
+
+            $groupmode = groups_get_activity_groupmode($cm);
+            if ($groupmode == NOGROUPS) {
+                if ($groupid) {
+                    debugging('groupid is not expected when group mode not used', DEBUG_DEVELOPER);
+                    $groupid = 0;
+                }
+            } else if ($groupmode == SEPARATEGROUPS) {
+                if ($groupid) {
+                    static::require_access_for_group($groupid, $boardid);
+                } else {
+                    if (!has_capability('moodle/site:accessallgroups', $context)
+                        && !has_capability('mod/board:manageboard', $context)
+                    ) {
+                        return [];
+                    }
+                }
+                // NOTE: in visible groups mode everybody can see everything, only posting is restricted to own group.
+            }
+
         } else {
             if (!$ownerid) {
                 debugging('ownerid is required in single-user modes', DEBUG_DEVELOPER);
                 return [];
             }
-            if (!self::can_view_user($boardid, $ownerid)) {
+            if (!self::can_view_owner($boardid, $ownerid)) {
                 return [];
+            }
+            if ($groupid) {
+                debugging('groupid is not expected in single-user modes', DEBUG_DEVELOPER);
+                $groupid = 0;
             }
         }
 
-        $groupid = groups_get_activity_group(static::coursemodule_for_board(static::get_board($boardid)), true) ?: null;
         $hideheaders = static::board_hide_headers($boardid);
 
         $columns = $DB->get_records('board_columns', ['boardid' => $boardid], 'sortorder, id', 'id, name, locked');
@@ -452,10 +507,11 @@ class board {
      *
      * @param int $boardid
      * @param int $ownerid
+     * @param int $groupid
      * @param int|null $since
      * @return array
      */
-    public static function board_history(int $boardid, int $ownerid, ?int $since): array {
+    public static function board_history(int $boardid, int $ownerid, int $groupid, ?int $since): array {
         global $DB;
 
         static::require_capability_for_board_view($boardid);
@@ -464,16 +520,35 @@ class board {
             return [];
         }
 
-        if ($board->singleusermode == self::SINGLEUSER_PUBLIC || $board->singleusermode == self::SINGLEUSER_PRIVATE) {
+        if ($board->singleusermode != self::SINGLEUSER_DISABLED) {
             if (!$ownerid) {
                 return [];
             }
-            if (!self::can_view_user($boardid, $ownerid)) {
+            if (!self::can_view_owner($boardid, $ownerid)) {
                 return [];
             }
         }
 
-        $groupid = groups_get_activity_group(static::coursemodule_for_board(static::get_board($boardid)), true) ?: null;
+        if ($board->singleusermode != self::SINGLEUSER_DISABLED) {
+            // Groups are not used in single-user-mode apart from user selection.
+            $groupid = 0;
+        } else {
+            $cm = self::coursemodule_for_board($board);
+            $context = \context_module::instance($cm->id);
+            $groupmode = groups_get_activity_groupmode($cm);
+            if ($groupmode == NOGROUPS) {
+                $groupid = 0;
+            } else if ($groupmode == SEPARATEGROUPS) {
+                if ($groupid) {
+                    static::require_access_for_group($groupid, $boardid);
+                } else {
+                    // Only managers can see in "All groups".
+                    if (!has_capability('mod/board:manageboard', $context)) {
+                        return [];
+                    }
+                }
+            }
+        }
 
         static::clear_history();
 
@@ -484,7 +559,8 @@ class board {
             $condition .= " AND id > :since";
             $params['since'] = $since;
         }
-        if (!empty($groupid)) {
+        if ($groupid) {
+            // NOTE: this will not work for non-group posts.
             $condition .= " AND groupid=:groupid";
             $params['groupid'] = $groupid;
         }
@@ -820,12 +896,15 @@ class board {
      *
      * @param int $columnid
      * @param int $ownerid
+     * @param int $groupid
      * @param string $heading
      * @param string $content
      * @param array $attachment
      * @return array
      */
-    public static function board_add_note(int $columnid, int $ownerid, string $heading, string $content, array $attachment): array {
+    public static function board_add_note(
+        int $columnid, int $ownerid, int $groupid, string $heading, string $content, array $attachment
+    ): array {
         global $DB, $USER;
 
         $context = static::context_for_column($columnid);
@@ -847,10 +926,25 @@ class board {
 
         if ($board) {
             $cm = static::coursemodule_for_board(static::get_board($boardid));
-            $groupid = groups_get_activity_group($cm, true) ?: null;
-            static::require_access_for_group($groupid, $boardid);
 
-            if (static::board_readonly($boardid)) {
+            if ($board->singleusermode != self::SINGLEUSER_DISABLED) {
+                // Groups are not used in single-user-mode apart from user selection.
+                $groupid = null;
+            } else {
+                $groupmode = groups_get_activity_groupmode($cm);
+                if ($groupmode == NOGROUPS) {
+                    $groupid = null;
+                } else {
+                    if ($groupid) {
+                        static::require_access_for_group($groupid, $boardid);
+                    } else {
+                        // Only managers can post in "All groups".
+                        require_capability('mod/board:manageboard', $context);
+                    }
+                }
+            }
+
+            if (static::board_readonly($boardid, $groupid)) {
                 throw new \Exception('board_add_note not available');
             }
 
@@ -976,7 +1070,7 @@ class board {
             static::require_access_for_group($note->groupid, $boardid);
         }
 
-        if (static::board_readonly($boardid)) {
+        if (static::board_readonly($boardid, $note->groupid)) {
             throw new \Exception('board_update_note not available');
         }
 
@@ -1062,7 +1156,7 @@ class board {
             static::require_access_for_group($note->groupid, $boardid);
         }
 
-        if (static::board_readonly($boardid)) {
+        if (static::board_readonly($boardid, $note->groupid)) {
             throw new \Exception('board_delete_note not available');
         }
 
@@ -1302,7 +1396,7 @@ class board {
             return $result;
         }
 
-        if (static::board_readonly($board->id)) {
+        if (static::board_readonly($board->id, $note->groupid)) {
             return $result;
         }
 
@@ -1363,7 +1457,7 @@ class board {
         if (!static::board_can_rate_note($noteid)['canrate']) {
             return $return;
         }
-        if (static::board_readonly($boardid)) {
+        if (static::board_readonly($boardid, $note->groupid)) {
             return $return;
         }
 
@@ -1435,8 +1529,6 @@ class board {
      * @return boolean
      */
     public static function can_access_group($groupid, $context) {
-        global $USER;
-
         if (static::can_access_all_groups($context)) {
             return true;
         }
@@ -1478,9 +1570,10 @@ class board {
      * Checks if the user can only view the board
      *
      * @param int $boardid
+     * @param int|null $groupid
      * @return mixed
      */
-    public static function board_readonly($boardid) {
+    public static function board_readonly(int $boardid, ?int $groupid): bool {
         if (!$board = static::get_board($boardid)) {
             return false;
         }
@@ -1491,9 +1584,8 @@ class board {
         $groupmode = groups_get_activity_groupmode($cm);
         $postbyoverdue = !empty($board->postby) && time() > $board->postby;
 
-        $readonlyboard = !$iseditor && (($groupmode == VISIBLEGROUPS &&
-                         !static::can_access_group(groups_get_activity_group($cm, true),
-        $context)) || $postbyoverdue);
+        $readonlyboard = !$iseditor && (($groupmode != NOGROUPS && $board->singleusermode == self::SINGLEUSER_DISABLED
+                            && !static::can_access_group((int)$groupid, $context)) || $postbyoverdue);
 
         return $readonlyboard;
     }
@@ -1590,14 +1682,15 @@ class board {
      */
     public static function get_users_for_board($boardid, $groupid = 0): array {
         if ($groupid) {
-            static::require_access_for_group($groupid, $boardid);
-            $userlist = groups_get_members($groupid,
-            'u.id, u.lastname, u.firstname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename',
-            'lastname ASC, firstname ASC');
+            $groups[] = $groupid;
         } else {
-            $userlist = get_enrolled_users(static::context_for_board($boardid), 'mod/board:view', 0, 'u.id,
-                u.lastname, u.firstname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename');
+            $groups = 0;
         }
+        $context = static::context_for_board($boardid);
+        $onlyactive = !has_capability('mod/board:manageboard', $context);
+        $userlist = get_enrolled_users(static::context_for_board($boardid), 'mod/board:view', $groups, 'u.id,
+            u.lastname, u.firstname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename',
+            onlyactive: $onlyactive);
         $users = [];
         foreach ($userlist as $user) {
             $users[$user->id] = fullname($user);
@@ -1607,11 +1700,12 @@ class board {
 
     /**
      * Check if you can view the notes for this user.
+     *
      * @param int $boardid the board id.
-     * @param int $userid the user id.
+     * @param int $ownerid the user id.
      * @return bool true if you can view the notes, false otherwise.
      */
-    public static function can_view_user($boardid, $userid): bool {
+    public static function can_view_owner(int $boardid, int $ownerid): bool {
         global $USER;
 
         $board = static::get_board($boardid);
@@ -1619,14 +1713,14 @@ class board {
         if (has_capability('mod/board:manageboard', $context)) {
             return true;
         }
-        if ($USER->id != $userid && !is_enrolled($context, $userid, '', false)) {
+        if (!is_enrolled($context, $ownerid, 'mod/board:view', true)) {
             // Non-managers can only view boards of enrolled users.
             return false;
         }
         if ($board->singleusermode == self::SINGLEUSER_PUBLIC) {
             return true;
         }
-        if ($board->singleusermode == self::SINGLEUSER_PRIVATE && $USER->id == $userid) {
+        if ($board->singleusermode == self::SINGLEUSER_PRIVATE && $USER->id == $ownerid) {
             return true;
         }
         return false;

@@ -131,7 +131,8 @@ final class submit_form extends external_api {
                 $result = board::board_update_note($data->noteid, $data->heading, $data->content, $attachment);
                 $result['action'] = 'update';
             } else {
-                $result = board::board_add_note($data->columnid, $data->ownerid, $data->heading, $data->content, $attachment);
+                $result = board::board_add_note(
+                    $data->columnid, $data->ownerid, $data->groupid, $data->heading, $data->content, $attachment);
                 $result['action'] = 'insert';
             }
 

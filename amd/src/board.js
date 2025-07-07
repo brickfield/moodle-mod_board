@@ -222,6 +222,7 @@ export default function(settings) {
         usersCanEdit = options.usersCanEdit,
         userId = parseInt(options.userId) || -1,
         ownerId = parseInt(options.ownerId),
+        groupId = parseInt(options.groupId),
         mediaSelection = options.mediaselection || MEDIA_SELECTION_BUTTONS,
         editingNote = 0,
         isReadOnlyBoard = options.readonly || false,
@@ -1140,7 +1141,8 @@ export default function(settings) {
      * @method processBoardHistory
      */
     var processBoardHistory = function() {
-        serviceCall('board_history', {id: board.id, ownerid: ownerId, since: lastHistoryId}, function(boardhistory) {
+        let payload = {id: board.id, ownerid: ownerId, groupid: groupId, since: lastHistoryId};
+        serviceCall('board_history', payload, function(boardhistory) {
             for (var index in boardhistory) {
                 var item = boardhistory[index];
                 if (item.boardid != board.id) {
@@ -1462,11 +1464,12 @@ export default function(settings) {
      * @param {number} noteid
      * @param {number} columnid
      * @param {number} ownerId
+     * @param {number} groupId
      * @returns {Deferred|*}
      */
-    var getBody = function(noteid, columnid, ownerId) {
+    var getBody = function(noteid, columnid, ownerId, groupId) {
         // Get the content of the modal.
-        var params = {noteid: noteid, columnid: columnid, ownerid: ownerId};
+        var params = {noteid: noteid, columnid: columnid, ownerid: ownerId, groupid: groupId};
         return Fragment.loadFragment('mod_board', 'note_form', contextid, params);
     };
 
@@ -1549,7 +1552,7 @@ export default function(settings) {
 
         ModalSaveCancel.create({
             title: title,
-            body: getBody(noteId, columnId, ownerId),
+            body: getBody(noteId, columnId, ownerId, groupId),
             large: true,
             removeOnClose: true
         }).then(function(modal) {
@@ -1761,7 +1764,7 @@ export default function(settings) {
      * @method init
      */
     var init = function() {
-        serviceCall('get_board', {id: board.id, ownerid: ownerId}, function(columns) {
+        serviceCall('get_board', {id: board.id, ownerid: ownerId, groupid: groupId}, function(columns) {
             // Init
             if (columns) {
                 for (var index in columns) {

@@ -89,12 +89,35 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
         $oldid = $data->id;
 
         $data->columnid = $this->get_new_parentid('board_column');
-        if (!empty($data->userid)) {
-            $data->userid = $this->get_mappingid('user', $data->userid);
+        $column = $DB->get_record('board_columns', ['id' => $data->columnid]);
+        if (!$column) {
+            return;
         }
-        if (!empty($data->groupid)) {
-            $data->groupid = $this->get_mappingid('group', $data->groupid);
+        $board = $DB->get_record('board', ['id' => $column->boardid]);
+        if (!$board) {
+            return;
         }
+
+        $data->userid = $this->get_mappingid('user', $data->userid, 0);
+        if (!empty($data->ownerid)) {
+            $data->ownerid = $this->get_mappingid('user', $data->ownerid);
+        }
+        if (empty($data->ownerid)) {
+            $data->ownerid = $data->userid;
+        }
+
+        if ($board->singleusermode != \mod_board\board::SINGLEUSER_DISABLED) {
+            // Group is used only for user selection in private and public single user mode.
+            $data->groupid = null;
+        } else {
+            if (!empty($data->groupid)) {
+                $data->groupid = $this->get_mappingid('group', $data->groupid);
+            }
+            if (!$data->groupid) {
+                $data->groupid = null;
+            }
+        }
+
         $data->timecreated = $this->apply_date_offset($data->timecreated);
 
         $newitemid = $DB->insert_record('board_notes', $data);
@@ -112,6 +135,10 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
         $oldid = $data->id;
 
         $data->noteid = $this->get_new_parentid('board_note');
+        if (!$data->noteid) {
+            return;
+        }
+
         if (!empty($data->userid)) {
             $data->userid = $this->get_mappingid('user', $data->userid);
         }
@@ -132,6 +159,10 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
         $oldid = $data->id;
 
         $data->noteid = $this->get_new_parentid('board_note');
+        if (!$data->noteid) {
+            return;
+        }
+
         if (!empty($data->userid)) {
             $data->userid = $this->get_mappingid('user', $data->userid);
         }

@@ -22,6 +22,8 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_board\board;
+
 /**
  * The main upgrade function.
  * @param int $oldversion
@@ -266,6 +268,22 @@ function xmldb_board_upgrade(int $oldversion) {
 
         // Board savepoint reached.
         upgrade_mod_savepoint(true, 2025070702, 'board');
+    }
+
+    if ($oldversion < 2025070703) {
+        // Group mode is not used in private and public single user modes.
+        $sql = "UPDATE {board_notes}
+                   SET groupid = NULL
+                 WHERE columnid IN (
+                     SELECT c.id
+                       FROM {board_columns} c
+                       JOIN {board} b ON b.id = c.boardid
+                      WHERE b.singleusermode = :private OR b.singleusermode = :public
+                 )";
+        $DB->execute($sql, ['private' => board::SINGLEUSER_PRIVATE, 'public' => board::SINGLEUSER_PUBLIC]);
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2025070703, 'board');
     }
 
     return true;

@@ -39,7 +39,8 @@ final class get_board extends external_api {
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'id' => new external_value(PARAM_INT, 'The board id', VALUE_REQUIRED),
-            'ownerid' => new external_value(PARAM_INT, 'The ownerid', VALUE_DEFAULT, 0),
+            'ownerid' => new external_value(PARAM_INT, 'The ownerid - 0 in normal mode', VALUE_REQUIRED),
+            'groupid' => new external_value(PARAM_INT, 'The group id - 0 in single user mode', VALUE_REQUIRED),
         ]);
     }
 
@@ -48,20 +49,22 @@ final class get_board extends external_api {
      *
      * @param int $id
      * @param int $ownerid
+     * @param int $groupid
      * @return array
      */
-    public static function execute(int $id, int $ownerid = 0): array {
+    public static function execute(int $id, int $ownerid, int $groupid): array {
         // Validate received parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
             'id' => $id,
             'ownerid' => $ownerid,
+            'groupid' => $groupid,
         ]);
 
         // Request and permission validation.
         $context = board::context_for_board($params['id']);
         self::validate_context($context);
 
-        return board::board_get($params['id'], $params['ownerid']);
+        return board::board_get($params['id'], $params['ownerid'], $params['groupid']);
     }
 
     /**

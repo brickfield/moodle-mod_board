@@ -279,6 +279,7 @@ function mod_board_output_fragment_note_form($args) {
     $noteid = clean_param(($args->noteid ?? 0), PARAM_INT);
     $columnid = clean_param(($args->columnid ?? 0), PARAM_INT);
     $ownerid = clean_param(($args->ownerid ?? 0), PARAM_INT);
+    $groupid = clean_param(($args->groupid ?? 0), PARAM_INT);
 
     if (empty($columnid)) {
         throw new \coding_exception('invalidformrequest');
@@ -290,6 +291,7 @@ function mod_board_output_fragment_note_form($args) {
     $formdata = [
         'columnid' => $columnid,
         'ownerid' => $ownerid,
+        'groupid' => $groupid,
     ];
 
     if ($noteid) {

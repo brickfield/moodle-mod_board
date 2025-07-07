@@ -28,7 +28,6 @@ use mod_board\board;
 
 $id      = optional_param('id', 0, PARAM_INT); // Course Module ID.
 $b       = optional_param('b', 0, PARAM_INT);  // Board instance ID.
-$group = optional_param('group', 0, PARAM_INT);  // Group ID.
 $ownerid = optional_param('ownerid', 0, PARAM_INT);  // Board owner ID.
 $embed   = optional_param('embed', 0, PARAM_INT);
 
@@ -54,10 +53,16 @@ require_course_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/board:view', $context);
 
+$groupid = groups_get_activity_group($cm, true) ?: 0;
+
 if ($board->singleusermode == board::SINGLEUSER_DISABLED) {
     $ownerid = 0;
 } else if (!$ownerid) {
-    $ownerid = $USER->id;
+    if (is_enrolled(context_course::instance($course->id), $USER->id, 'mod/board:view', false)) {
+        $ownerid = $USER->id;
+    } else {
+        $ownerid = 0;
+    }
 }
 
 $pageurl = new moodle_url('/mod/board/view.php', ['id' => $cm->id, 'ownerid' => $ownerid]);
@@ -68,8 +73,7 @@ $PAGE->set_heading($course->fullname);
 $PAGE->set_activity_record($board);
 
 // Logic to limit view when board is in singleuser mode.
-if (($board->singleusermode != board::SINGLEUSER_DISABLED)
-    && (!board::can_view_user($board->id, $ownerid))) {
+if ($board->singleusermode != board::SINGLEUSER_DISABLED && !board::can_view_owner($board->id, $ownerid)) {
     echo $OUTPUT->header();
     echo $OUTPUT->heading(get_string('nopermission', 'mod_board'));
     echo $OUTPUT->footer();
@@ -82,8 +86,9 @@ $completion->set_module_viewed($cm);
 
 $PAGE->requires->js_call_amd('mod_board/main', 'initialize',
     [
-    'boardid' => $board->id,
-    'ownerid' => $ownerid,
+        'boardid' => $board->id,
+        'ownerid' => $ownerid,
+        'groupid' => $groupid,
     ]
 );
 
@@ -107,12 +112,16 @@ if (get_config('mod_board', 'enableprivacystatement')) {
 }
 
 echo $OUTPUT->box_start('mod_introbox', 'group_menu');
-echo groups_print_activity_menu($cm, $pageurl, true);
+if ($board->singleusermode != board::SINGLEUSER_PRIVATE || has_capability('mod/board:manageboard', $context)) {
+    $baseurl = new moodle_url('/mod/board/view.php', ['id' => $cm->id]);
+    echo groups_print_activity_menu($cm, $baseurl, true);
+}
 echo $OUTPUT->box_end();
 
 if ($board->singleusermode == board::SINGLEUSER_PUBLIC ||
-    (has_capability('mod/board:manageboard', $context) && $board->singleusermode == board::SINGLEUSER_PRIVATE)) {
-    $users = board::get_users_for_board($board->id, $group);
+    ($board->singleusermode == board::SINGLEUSER_PRIVATE && has_capability('mod/board:manageboard', $context))
+) {
+    $users = board::get_users_for_board($board->id, $groupid);
     if (count($users) == 0) {
         echo $OUTPUT->box_start('mod_introbox', 'pageintro');
         echo $OUTPUT->notification(get_string('nousers', 'mod_board'));
@@ -131,9 +140,7 @@ if (!empty($board->background_color)) {
     $extrabackground = "background-color: {$color};";
 }
 
-if (($board->singleusermode == board::SINGLEUSER_PUBLIC || $board->singleusermode == board::SINGLEUSER_PRIVATE) &&
-    ($ownerid == $USER->id && !is_enrolled(context_course::instance($course->id), $USER->id, '', true))) {
-
+if (!$ownerid && $board->singleusermode != board::SINGLEUSER_DISABLED) {
     echo $OUTPUT->box_start('mod_introbox', 'pageintro');
     echo $OUTPUT->notification(get_string('selectuserplease', 'mod_board'));
     echo $OUTPUT->box_end();
