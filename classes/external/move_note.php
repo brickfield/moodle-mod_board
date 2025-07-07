@@ -39,7 +39,6 @@ final class move_note extends external_api {
         return new external_function_parameters([
             'id' => new external_value(PARAM_INT, 'The note id', VALUE_REQUIRED),
             'columnid' => new external_value(PARAM_INT, 'The new column id', VALUE_REQUIRED),
-            'ownerid' => new external_value(PARAM_INT, 'The owner id', VALUE_REQUIRED),
             'sortorder' => new external_value(PARAM_INT, 'The new sort order for the note', VALUE_REQUIRED),
         ]);
     }
@@ -49,16 +48,14 @@ final class move_note extends external_api {
      *
      * @param int $id
      * @param int $columnid
-     * @param int $ownerid
      * @param int $sortorder The order in the column that the note was placed.
      * @return array
      */
-    public static function execute(int $id, int $columnid, int $ownerid, int $sortorder): array {
+    public static function execute(int $id, int $columnid, int $sortorder): array {
         // Validate received parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
             'id' => $id,
             'columnid' => $columnid,
-            'ownerid' => $ownerid,
             'sortorder' => $sortorder,
         ]);
 
@@ -67,7 +64,7 @@ final class move_note extends external_api {
         $context = board::context_for_board($column->boardid);
         self::validate_context($context);
 
-        return board::board_move_note($params['id'], $params['ownerid'], $params['columnid'], $params['sortorder']);
+        return board::board_move_note($params['id'], $params['columnid'], $params['sortorder']);
     }
 
     /**

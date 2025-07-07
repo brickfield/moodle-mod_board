@@ -88,12 +88,23 @@ class board {
      * @param int $id The board id.
      * @param int $ownerid The user board to get notes from.
      */
-    public static function get_configuration($id, $ownerid) {
+    public static function get_configuration(int $id, int $ownerid): array {
         global $DB, $USER;
 
         $board = $DB->get_record('board', ['id' => $id]);
         $contextid = \context_module::instance(self::coursemodule_for_board($board)->id)->id;
         $config = get_config('mod_board');
+
+        if ($board->singleusermode == self::SINGLEUSER_DISABLED) {
+            if ($ownerid) {
+                debugging('ownerid must be used only in single-user modes', DEBUG_DEVELOPER);
+                $ownerid = 0;
+            }
+        } else {
+            if (!$ownerid) {
+                debugging('ownerid is required in single-user modes', DEBUG_DEVELOPER);
+            }
+        }
 
         $conf = [
             'board' => $board,
@@ -102,7 +113,7 @@ class board {
             'usersCanEdit' => self::board_users_can_edit($board->id),
             'userId' => $USER->id,
             'ownerId' => $ownerid,
-            'readonly' => (self::board_readonly($board->id) || !self::can_post($board->id, $USER->id, $ownerid)),
+            'readonly' => (self::board_readonly($board->id) || !self::can_post($board->id, $ownerid)),
             'columnicon' => $config->new_column_icon,
             'noteicon' => $config->new_note_icon,
             'mediaselection' => $config->media_selection,
@@ -380,7 +391,7 @@ class board {
      * @return array
      */
     public static function board_get(int $boardid, int $ownerid = 0): array {
-        global $DB, $USER;
+        global $DB;
 
         static::require_capability_for_board_view($boardid);
 
@@ -388,23 +399,26 @@ class board {
             return [];
         }
 
+        if ($board->singleusermode == self::SINGLEUSER_DISABLED) {
+            if ($ownerid) {
+                debugging('ownerid must be used only in single-user modes', DEBUG_DEVELOPER);
+            }
+            $ownerid = null;
+        } else {
+            if (!$ownerid) {
+                debugging('ownerid is required in single-user modes', DEBUG_DEVELOPER);
+                return [];
+            }
+            if (!self::can_view_user($boardid, $ownerid)) {
+                return [];
+            }
+        }
+
         $groupid = groups_get_activity_group(static::coursemodule_for_board(static::get_board($boardid)), true) ?: null;
         $hideheaders = static::board_hide_headers($boardid);
 
         $columns = $DB->get_records('board_columns', ['boardid' => $boardid], 'sortorder, id', 'id, name, locked');
         $columnindex = 0;
-
-        if ($board->singleusermode == static::SINGLEUSER_PRIVATE) {
-            if (!static::can_view_user($board->id, $ownerid) || $ownerid == 0) {
-                $ownerid = $USER->id;
-            }
-        } else if ($board->singleusermode == static::SINGLEUSER_PUBLIC) {
-            if ($ownerid == 0) {
-                $ownerid = $USER->id;
-            }
-        } else {
-            $ownerid = 0;
-        }
 
         foreach ($columns as $columnid => $column) {
             if ($column->locked === null) {
@@ -450,6 +464,15 @@ class board {
             return [];
         }
 
+        if ($board->singleusermode == self::SINGLEUSER_PUBLIC || $board->singleusermode == self::SINGLEUSER_PRIVATE) {
+            if (!$ownerid) {
+                return [];
+            }
+            if (!self::can_view_user($boardid, $ownerid)) {
+                return [];
+            }
+        }
+
         $groupid = groups_get_activity_group(static::coursemodule_for_board(static::get_board($boardid)), true) ?: null;
 
         static::clear_history();
@@ -466,10 +489,8 @@ class board {
             $params['groupid'] = $groupid;
         }
         if ($board->singleusermode == self::SINGLEUSER_PUBLIC || $board->singleusermode == self::SINGLEUSER_PRIVATE) {
-            if (self::can_view_user($boardid, $ownerid)) {
-                $condition .= " AND (ownerid=:ownerid OR ownerid=null)";
-                $params['ownerid'] = $ownerid;
-            }
+            $condition .= " AND (ownerid=:ownerid OR ownerid=0)"; // Value 0 is used for global actions.
+            $params['ownerid'] = $ownerid;
         }
 
         return $DB->get_records_select('board_history', $condition, $params);
@@ -663,7 +684,7 @@ class board {
         global $DB, $USER;
 
         if (!$note = $DB->get_record('board_notes', ['id' => $id])) {
-            return false;
+            return;
         }
 
         $context = static::context_for_column($note->columnid);
@@ -819,10 +840,12 @@ class board {
         $column = static::get_column($columnid);
 
         $boardid = $column->boardid;
+        $board = static::get_board($boardid);
+
         // Get the count of notes in the column to add to bottom of sort order.
         $countnotes = $DB->count_records('board_notes', ['columnid' => $columnid, 'deleted' => 0]);
 
-        if ($boardid) {
+        if ($board) {
             $cm = static::coursemodule_for_board(static::get_board($boardid));
             $groupid = groups_get_activity_group($cm, true) ?: null;
             static::require_access_for_group($groupid, $boardid);
@@ -830,7 +853,23 @@ class board {
             if (static::board_readonly($boardid)) {
                 throw new \Exception('board_add_note not available');
             }
-            if (!self::can_post($boardid, $USER->id, $ownerid)) {
+
+            if ($board->singleusermode == self::SINGLEUSER_DISABLED) {
+                if ($ownerid) {
+                    debugging('ownerid should be used only in single-user modes', DEBUG_DEVELOPER);
+                    if ($ownerid != $USER->id) {
+                        throw new \Exception('board_add_note not available');
+                    }
+                }
+                $ownerid = $USER->id;
+            } else {
+                if (!$ownerid) {
+                    debugging('ownerid is required in single-user modes', DEBUG_DEVELOPER);
+                    $ownerid = $USER->id;
+                }
+            }
+
+            if (!self::can_post($boardid, $ownerid)) {
                 throw new \Exception('board_add_note not available');
             }
             $transaction = $DB->start_delegated_transaction();
@@ -915,13 +954,12 @@ class board {
      * Updates a note.
      *
      * @param int $id
-     * @param int $ownerid
      * @param string $heading
      * @param string $content
      * @param array $attachment
      * @return array
      */
-    public static function board_update_note(int $id, int $ownerid, string $heading, string $content, array $attachment): array {
+    public static function board_update_note(int $id, string $heading, string $content, array $attachment): array {
         global $DB, $USER;
 
         static::require_capability_for_note($id);
@@ -952,7 +990,7 @@ class board {
             $url = !empty($type) ? mb_substr($attachment['url'], 0, static::LENGTH_URL) : null;
 
             $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => 'update_note',
-                'ownerid' => $ownerid, 'userid' => $USER->id, 'content' => json_encode(['id' => $id,
+                'ownerid' => $note->ownerid, 'userid' => $USER->id, 'content' => json_encode(['id' => $id,
                 'columnid' => $columnid, 'heading' => $heading, 'content' => $content,
                 'attachment' => ['type' => $type, 'info' => $info, 'url' => $url]]),
                 'timecreated' => time()]);
@@ -1129,12 +1167,11 @@ class board {
      * Moves a note to a different column
      *
      * @param int $id
-     * @param int $ownerid
      * @param int $columnid
      * @param int $sortorder The order in the column the note was placed.
      * @return array
      */
-    public static function board_move_note(int $id, int $ownerid, int $columnid, int $sortorder): array {
+    public static function board_move_note(int $id, int $columnid, int $sortorder): array {
         global $DB, $USER;
 
         $note = static::get_note($id);
@@ -1155,9 +1192,9 @@ class board {
 
             $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => 'delete_note',
                 'content' => json_encode(['id' => $note->id, 'columnid' => $note->columnid]),
-                'ownerid' => $ownerid, 'userid' => $USER->id, 'timecreated' => time()]);
+                'ownerid' => $note->ownerid, 'userid' => $USER->id, 'timecreated' => time()]);
             $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'groupid' => $note->groupid,
-                'action' => 'add_note', 'userid' => $note->userid, 'ownerid' => $ownerid,
+                'action' => 'add_note', 'userid' => $note->userid, 'ownerid' => $note->ownerid,
                 'content' => json_encode(['id' => $note->id, 'columnid' => $columnid,
                 'heading' => $note->heading, 'content' => $note->content,
                 'attachment' => ['type' => $note->type, 'info' => $note->info,
@@ -1582,6 +1619,10 @@ class board {
         if (has_capability('mod/board:manageboard', $context)) {
             return true;
         }
+        if ($USER->id != $userid && !is_enrolled($context, $userid, '', false)) {
+            // Non-managers can only view boards of enrolled users.
+            return false;
+        }
         if ($board->singleusermode == self::SINGLEUSER_PUBLIC) {
             return true;
         }
@@ -1592,27 +1633,25 @@ class board {
     }
 
     /**
-     * Check if the user can post on this board
+     * Check if current user can post on this board
      *
      * @param int $boardid the board id.
-     * @param int $userid the user id.
-     * @param int $ownerid the board owner id.
+     * @param int $ownerid the board owner
      */
-    public static function can_post(int $boardid, int $userid, int $ownerid): bool {
+    public static function can_post(int $boardid, int $ownerid): bool {
         global $USER;
 
-        $context = static::context_for_board($boardid);
-        if ($userid == $ownerid && has_capability('mod/board:post', $context)) {
-            return true;
-        }
         $board = static::get_board($boardid);
         $context = static::context_for_board($boardid);
-        if (has_capability('mod/board:manageboard', $context) &&
-            ($board->singleusermode == self::SINGLEUSER_PUBLIC ||
-            $board->singleusermode == self::SINGLEUSER_PRIVATE)
-            ) {
-            return true;
+
+        if ($board->singleusermode == self::SINGLEUSER_DISABLED) {
+            return has_capability('mod/board:post', $context);
         }
-        return false;
+
+        if ($USER->id == $ownerid) {
+            return has_capability('mod/board:post', $context);
+        }
+
+        return has_capability('mod/board:manageboard', $context);
     }
 }

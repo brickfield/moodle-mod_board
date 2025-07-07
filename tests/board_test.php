@@ -242,7 +242,7 @@ final class board_test extends \advanced_testcase {
             'filecontents' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABpAAAAQaCAIAhEUgAABpAAAAQaCAIAAADL9awBAAAACXBIWXMAA',
         ];
 
-        $note = board::board_add_note($column->id, 2, 'heading', 'content', $attachment);
+        $note = board::board_add_note($column->id, 0, 'heading', 'content', $attachment);
         $result = board::get_note_file($note['note']->id);
         $this->assertEmpty($result);
     }
@@ -279,7 +279,7 @@ final class board_test extends \advanced_testcase {
             'info' => '',
             'url' => '',
         ];
-        $result = board::board_add_note($column->id, 2, 'Test heading', 'Test content', $attachment);
+        $result = board::board_add_note($column->id, 0, 'Test heading', 'Test content', $attachment);
 
         $this->assertIsArray($result);
     }
@@ -296,7 +296,7 @@ final class board_test extends \advanced_testcase {
             'info' => '',
             'url' => '',
         ];
-        $result = board::board_update_note($note->id, 2, 'update heading', 'update content', $attachment);
+        $result = board::board_update_note($note->id, 'update heading', 'update content', $attachment);
 
         $this->assertIsArray($result);
     }
@@ -322,7 +322,7 @@ final class board_test extends \advanced_testcase {
         $column = self::add_column($board->id);
         $note = self::add_note($column->id);
         $column2 = self::add_column($board->id, 'New column');
-        $result = board::board_move_note($note->id, 0, $column2->id, 0);
+        $result = board::board_move_note($note->id, $column2->id, 0);
 
         $this->assertIsArray($result);
         $this->assertTrue($result['status']);
@@ -419,7 +419,7 @@ final class board_test extends \advanced_testcase {
 
         $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
         $this->setUser($student);
-        $result = board::board_add_note($column->id, $student->id, 'Test heading', 'Test content', $attachment);
+        $result = board::board_add_note($column->id, 0, 'Test heading', 'Test content', $attachment);
 
         $cm = get_coursemodule_from_instance('board', $board->id);
         // Make sure we're using a cm_info object.
@@ -428,7 +428,7 @@ final class board_test extends \advanced_testcase {
 
         $this->assertEquals(COMPLETION_INCOMPLETE, $customcompletion->get_state('completionnotes'));
 
-        $result = board::board_add_note($column->id, $student->id, 'Test heading 2', 'Test content 2', $attachment);
+        $result = board::board_add_note($column->id, 0, 'Test heading 2', 'Test content 2', $attachment);
         $this->assertEquals(COMPLETION_COMPLETE, $customcompletion->get_state('completionnotes'));
     }
 
@@ -490,20 +490,20 @@ final class board_test extends \advanced_testcase {
         $columns4 = array_values($DB->get_records('board_columns', ['boardid' => $board4->id], 'id ASC'));
 
         $this->setUser($student1);
-        $note1x1 = board::board_add_note($columns1[0]->id, $student1->id, 'b1s1h1', 'test', [])['note'];
+        $note1x1 = board::board_add_note($columns1[0]->id, 0, 'b1s1h1', 'test', [])['note'];
         $note2x1 = board::board_add_note($columns2[0]->id, $student1->id, 'b2s1h1', 'test', [])['note'];
         $note3x1 = board::board_add_note($columns3[0]->id, $student1->id, 'b3s1h1', 'test', [])['note'];
         $SESSION->activegroup[$cm1->course][SEPARATEGROUPS][0] = $group1->id;
-        $note4x1 = board::board_add_note($columns4[0]->id, $student1->id, 'b4s1h1', 'test', [])['note'];
+        $note4x1 = board::board_add_note($columns4[0]->id, 0, 'b4s1h1', 'test', [])['note'];
         unset($SESSION->activegroup[$cm1->course][SEPARATEGROUPS]);
         $this->assertSame($group1->id, $note4x1->groupid);
 
         $this->setUser($student2);
-        $note1x2 = board::board_add_note($columns1[0]->id, $student2->id, 'b1s2h1', 'test', [])['note'];
+        $note1x2 = board::board_add_note($columns1[0]->id, 0, 'b1s2h1', 'test', [])['note'];
         $note2x2 = board::board_add_note($columns2[0]->id, $student2->id, 'b2s2h1', 'test', [])['note'];
         $note3x2 = board::board_add_note($columns3[0]->id, $student2->id, 'b3s2h1', 'test', [])['note'];
         $SESSION->activegroup[$cm1->course][SEPARATEGROUPS][0] = $group2->id;
-        $note4x2 = board::board_add_note($columns4[0]->id, $student2->id, 'b4s2h1', 'test', [])['note'];
+        $note4x2 = board::board_add_note($columns4[0]->id, 0, 'b4s2h1', 'test', [])['note'];
         unset($SESSION->activegroup[$cm1->course][SEPARATEGROUPS]);
 
         $this->setUser($teacher1);
@@ -604,6 +604,7 @@ final class board_test extends \advanced_testcase {
             'id' => 1,
             'columnid' => $columnid,
             'userid' => '2',
+            'ownerid' => '2',
             'groupid' => null,
             'content' => 'Test content',
             'heading' => 'Test heading',
@@ -626,6 +627,7 @@ final class board_test extends \advanced_testcase {
             'id' => 1,
             'columnid' => $columnid,
             'userid' => '2',
+            'ownerid' => '2',
             'groupid' => null,
             'content' => 'Test content',
             'heading' => 'Test heading',

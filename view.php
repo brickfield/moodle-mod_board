@@ -54,11 +54,9 @@ require_course_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/board:view', $context);
 
-// Update 'viewed' state if required by completion system.
-$completion = new completion_info($course);
-$completion->set_module_viewed($cm);
-
-if (!$ownerid) {
+if ($board->singleusermode == board::SINGLEUSER_DISABLED) {
+    $ownerid = 0;
+} else if (!$ownerid) {
     $ownerid = $USER->id;
 }
 
@@ -77,6 +75,10 @@ if (($board->singleusermode != board::SINGLEUSER_DISABLED)
     echo $OUTPUT->footer();
     die();
 }
+
+// Update 'viewed' state if required by completion system.
+$completion = new completion_info($course);
+$completion->set_module_viewed($cm);
 
 $PAGE->requires->js_call_amd('mod_board/main', 'initialize',
     [

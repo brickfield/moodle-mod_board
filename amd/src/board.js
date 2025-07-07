@@ -839,7 +839,7 @@ export default function(settings) {
                 if (usersCanEdit == 1 || isEditor) {
                     var moveElement = $('<div class="mod_board_move fa fa-arrows move_note" role="button" tabindex="0"></div>');
                     notecontrols.append(moveElement);
-                    moveNotesDialog.init(ownerId, moveNote);
+                    moveNotesDialog.init(moveNote);
                 }
 
                 var editElement = $('<div class="mod_board_move fa fa-pencil edit_note" role="button" tabindex="0"></div>');
@@ -1341,7 +1341,6 @@ export default function(settings) {
                 let payload = {
                     id: noteid,
                     columnid: columnid,
-                    ownerid: ownerId,
                     sortorder: sortorder
                 };
                 moveNote(fromColumnID, payload, elem);

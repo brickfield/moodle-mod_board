@@ -128,7 +128,7 @@ final class submit_form extends external_api {
                 if (!$note || $note->columnid != $column->id) {
                     throw new moodle_exception('formsubmissioninvalid');
                 }
-                $result = board::board_update_note($data->noteid, $data->ownerid, $data->heading, $data->content, $attachment);
+                $result = board::board_update_note($data->noteid, $data->heading, $data->content, $attachment);
                 $result['action'] = 'update';
             } else {
                 $result = board::board_add_note($data->columnid, $data->ownerid, $data->heading, $data->content, $attachment);

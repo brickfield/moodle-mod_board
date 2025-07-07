@@ -250,5 +250,23 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2022040114, 'board');
     }
 
+    if ($oldversion < 2025070702) {
+        // Make sure ownerid is set in all records.
+        $sql = "UPDATE {board_notes}
+                   SET ownerid = userid
+                 WHERE ownerid IS NULL";
+        $DB->execute($sql);
+
+        // Changing nullability of field ownerid on table board_notes to not null.
+        $table = new xmldb_table('board_notes');
+        $field = new xmldb_field('ownerid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, 'columnid');
+
+        // Launch change of nullability for field ownerid.
+        $dbman->change_field_notnull($table, $field);
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2025070702, 'board');
+    }
+
     return true;
 }
