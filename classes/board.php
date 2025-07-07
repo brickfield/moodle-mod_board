@@ -186,7 +186,7 @@ class board {
      * Retrieves the context of the selected board.
      *
      * @param int $id
-     * @return object
+     * @return \context
      */
     public static function context_for_board($id) {
         if (!$board = static::get_board($id)) {
@@ -201,7 +201,7 @@ class board {
      * Retrieves the context of the selected column.
      *
      * @param int $id
-     * @return object
+     * @return \context
      */
     public static function context_for_column($id) {
         if (!$column = static::get_column($id)) {

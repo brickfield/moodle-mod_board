@@ -18,7 +18,6 @@ namespace mod_board;
 
 defined('MOODLE_INTERNAL') || die;
 
-require_once($CFG->dirroot . "/mod/board/external.php");
 require_once($CFG->libdir . "/formslib.php");
 
 /**

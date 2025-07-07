@@ -128,7 +128,7 @@ class comment {
     /**
      * Checks if the user is allowed to post a comment on a note.
      *
-     * @param context $context the context, the user might post.
+     * @param \context $context the context, the user might post.
      * @return boolean true if user can create a comment.
      */
     public static function can_create($context) {
