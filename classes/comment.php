@@ -51,17 +51,7 @@ class comment {
     /**
      * @var $timecreated
      */
-    public $courseid = 0;
-
-    /**
-     * @var $timecreated
-     */
     public $timecreated = 0;
-
-    /**
-     * @var $timemodified
-     */
-    public $timemodified = 0;
 
     /**
      * @var $context
@@ -73,7 +63,7 @@ class comment {
      *
      * @param array $attrs parameter for creating a comment indexed by attriute names.
      */
-    public function __construct($attrs = []) {
+    public function __construct(array $attrs = []) {
         global $DB, $USER;
 
         $commentid = $attrs['commentid'];
@@ -90,6 +80,9 @@ class comment {
         }
 
         foreach ($attrs as $key => $value) {
+            if ($key === 'commentid') {
+                continue;
+            }
             $this->$key = $value;
         }
 
@@ -164,7 +157,7 @@ class comment {
     /**
      * Create or update this post.
      *
-     * @return \block_socialcomments\local\comment
+     * @return comment
      */
     public function save() {
         global $DB, $USER;
