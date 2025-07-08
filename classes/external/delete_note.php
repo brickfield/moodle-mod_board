@@ -21,6 +21,7 @@ use core_external\external_value;
 use core_external\external_api;
 use core_external\external_single_structure;
 use mod_board\board;
+use mod_board\local\note;
 
 /**
  * Delete bord note.
@@ -48,18 +49,41 @@ final class delete_note extends external_api {
      * @return array
      */
     public static function execute(int $id): array {
+        global $USER;
+
         // Validate received parameters.
-        $params = self::validate_parameters(self::execute_parameters(), [
+        [
+            'id' => $id,
+        ] = self::validate_parameters(self::execute_parameters(), [
             'id' => $id,
         ]);
 
-        // Request and permission validation.
-        $note = board::get_note($params['id']);
+        $note = board::get_note($id);
+        if (!$note) {
+            return ['status' => true, 'historyid' => 0];
+        }
         $column = board::get_column($note->columnid);
-        $context = board::context_for_board($column->boardid);
-        self::validate_context($context);
+        $board = board::get_board($column->boardid);
+        $context = board::context_for_board($board->id);
 
-        return board::board_delete_note($params['id']);
+        // Request and permission validation.
+        self::validate_context($context);
+        require_capability('mod/board:view', $context);
+        require_capability('mod/board:post', $context);
+
+        if ($USER->id != $note->userid) {
+            require_capability('mod/board:manageboard', $context);
+        }
+
+        if ($note->groupid) {
+            board::require_access_for_group($note->groupid, $board->id);
+        }
+
+        if (board::board_readonly($board->id, $note->groupid)) {
+            throw new \Exception('board_delete_note not available');
+        }
+
+        return note::delete($id);
     }
 
     /**

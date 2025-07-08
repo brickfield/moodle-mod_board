@@ -22,6 +22,7 @@ use core_external\external_api;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use mod_board\board;
+use mod_board\local\note;
 
 /**
  * Returns bord data.
@@ -137,7 +138,7 @@ final class get_board extends external_api {
             $column->notes = $DB->get_records('board_notes', $params, 'sortorder',
                 'id, userid, heading, content, type, info, url, timecreated, sortorder');
             foreach ($column->notes as $colid => $note) {
-                $note->rating = board::get_note_rating($note->id);
+                $note->rating = note::get_rating($note->id);
             }
         }
 

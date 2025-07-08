@@ -32,6 +32,7 @@ use flexible_table;
 use moodle_url;
 use html_writer;
 use mod_board\board as board;
+use mod_board\local\note;
 
 /**
  * Define board table class.
@@ -170,7 +171,7 @@ class board_table extends flexible_table {
                 }
                 if ($this->hasrating) {
                     if ($note) {
-                        $row[] = board::get_note_rating($note->id);
+                        $row[] = note::get_rating($note->id);
                     } else {
                         $row[] = '';
                     }

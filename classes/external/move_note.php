@@ -21,9 +21,10 @@ use core_external\external_value;
 use core_external\external_api;
 use core_external\external_single_structure;
 use mod_board\board;
+use mod_board\local\note;
 
 /**
- * Move bord note.
+ * Move board note.
  *
  * @package    mod_board
  * @copyright  2021 Brickfield Education Labs <https://www.brickfield.ie/>
@@ -52,19 +53,39 @@ final class move_note extends external_api {
      * @return array
      */
     public static function execute(int $id, int $columnid, int $sortorder): array {
+        global $USER;
+
         // Validate received parameters.
-        $params = self::validate_parameters(self::execute_parameters(), [
+        [
+            'id' => $id,
+            'columnid' => $columnid,
+            'sortorder' => $sortorder,
+        ] = self::validate_parameters(self::execute_parameters(), [
             'id' => $id,
             'columnid' => $columnid,
             'sortorder' => $sortorder,
         ]);
 
-        // Request and permission validation.
-        $column = board::get_column($params['columnid']);
+        $note = board::get_note($id);
+        if (!$note) {
+            return ['status' => false, 'historyid' => 0];
+        }
+        $column = board::get_column($note->columnid);
         $context = board::context_for_board($column->boardid);
-        self::validate_context($context);
+        $newcolumn = board::get_column($columnid);
+        if ($newcolumn->boardid != $column->boardid) {
+            return ['status' => false, 'historyid' => 0];
+        }
 
-        return board::board_move_note($params['id'], $params['columnid'], $params['sortorder']);
+        // Request and permission validation.
+        self::validate_context($context);
+        require_capability('mod/board:view', $context);
+
+        if ($USER->id != $note->userid && !board::board_users_can_edit($column->boardid)) {
+            board::require_capability_for_column($note->columnid);
+        }
+
+        return note::move($id, $columnid, $sortorder);
     }
 
     /**

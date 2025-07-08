@@ -23,6 +23,7 @@ use core_external\external_single_structure;
 use mod_board\board;
 use mod_board\note_form;
 use moodle_exception;
+use mod_board\local\note;
 
 /**
  * Submit note form - create or update.
@@ -41,7 +42,7 @@ final class submit_form extends external_api {
         return new external_function_parameters(
             [
                 'contextid' => new external_value(PARAM_INT, 'The context id for the course'),
-                'jsonformdata' => new external_value(PARAM_RAW, 'The data from the create group form, encoded as a json array'),
+                'jsonformdata' => new external_value(PARAM_RAW, 'The data from the create note form, json encoded string'),
             ]
         );
     }
@@ -53,16 +54,25 @@ final class submit_form extends external_api {
      * @param string $jsonformdata
      * @return array
      */
-    public static function execute($contextid, $jsonformdata): array {
-        $params = self::validate_parameters(self::execute_parameters(),
-            ['contextid' => $contextid, 'jsonformdata' => $jsonformdata]);
+    public static function execute(int $contextid, string $jsonformdata): array {
+        global $USER, $DB;
+
+        [
+            'contextid' => $contextid,
+            'jsonformdata' => $jsonformdata,
+        ] = self::validate_parameters(self::execute_parameters(), [
+            'contextid' => $contextid,
+            'jsonformdata' => $jsonformdata,
+        ]);
 
         // Check the context.
-        $context = \context::instance_by_id($params['contextid'], MUST_EXIST);
+        $context = \context::instance_by_id($contextid);
         self::validate_context($context);
+        require_capability('mod/board:view', $context);
+        require_capability('mod/board:post', $context);
 
         // Extract data out of the form content.
-        $serialiseddata = json_decode($params['jsonformdata']);
+        $serialiseddata = json_decode($jsonformdata);
         $data = [];
         parse_str($serialiseddata, $data);
         $data = str_replace(["\r", "\n"], '', $data);
@@ -72,9 +82,10 @@ final class submit_form extends external_api {
         $data = $form->get_data();
         if ($data) {
             // Check that the passed context, and the context with this note/column match.
-            $column = board::get_column($data->columnid);
-            $ccontext = board::context_for_board($column->boardid);
-            if ($context->id !== $ccontext->id) {
+            $column = $DB->get_record('board_columns', ['id' => $data->columnid], '*', MUST_EXIST);
+            $board = $DB->get_record('board', ['id' => $column->boardid], '*', MUST_EXIST);
+            $colcontext = board::context_for_board($column->boardid);
+            if ($context->id !== $colcontext->id) {
                 throw new moodle_exception('formcontextmismatch');
             }
 
@@ -124,14 +135,65 @@ final class submit_form extends external_api {
 
             // Process either as an update or insert.
             if ($data->noteid) {
-                $note = board::get_note($data->noteid);
+                $note = $DB->get_record('board_notes', ['id' => $data->noteid, 'deleted' => 0], '*', MUST_EXIST);
                 if (!$note || $note->columnid != $column->id) {
                     throw new moodle_exception('formsubmissioninvalid');
                 }
-                $result = board::board_update_note($data->noteid, $data->heading, $data->content, $attachment);
+                if ($USER->id != $note->userid) {
+                    require_capability('mod/board:manageboard', $context);
+                }
+                if (!empty($note->groupid)) {
+                    board::require_access_for_group($note->groupid, $board->id);
+                }
+                if (board::board_readonly($board->id, $note->groupid)) {
+                    throw new \Exception('board_update_note not available');
+                }
+                $result = note::update($data->noteid, $data->heading, $data->content, $attachment);
                 $result['action'] = 'update';
+
             } else {
-                $result = board::board_add_note(
+                if ($board->singleusermode != board::SINGLEUSER_DISABLED) {
+                    // Groups are not used in single-user-mode apart from user selection.
+                    $data->groupid = null;
+                } else {
+                    $cm = board::coursemodule_for_board($board);
+                    $groupmode = groups_get_activity_groupmode($cm);
+                    if ($groupmode == NOGROUPS) {
+                        $data->groupid = null;
+                    } else {
+                        if ($data->groupid) {
+                            board::require_access_for_group($data->groupid, $board->id);
+                        } else {
+                            // Only managers can post in "All groups".
+                            require_capability('mod/board:manageboard', $context);
+                        }
+                    }
+                }
+
+                if (board::board_readonly($board->id, $data->groupid)) {
+                    throw new \Exception('board_add_note not available');
+                }
+
+                if ($board->singleusermode == board::SINGLEUSER_DISABLED) {
+                    if ($data->ownerid) {
+                        debugging('ownerid should be used only in single-user modes', DEBUG_DEVELOPER);
+                        if ($data->ownerid != $USER->id) {
+                            throw new \Exception('board_add_note not available');
+                        }
+                    }
+                    $data->ownerid = $USER->id;
+                } else {
+                    if (!$data->ownerid) {
+                        debugging('ownerid is required in single-user modes', DEBUG_DEVELOPER);
+                        $data->ownerid = $USER->id;
+                    }
+                }
+
+                if (!board::can_post($board->id, $data->ownerid)) {
+                    throw new \Exception('board_add_note not available');
+                }
+
+                $result = note::create(
                     $data->columnid, $data->ownerid, $data->groupid, $data->heading, $data->content, $attachment);
                 $result['action'] = 'insert';
             }

@@ -37,7 +37,7 @@ final class get_configuration_test extends \advanced_testcase {
             'course' => $course->id,
             'singleusermode' => board::SINGLEUSER_DISABLED,
             'groupmode' => NOGROUPS,
-            'ratingenabled' => 0,
+            'addrating' => board::RATINGDISABLED,
             'hideheaders' => 0,
             'sortby' => board::SORTBYDATE,
             'enableblanktarget' => 0,
@@ -49,7 +49,7 @@ final class get_configuration_test extends \advanced_testcase {
             'course' => $course->id,
             'singleusermode' => board::SINGLEUSER_PRIVATE,
             'groupmode' => NOGROUPS,
-            'ratingenabled' => 0,
+            'addrating' => board::RATINGBYALL,
             'hideheaders' => 0,
             'sortby' => board::SORTBYDATE,
             'enableblanktarget' => 0,
@@ -61,7 +61,7 @@ final class get_configuration_test extends \advanced_testcase {
             'course' => $course->id,
             'singleusermode' => board::SINGLEUSER_PUBLIC,
             'groupmode' => NOGROUPS,
-            'ratingenabled' => 0,
+            'addrating' => board::RATINGBYSTUDENTS,
             'hideheaders' => 0,
             'sortby' => board::SORTBYDATE,
             'enableblanktarget' => 0,
@@ -73,7 +73,7 @@ final class get_configuration_test extends \advanced_testcase {
             'course' => $course->id,
             'singleusermode' => board::SINGLEUSER_DISABLED,
             'groupmode' => SEPARATEGROUPS,
-            'ratingenabled' => 0,
+            'addrating' => board::RATINGBYTEACHERS,
             'hideheaders' => 0,
             'sortby' => board::SORTBYDATE,
             'enableblanktarget' => 0,
@@ -134,7 +134,7 @@ final class get_configuration_test extends \advanced_testcase {
         $this->assertSame($student1->id, (string)$settings->ownerId);
         $this->assertSame(0, $settings->groupId);
         $this->assertFalse($settings->readonly);
-        $this->assertFalse($settings->ratingenabled);
+        $this->assertTrue($settings->ratingenabled);
         $this->assertFalse($settings->hideheaders);
         $this->assertSame('1', $settings->sortby);
         $this->assertSame('0', $settings->enableblanktarget);
@@ -152,7 +152,7 @@ final class get_configuration_test extends \advanced_testcase {
         $this->assertSame($student1->id, (string)$settings->ownerId);
         $this->assertSame(0, $settings->groupId);
         $this->assertFalse($settings->readonly);
-        $this->assertFalse($settings->ratingenabled);
+        $this->assertTrue($settings->ratingenabled);
         $this->assertFalse($settings->hideheaders);
         $this->assertSame('1', $settings->sortby);
         $this->assertSame('0', $settings->enableblanktarget);
@@ -170,7 +170,7 @@ final class get_configuration_test extends \advanced_testcase {
         $this->assertSame(0, $settings->ownerId);
         $this->assertSame(0, $settings->groupId);
         $this->assertTrue($settings->readonly);
-        $this->assertFalse($settings->ratingenabled);
+        $this->assertTrue($settings->ratingenabled);
         $this->assertFalse($settings->hideheaders);
         $this->assertSame('1', $settings->sortby);
         $this->assertSame('0', $settings->enableblanktarget);
@@ -188,7 +188,7 @@ final class get_configuration_test extends \advanced_testcase {
         $this->assertSame(0, $settings->ownerId);
         $this->assertSame($group1->id, (string)$settings->groupId);
         $this->assertFalse($settings->readonly);
-        $this->assertFalse($settings->ratingenabled);
+        $this->assertTrue($settings->ratingenabled);
         $this->assertFalse($settings->hideheaders);
         $this->assertSame('1', $settings->sortby);
         $this->assertSame('0', $settings->enableblanktarget);
@@ -206,7 +206,7 @@ final class get_configuration_test extends \advanced_testcase {
         $this->assertSame(0, $settings->ownerId);
         $this->assertSame($group2->id, (string)$settings->groupId);
         $this->assertTrue($settings->readonly);
-        $this->assertFalse($settings->ratingenabled);
+        $this->assertTrue($settings->ratingenabled);
         $this->assertFalse($settings->hideheaders);
         $this->assertSame('1', $settings->sortby);
         $this->assertSame('0', $settings->enableblanktarget);
@@ -244,7 +244,7 @@ final class get_configuration_test extends \advanced_testcase {
         $this->assertSame($student1->id, (string)$settings->ownerId);
         $this->assertSame(0, $settings->groupId);
         $this->assertFalse($settings->readonly);
-        $this->assertFalse($settings->ratingenabled);
+        $this->assertTrue($settings->ratingenabled);
         $this->assertFalse($settings->hideheaders);
         $this->assertSame('1', $settings->sortby);
         $this->assertSame('0', $settings->enableblanktarget);
@@ -262,7 +262,7 @@ final class get_configuration_test extends \advanced_testcase {
         $this->assertSame($student1->id, (string)$settings->ownerId);
         $this->assertSame(0, $settings->groupId);
         $this->assertFalse($settings->readonly);
-        $this->assertFalse($settings->ratingenabled);
+        $this->assertTrue($settings->ratingenabled);
         $this->assertFalse($settings->hideheaders);
         $this->assertSame('1', $settings->sortby);
         $this->assertSame('0', $settings->enableblanktarget);
@@ -280,7 +280,7 @@ final class get_configuration_test extends \advanced_testcase {
         $this->assertSame(0, $settings->ownerId);
         $this->assertSame(0, $settings->groupId);
         $this->assertTrue($settings->readonly);
-        $this->assertFalse($settings->ratingenabled);
+        $this->assertTrue($settings->ratingenabled);
         $this->assertFalse($settings->hideheaders);
         $this->assertSame('1', $settings->sortby);
         $this->assertSame('0', $settings->enableblanktarget);
@@ -298,7 +298,7 @@ final class get_configuration_test extends \advanced_testcase {
         $this->assertSame(0, $settings->ownerId);
         $this->assertSame($group1->id, (string)$settings->groupId);
         $this->assertFalse($settings->readonly);
-        $this->assertFalse($settings->ratingenabled);
+        $this->assertTrue($settings->ratingenabled);
         $this->assertFalse($settings->hideheaders);
         $this->assertSame('1', $settings->sortby);
         $this->assertSame('0', $settings->enableblanktarget);
@@ -316,7 +316,7 @@ final class get_configuration_test extends \advanced_testcase {
         $this->assertSame(0, $settings->ownerId);
         $this->assertSame($group2->id, (string)$settings->groupId);
         $this->assertFalse($settings->readonly);
-        $this->assertFalse($settings->ratingenabled);
+        $this->assertTrue($settings->ratingenabled);
         $this->assertFalse($settings->hideheaders);
         $this->assertSame('1', $settings->sortby);
         $this->assertSame('0', $settings->enableblanktarget);

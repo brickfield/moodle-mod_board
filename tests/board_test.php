@@ -16,7 +16,7 @@
 
 namespace mod_board;
 
-use mod_board\board;
+use mod_board\local\note;
 use cm_info;
 use mod_board\completion\custom_completion;
 
@@ -33,7 +33,7 @@ final class board_test extends \advanced_testcase {
 
     public function test_coursemodule_for_board(): void {
         $this->resetAfterTest();
-        $this->setAdminUser();
+
         $course = $this->getDataGenerator()->create_course();
         $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
 
@@ -43,10 +43,14 @@ final class board_test extends \advanced_testcase {
 
     public function test_get_board(): void {
         $this->resetAfterTest();
-        $board = self::add_board(2);
-        $output = board::get_board($board->id);
 
-        $this->assertEquals($board->id, $output->id);
+        $course = $this->getDataGenerator()->create_course();
+        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
+        unset($board->cmid);
+
+        $result = board::get_board($board->id);
+
+        $this->assertEquals($board, $result);
     }
 
     public function test_get_column(): void {
@@ -66,22 +70,6 @@ final class board_test extends \advanced_testcase {
         $output = board::get_note($note->id);
 
         $this->assertEquals($note->id, $output->id);
-    }
-
-    public function test_get_note_rating(): void {
-        $this->resetAfterTest();
-        $board = self::add_board(2);
-        $column = self::add_column($board->id);
-        $note = self::add_note($column->id);
-        self::add_note_rating($note->id, 2);
-        $output = board::get_note_rating($note->id);
-
-        $this->assertEquals(1, $output);
-
-        self::add_note_rating($note->id, 3);
-        $output = board::get_note_rating($note->id);
-
-        $this->assertEquals(2, $output);
     }
 
     public function test_context_for_board(): void {
@@ -146,17 +134,18 @@ final class board_test extends \advanced_testcase {
 
     public function test_get_note_file(): void {
         $this->resetAfterTest();
+        $admin = get_admin();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
         $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
         $column = self::add_column($board->id);
         $note = self::add_note($column->id);
 
-        $result = board::get_note_file($note->id);
+        $result = note::get_note_file($note->id);
         $this->assertNull($result);
 
         $note = self::add_note_file($column->id, 'www.google.com');
-        $result = board::get_note_file($note->id);
+        $result = note::get_note_file($note->id);
         $this->assertFalse($result);
 
         $attachment = [
@@ -167,102 +156,9 @@ final class board_test extends \advanced_testcase {
             'filecontents' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABpAAAAQaCAIAhEUgAABpAAAAQaCAIAAADL9awBAAAACXBIWXMAA',
         ];
 
-        $note = board::board_add_note($column->id, 0, 0, 'heading', 'content', $attachment);
-        $result = board::get_note_file($note['note']->id);
+        $note = note::create($column->id, $admin->id, 0, 'heading', 'content', $attachment);
+        $result = note::get_note_file($note['note']->id);
         $this->assertEmpty($result);
-    }
-
-    public function test_board_note_update_attachment(): void {
-        $this->resetAfterTest();
-        $this->setAdminUser();
-        $course = $this->getDataGenerator()->create_course();
-        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
-        $column = self::add_column($board->id);
-        $note = self::add_note($column->id);
-
-        $attachment = [
-            'type' => 2,
-            'info' => 'test info',
-            'url' => 'test url',
-            'filename' => 'testimage.png',
-            'filecontents' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABpAAAAQaCAIAhEUgAABpAAAAQaCAIAAADL9awBAAAACXBIWXMAASAS', // phpcs:ignore
-        ];
-
-        $result = board::board_note_update_attachment($note->id, $attachment);
-        $this->assertEquals($result['info'], $attachment['info']);
-        $this->assertEquals($result['url'], $attachment['url']);
-    }
-
-    public function test_board_add_note(): void {
-        $this->resetAfterTest();
-        $this->setAdminUser();
-        $course = $this->getDataGenerator()->create_course();
-        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
-        $column = self::add_column($board->id);
-        $attachment = [
-            'type' => 0,
-            'info' => '',
-            'url' => '',
-        ];
-        $result = board::board_add_note($column->id, 0, 0, 'Test heading', 'Test content', $attachment);
-
-        $this->assertIsArray($result);
-    }
-
-    public function test_board_update_note(): void {
-        $this->resetAfterTest();
-        $this->setAdminUser();
-        $course = $this->getDataGenerator()->create_course();
-        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
-        $column = self::add_column($board->id);
-        $note = self::add_note($column->id);
-        $attachment = [
-            'type' => 0,
-            'info' => '',
-            'url' => '',
-        ];
-        $result = board::board_update_note($note->id, 'update heading', 'update content', $attachment);
-
-        $this->assertIsArray($result);
-    }
-
-    public function test_board_delete_note(): void {
-        $this->resetAfterTest();
-        $this->setAdminUser();
-        $course = $this->getDataGenerator()->create_course();
-        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
-        $column = self::add_column($board->id);
-        $note = self::add_note($column->id);
-        $result = board::board_delete_note($note->id);
-
-        $this->assertIsArray($result);
-        $this->assertTrue($result['status']);
-    }
-
-    public function test_board_move_note(): void {
-        $this->resetAfterTest();
-        $this->setAdminUser();
-        $course = $this->getDataGenerator()->create_course();
-        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
-        $column = self::add_column($board->id);
-        $note = self::add_note($column->id);
-        $column2 = self::add_column($board->id, 'New column');
-        $result = board::board_move_note($note->id, $column2->id, 0);
-
-        $this->assertIsArray($result);
-        $this->assertTrue($result['status']);
-    }
-
-    public function test_board_can_rate_note(): void {
-        $this->resetAfterTest();
-        $this->setAdminUser();
-        $course = $this->getDataGenerator()->create_course();
-        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id, 'addrating' => 3]);
-        $column = self::add_column($board->id);
-        $note = self::add_note($column->id);
-        $result = board::board_can_rate_note($note->id);
-
-        $this->assertTrue($result['canrate']);
     }
 
     public function test_board_rating_enabled(): void {
@@ -277,20 +173,6 @@ final class board_test extends \advanced_testcase {
         $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id, 'addrating' => 3]);
         $result = board::board_rating_enabled($board->id);
         $this->assertTrue($result);
-    }
-
-     // Undefined variable 'rate', it never gets defined if a valid note is passed in.
-    public function test_board_rate_note(): void {
-        $this->resetAfterTest();
-        $this->setAdminUser();
-        $course = $this->getDataGenerator()->create_course();
-        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id, 'addrating' => 3]);
-        $column = self::add_column($board->id);
-        $note = self::add_note($column->id);
-        $result = board::board_rate_note($note->id);
-
-        $this->assertIsArray($result);
-        $this->assertTrue($result['status']);
     }
 
     public function test_board_is_editor(): void {
@@ -344,7 +226,7 @@ final class board_test extends \advanced_testcase {
 
         $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
         $this->setUser($student);
-        $result = board::board_add_note($column->id, 0, 0, 'Test heading', 'Test content', $attachment);
+        $result = note::create($column->id, $student->id, 0, 'Test heading', 'Test content', $attachment);
 
         $cm = get_coursemodule_from_instance('board', $board->id);
         // Make sure we're using a cm_info object.
@@ -353,12 +235,12 @@ final class board_test extends \advanced_testcase {
 
         $this->assertEquals(COMPLETION_INCOMPLETE, $customcompletion->get_state('completionnotes'));
 
-        $result = board::board_add_note($column->id, 0, 0, 'Test heading 2', 'Test content 2', $attachment);
+        $result = note::create($column->id, $student->id, 0, 'Test heading 2', 'Test content 2', $attachment);
         $this->assertEquals(COMPLETION_COMPLETE, $customcompletion->get_state('completionnotes'));
     }
 
     public function test_can_view_note(): void {
-        global $DB, $SESSION;
+        global $DB;
 
         $this->resetAfterTest();
 
@@ -415,20 +297,20 @@ final class board_test extends \advanced_testcase {
         $columns4 = array_values($DB->get_records('board_columns', ['boardid' => $board4->id], 'id ASC'));
 
         $this->setUser($student1);
-        $note1x1 = board::board_add_note($columns1[0]->id, 0, 0, 'b1s1h1', 'test', [])['note'];
-        $note2x1 = board::board_add_note($columns2[0]->id, $student1->id, 0, 'b2s1h1', 'test', [])['note'];
-        $note3x1 = board::board_add_note($columns3[0]->id, $student1->id, 0, 'b3s1h1', 'test', [])['note'];
-        $note4x1 = board::board_add_note($columns4[0]->id, 0, $group1->id, 'b4s1h1', 'test', [])['note'];
+        $note1x1 = note::create($columns1[0]->id, $student1->id, 0, 'b1s1h1', 'test', [])['note'];
+        $note2x1 = note::create($columns2[0]->id, $student1->id, 0, 'b2s1h1', 'test', [])['note'];
+        $note3x1 = note::create($columns3[0]->id, $student1->id, 0, 'b3s1h1', 'test', [])['note'];
+        $note4x1 = note::create($columns4[0]->id, $student1->id, $group1->id, 'b4s1h1', 'test', [])['note'];
 
         $this->setUser($student2);
-        $note1x2 = board::board_add_note($columns1[0]->id, 0, 0, 'b1s2h1', 'test', [])['note'];
-        $note2x2 = board::board_add_note($columns2[0]->id, $student2->id, 0, 'b2s2h1', 'test', [])['note'];
-        $note3x2 = board::board_add_note($columns3[0]->id, $student2->id, 0, 'b3s2h1', 'test', [])['note'];
-        $note4x2 = board::board_add_note($columns4[0]->id, 0, $group2->id, 'b4s2h1', 'test', [])['note'];
+        $note1x2 = note::create($columns1[0]->id, $student2->id, 0, 'b1s2h1', 'test', [])['note'];
+        $note2x2 = note::create($columns2[0]->id, $student2->id, 0, 'b2s2h1', 'test', [])['note'];
+        $note3x2 = note::create($columns3[0]->id, $student2->id, 0, 'b3s2h1', 'test', [])['note'];
+        $note4x2 = note::create($columns4[0]->id, $student2->id, $group2->id, 'b4s2h1', 'test', [])['note'];
 
         $this->setUser($teacher1);
-        $note2x1xt = board::board_add_note($columns2[0]->id, $student1->id, 0, 'b2s1h1', 'teach', [])['note'];
-        $note3x1xt = board::board_add_note($columns3[0]->id, $student1->id, 0, 'b3s1h1', 'teach', [])['note'];
+        $note2x1xt = note::create($columns2[0]->id, $student1->id, 0, 'b2s1h1', 'teach', [])['note'];
+        $note3x1xt = note::create($columns3[0]->id, $student1->id, 0, 'b3s1h1', 'teach', [])['note'];
 
         $this->setUser($student1->id);
         $this->assertSame($context1->id, board::can_view_note($note1x1->id)->id);

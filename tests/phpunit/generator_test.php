@@ -118,4 +118,97 @@ final class generator_test extends \advanced_testcase {
         $this->assertSame('0', $column5->locked);
         $this->assertSame('5', $column5->sortorder);
     }
+
+    public function test_create_note(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course([]);
+        $user1 = $this->getDataGenerator()->create_user();
+        $user2 = $this->getDataGenerator()->create_user();
+        $group = $this->getDataGenerator()->create_group(['courseid' => $course->id]);
+
+        /** @var \mod_board_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_board');
+
+        $board1 = $this->getDataGenerator()->create_module('board', [
+            'course' => $course->id,
+            'singleusermode' => board::SINGLEUSER_DISABLED,
+        ]);
+        list($column1, $column2, $column3)
+            = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
+
+        $this->setUser($user1);
+
+        $this->setCurrentTimeStart();
+        $note = $generator->create_note(['columnid' => $column1->id, 'heading' => 'Head 1', 'content' => 'CCC']);
+        $this->assertSame($column1->id, $note->columnid);
+        $this->assertSame($user1->id, $note->ownerid);
+        $this->assertSame($user1->id, $note->userid);
+        $this->assertSame(null, $note->groupid);
+        $this->assertSame('CCC', $note->content);
+        $this->assertSame('Head 1', $note->heading);
+        $this->assertSame('0', $note->type);
+        $this->assertSame(null, $note->info);
+        $this->assertSame(null, $note->url);
+        $this->assertTimeCurrent($note->timecreated);
+        $this->assertSame('0', $note->sortorder);
+        $this->assertSame('0', $note->deleted);
+
+        $this->setCurrentTimeStart();
+        $note = $generator->create_note(
+            ['columnid' => $column1->id, 'heading' => 'Head 2', 'groupid' => $group->id, 'userid' => $user2->id]);
+        $this->assertSame($column1->id, $note->columnid);
+        $this->assertSame($user2->id, $note->ownerid);
+        $this->assertSame($user2->id, $note->userid);
+        $this->assertSame($group->id, $note->groupid);
+        $this->assertSame('', $note->content);
+        $this->assertSame('Head 2', $note->heading);
+        $this->assertSame('0', $note->type);
+        $this->assertSame(null, $note->info);
+        $this->assertSame(null, $note->url);
+        $this->assertTimeCurrent($note->timecreated);
+        $this->assertSame('1', $note->sortorder);
+        $this->assertSame('0', $note->deleted);
+
+        $this->setUser(null);
+
+        $board2 = $this->getDataGenerator()->create_module('board', [
+            'course' => $course->id,
+            'singleusermode' => board::SINGLEUSER_PRIVATE,
+        ]);
+        list($column1, $column2, $column3)
+            = array_values($DB->get_records('board_columns', ['boardid' => $board2->id], 'id ASC'));
+
+        $this->setCurrentTimeStart();
+        $note = $generator->create_note(
+            ['columnid' => $column1->id, 'content' => 'XXX', 'userid' => $user1->id, 'ownerid' => $user2->id]);
+        $this->assertSame($column1->id, $note->columnid);
+        $this->assertSame($user2->id, $note->ownerid);
+        $this->assertSame($user1->id, $note->userid);
+        $this->assertSame(null, $note->groupid);
+        $this->assertSame('XXX', $note->content);
+        $this->assertSame(null, $note->heading);
+        $this->assertSame('0', $note->type);
+        $this->assertSame(null, $note->info);
+        $this->assertSame(null, $note->url);
+        $this->assertTimeCurrent($note->timecreated);
+        $this->assertSame('0', $note->sortorder);
+        $this->assertSame('0', $note->deleted);
+
+        $this->setCurrentTimeStart();
+        $note = $generator->create_note(['columnid' => $column1->id, 'userid' => $user1->id]);
+        $this->assertSame($column1->id, $note->columnid);
+        $this->assertSame($user1->id, $note->ownerid);
+        $this->assertSame($user1->id, $note->userid);
+        $this->assertSame(null, $note->groupid);
+        $this->assertSame('', $note->content);
+        $this->assertSame('Some note', $note->heading);
+        $this->assertSame('0', $note->type);
+        $this->assertSame(null, $note->info);
+        $this->assertSame(null, $note->url);
+        $this->assertTimeCurrent($note->timecreated);
+        $this->assertSame('1', $note->sortorder);
+        $this->assertSame('0', $note->deleted);
+    }
 }

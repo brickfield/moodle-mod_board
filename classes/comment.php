@@ -108,7 +108,7 @@ class comment {
             return $this->context;
         }
 
-        $note = $DB->get_record('board_notes', ['id' => $this->noteid], '*', MUST_EXIST);
+        $note = $DB->get_record('board_notes', ['id' => $this->noteid, 'deleted' => 0], '*', MUST_EXIST);
         $column = $DB->get_record('board_columns', ['id' => $note->columnid], '*', MUST_EXIST);
         $board = $DB->get_record('board', ['id' => $column->boardid], '*', MUST_EXIST);
 

@@ -21,6 +21,7 @@ use core_external\external_value;
 use core_external\external_api;
 use core_external\external_single_structure;
 use mod_board\board;
+use mod_board\local\note;
 
 /**
  * Rate bord note.
@@ -48,18 +49,31 @@ final class rate_note extends external_api {
      * @return array
      */
     public static function execute(int $id): array {
+        global $DB;
         // Validate received parameters.
-        $params = self::validate_parameters(self::execute_parameters(), [
+        [
+            'id' => $id,
+        ] = self::validate_parameters(self::execute_parameters(), [
             'id' => $id,
         ]);
 
-        // Request and permission validation.
-        $note = board::get_note($params['id']);
-        $column = board::get_column($note->columnid);
-        $context = board::context_for_board($column->boardid);
-        self::validate_context($context);
+        $note = board::get_note($id);
+        if (!$note) {
+            return ['status' => false, 'rating' => 0, 'historyid' => 0];
+        }
+        $column = $DB->get_record('board_columns', ['id' => $note->columnid], '*', MUST_EXIST);
+        $board = $DB->get_record('board', ['id' => $column->boardid], '*', MUST_EXIST);
+        $context = board::context_for_board($board->id);
 
-        return board::board_rate_note($params['id']);
+        // Request and permission validation.
+        self::validate_context($context);
+        require_capability('mod/board:view', $context);
+
+        if (!note::can_rate($note->id)) {
+            return ['status' => false, 'rating' => 0, 'historyid' => 0];
+        }
+
+        return note::rate($id);
     }
 
     /**

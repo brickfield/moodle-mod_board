@@ -41,10 +41,6 @@ final class move_column_test extends \advanced_testcase {
             'course' => $course->id,
             'singleusermode' => board::SINGLEUSER_DISABLED,
             'groupmode' => NOGROUPS,
-            'ratingenabled' => 0,
-            'hideheaders' => 0,
-            'sortby' => board::SORTBYDATE,
-            'enableblanktarget' => 0,
         ]);
 
         $teacher1 = $this->getDataGenerator()->create_user();

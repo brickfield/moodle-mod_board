@@ -299,7 +299,7 @@ function mod_board_output_fragment_note_form($args) {
 
     if ($noteid) {
         // Load data for an existing note.
-        $note = $DB->get_record('board_notes', ['id' => $noteid]);
+        $note = $DB->get_record('board_notes', ['id' => $noteid, 'deleted' => 0]);
         $itemid = $noteid;
 
         if (!$note) {

@@ -21,6 +21,7 @@ use core_external\external_value;
 use core_external\external_api;
 use core_external\external_single_structure;
 use mod_board\board;
+use mod_board\local\note;
 
 /**
  * Can user rate note?
@@ -48,18 +49,28 @@ final class can_rate_note extends external_api {
      * @return bool
      */
     public static function execute(int $id): array {
+        global $DB, $USER;
+
         // Validate received parameters.
-        $params = self::validate_parameters(self::execute_parameters(), [
+        [
+            'id' => $id,
+        ] = self::validate_parameters(self::execute_parameters(), [
             'id' => $id,
         ]);
 
-        // Request and permission validation.
-        $note = board::get_note($params['id']);
-        $column = board::get_column($note->columnid);
-        $context = board::context_for_board($column->boardid);
-        self::validate_context($context);
+        $note = board::get_note($id);
+        if (!$note) {
+            return ['canrate' => false, 'hasrated' => false];
+        }
+        $context = board::context_for_column($note->columnid);
 
-        return board::board_can_rate_note($params['id']);
+        // Request and permission validation.
+        self::validate_context($context);
+        require_capability('mod/board:view', $context);
+
+        $hasrated = $DB->record_exists('board_note_ratings', ['userid' => $USER->id, 'noteid' => $id]);
+
+        return ['canrate' => note::can_rate($id), 'hasrated' => $hasrated];
     }
 
     /**

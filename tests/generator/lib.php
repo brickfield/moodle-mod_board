@@ -82,7 +82,7 @@ class mod_board_generator extends testing_module_generator {
     }
 
     /**
-     * Create new board column.
+     * Create a new board column.
      *
      * @param array|stdClass|null $record
      * @return stdClass column record
@@ -105,5 +105,37 @@ class mod_board_generator extends testing_module_generator {
         $id = \mod_board\local\column::create($record->boardid, $record->name)['id'];
 
         return $DB->get_record('board_columns', ['id' => $id], '*', MUST_EXIST);
+    }
+
+    /**
+     * Create new a note.
+     *
+     * @param array|stdClass|null $record
+     * @return stdClass column record
+     */
+    public function create_note($record = null): stdClass {
+        global $DB, $USER;
+
+        $record = (object)(array)$record;
+
+        if (empty($record->columnid)) {
+            throw new coding_exception('Note generator requires $record->columnid');
+        }
+
+        if (empty($record->heading) && empty($record->content)) {
+            $record->heading = 'Some note';
+        }
+        $heading = $record->heading ?? '';
+        $content = $record->content ?? '';
+        $userid = $record->userid ?? $USER->id;
+        $ownerid = $record->ownerid ?? $userid;
+        $groupid = $record->groupid ?? 0;
+        $attachment = []; // Not supported here for now.
+
+        $id = \mod_board\local\note::create(
+            $record->columnid, $ownerid, $groupid, $heading, $content, $attachment, $userid
+        )['note']->id;
+
+        return $DB->get_record('board_notes', ['id' => $id], '*', MUST_EXIST);
     }
 }
