@@ -100,6 +100,9 @@ function board_get_post_actions() {
 function board_add_instance($data, $mform = null) {
     global $DB;
 
+    $data->timecreated = time();
+    $data->timemodified = $data->timecreated;
+
     if (!isset($data->hideheaders)) {
         $data->hideheaders = 0;
     }

@@ -53,9 +53,13 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
         $data = (object)$data;
         $oldid = $data->id;
         $data->course = $this->get_courseid();
-
-        $data->timemodified = $this->apply_date_offset($data->timemodified);
         $data->historyid = 0;
+
+        // Do not apply offset to board modification date.
+
+        if ($data->postby) {
+            $data->postby = $this->apply_date_offset($data->postby);
+        }
 
         $newitemid = $DB->insert_record('board', $data);
         $this->apply_activity_instance($newitemid);
@@ -118,7 +122,7 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
             }
         }
 
-        $data->timecreated = $this->apply_date_offset($data->timecreated);
+        // Do not apply offset to note creation date.
 
         $newitemid = $DB->insert_record('board_notes', $data);
         $this->set_mapping('board_note', $oldid, $newitemid, true);
@@ -142,7 +146,8 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
         if (!empty($data->userid)) {
             $data->userid = $this->get_mappingid('user', $data->userid);
         }
-        $data->timecreated = $this->apply_date_offset($data->timecreated);
+
+        // Do not apply offset to rating creation date.
 
         $newitemid = $DB->insert_record('board_note_ratings', $data);
         $this->set_mapping('board_note_rating', $oldid, $newitemid, true);
@@ -166,7 +171,8 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
         if (!empty($data->userid)) {
             $data->userid = $this->get_mappingid('user', $data->userid);
         }
-        $data->timecreated = $this->apply_date_offset($data->timecreated);
+
+        // Do not apply offset to comment creation date.
 
         $newitemid = $DB->insert_record('board_comments', $data);
         $this->set_mapping('board_comments', $oldid, $newitemid, true);
@@ -191,6 +197,9 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
         foreach ($columns as $columnid => $column) {
             $notes = $DB->get_records('board_notes', ['columnid' => $columnid]);
             foreach ($notes as $noteid => $note) {
+                if ($note->url === null) {
+                    continue;
+                }
                 $pattern = '/pluginfile.php\/(\d+)\//i';
                 $replacement = 'pluginfile.php/'.$context->id.'/';
                 $url = preg_replace($pattern, $replacement, $note->url);
