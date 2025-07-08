@@ -21,6 +21,7 @@ use core_external\external_value;
 use core_external\external_api;
 use core_external\external_single_structure;
 use mod_board\board;
+use mod_board\local\column;
 
 /**
  * Add board column.
@@ -50,17 +51,26 @@ final class add_column extends external_api {
      * @return array
      */
     public static function execute(int $boardid, string $name): array {
+        global $DB;
+
         // Validate received parameters.
-        $params = self::validate_parameters(self::execute_parameters(), [
+        [
+            'boardid' => $boardid,
+            'name' => $name,
+        ] = self::validate_parameters(self::execute_parameters(), [
             'boardid' => $boardid,
             'name' => $name,
         ]);
 
-        // Request and permission validation.
-        $context = board::context_for_board($params['boardid']);
-        self::validate_context($context);
+        $board = $DB->get_record('board', ['id' => $boardid], '*', MUST_EXIST);
 
-        return board::board_add_column($params['boardid'], $params['name']);
+        // Request and permission validation.
+        $context = board::context_for_board($board->id);
+        self::validate_context($context);
+        require_capability('mod/board:view', $context);
+        require_capability('mod/board:manageboard', $context);
+
+        return column::create($board->id, $name);
     }
 
     /**

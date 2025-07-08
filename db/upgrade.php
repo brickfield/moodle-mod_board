@@ -286,5 +286,26 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2025070703, 'board');
     }
 
+    if ($oldversion < 2025070704) {
+        // Make sure locked is set in all records.
+        $sql = "UPDATE {board_columns}
+                   SET locked = 0
+                 WHERE locked IS NULL";
+        $DB->execute($sql);
+
+        // Changing nullability of field locked on table board_columns to not null.
+        $table = new xmldb_table('board_columns');
+        $field = new xmldb_field('locked', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, '0', 'name');
+
+        // Launch change of nullability for field locked.
+        $dbman->change_field_notnull($table, $field);
+
+        // Launch change of default for field locked.
+        $dbman->change_field_default($table, $field);
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2025070704, 'board');
+    }
+
     return true;
 }

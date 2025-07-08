@@ -168,45 +168,6 @@ final class board_test extends \advanced_testcase {
         $this->assertEquals($result[$record->id]->boardid, $board->id);
     }
 
-    public function test_board_add_column(): void {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setAdminUser();
-        $course = $this->getDataGenerator()->create_course();
-        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
-        $result = board::board_add_column($board->id, 'Test column');
-
-        $column = $DB->get_record('board_columns', ['name' => 'Test column']);
-
-        $this->assertIsArray($result);
-        $this->assertEquals($result['id'], $column->id);
-    }
-
-    public function test_board_update_column(): void {
-        $this->resetAfterTest();
-        $this->setAdminUser();
-        $course = $this->getDataGenerator()->create_course();
-        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
-        $column = self::add_column($board->id);
-        $result = board::board_update_column($column->id, 'Test column');
-
-        $this->assertIsArray($result);
-        $this->assertTrue($result['status']);
-    }
-
-    public function test_board_delete_column(): void {
-        $this->resetAfterTest();
-        $this->setAdminUser();
-        $course = $this->getDataGenerator()->create_course();
-        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
-        $column = self::add_column($board->id);
-        $result = board::board_delete_column($column->id);
-
-        $this->assertIsArray($result);
-        $this->assertTrue($result['status']);
-    }
-
     public function test_get_note_file(): void {
         $this->resetAfterTest();
         $this->setAdminUser();

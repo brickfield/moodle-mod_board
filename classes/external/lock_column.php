@@ -21,6 +21,7 @@ use core_external\external_value;
 use core_external\external_api;
 use core_external\external_single_structure;
 use mod_board\board;
+use mod_board\local\column;
 
 /**
  * Lock board column.
@@ -50,18 +51,32 @@ final class lock_column extends external_api {
      * @return array
      */
     public static function execute(int $id, bool $status): array {
+        global $DB;
+
         // Validate recieved parameters.
-        $params = self::validate_parameters(self::execute_parameters(), [
+        [
+            'id' => $id,
+            'status' => $status,
+        ] = self::validate_parameters(self::execute_parameters(), [
             'id' => $id,
             'status' => $status,
         ]);
 
-        // Request and permission validation.
-        $column = board::get_column($params['id']);
-        $context = board::context_for_board($column->boardid);
-        self::validate_context($context);
+        $column = $DB->get_record('board_columns', ['id' => $id]);
+        if (!$column) {
+            return [
+                'status' => false,
+                'historyid' => 0,
+            ];
+        }
 
-        return board::board_lock_column($params['id'], $params['status']);
+        // Request and permission validation.
+        $context = board::context_for_column($column->id);
+        self::validate_context($context);
+        require_capability('mod/board:view', $context);
+        require_capability('mod/board:manageboard', $context);
+
+        return column::lock($column->id, $status);
     }
 
     /**

@@ -185,19 +185,6 @@ class board {
     }
 
     /**
-     * Adds a capability check for the board.
-     *
-     * @param int $id
-     * @return void
-     */
-    public static function require_capability_for_board($id) {
-        $context = static::context_for_board($id);
-        if ($context) {
-            require_capability('mod/board:manageboard', $context);
-        }
-    }
-
-    /**
      * Adds a capability check for the columns.
      *
      * @param int $id
@@ -403,184 +390,6 @@ class board {
         }
 
         return $DB->get_records_select('board_history', $condition, $params);
-    }
-
-    /**
-     * Adds a column to the board
-     *
-     * @param int $boardid
-     * @param string $name
-     * @return array
-     */
-    public static function board_add_column(int $boardid, string $name): array {
-        global $DB, $USER;
-
-        $name = mb_substr($name, 0, static::LENGTH_COLNAME);
-
-        static::require_capability_for_board($boardid);
-
-        $transaction = $DB->start_delegated_transaction();
-
-        $maxsortorder = $DB->get_field('board_columns', 'MAX(sortorder)', ['boardid' => $boardid]);
-
-        $columnid = $DB->insert_record('board_columns', ['boardid' => $boardid, 'name' => $name,
-            'sortorder' => $maxsortorder + 1]);
-        $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => 'add_column',
-            'ownerid' => 0, 'userid' => $USER->id, 'content' => json_encode(['id' => $columnid, 'name' => $name]),
-            'timecreated' => time()]);
-        $DB->update_record('board', ['id' => $boardid, 'historyid' => $historyid]);
-        $transaction->allow_commit();
-
-        static::board_add_column_log($boardid, $name, $columnid);
-
-        static::clear_history();
-        return ['id' => $columnid, 'historyid' => $historyid];
-    }
-
-    /**
-     * Triggers the add column event log.
-     *
-     * @param int $boardid
-     * @param string $name
-     * @param int $columnid
-     * @return void
-     */
-    public static function board_add_column_log($boardid, $name, $columnid) {
-        if (!get_config('mod_board', 'addcolumnnametolog')) {
-            $name = '';
-        }
-        $event = \mod_board\event\add_column::create([
-            'objectid' => $columnid,
-            'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
-            'other' => ['name' => $name],
-        ]);
-        $event->trigger();
-    }
-
-    /**
-     * Updates the column.
-     *
-     * @param int $id
-     * @param string $name
-     * @return array
-     */
-    public static function board_update_column(int $id, string $name): array {
-        global $DB, $USER;
-
-        $name = mb_substr($name, 0, static::LENGTH_COLNAME);
-
-        static::require_capability_for_column($id);
-
-        $boardid = $DB->get_field('board_columns', 'boardid', ['id' => $id]);
-        if ($boardid) {
-            $transaction = $DB->start_delegated_transaction();
-            $update = $DB->update_record('board_columns', ['id' => $id, 'name' => $name]);
-            $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => 'update_column',
-                'ownerid' => 0, 'userid' => $USER->id, 'content' => json_encode(['id' => $id, 'name' => $name]),
-                'timecreated' => time()]);
-            $DB->update_record('board', ['id' => $id, 'historyid' => $historyid]);
-            $transaction->allow_commit();
-
-            static::board_update_column_log($boardid, $name, $id);
-        } else {
-            $update = false;
-            $historyid = 0;
-        }
-
-        static::clear_history();
-        return ['status' => $update, 'historyid' => $historyid];
-    }
-
-    /**
-     * Triggers the update column log.
-     *
-     * @param int $boardid
-     * @param string $name
-     * @param int $columnid
-     * @return void
-     */
-    public static function board_update_column_log($boardid, $name, $columnid) {
-        if (!get_config('mod_board', 'addcolumnnametolog')) {
-            $name = '';
-        }
-        $event = \mod_board\event\update_column::create([
-            'objectid' => $columnid,
-            'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
-            'other' => ['name' => $name],
-        ]);
-        $event->trigger();
-    }
-
-    /**
-     * Deletes a column.
-     *
-     * @param int $id
-     * @return array
-     */
-    public static function board_delete_column(int $id): array {
-        global $DB, $USER;
-
-        static::require_capability_for_column($id);
-
-        $boardid = $DB->get_field('board_columns', 'boardid', ['id' => $id]);
-        if ($boardid) {
-            $transaction = $DB->start_delegated_transaction();
-            $notes = $DB->get_records('board_notes', ['columnid' => $id]);
-            foreach ($notes as $noteid => $note) {
-                $DB->delete_records('board_note_ratings', ['noteid' => $note->id]);
-                $DB->update_record('board_notes', ['id' => $note->id, 'deleted' => 1]);
-                static::delete_note_file($note->id);
-            }
-            $delete = $DB->delete_records('board_columns', ['id' => $id]);
-            $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => 'delete_column',
-                'ownerid' => 0, 'content' => json_encode(['id' => $id]),
-                'userid' => $USER->id, 'timecreated' => time()]);
-            $DB->update_record('board', ['id' => $boardid, 'historyid' => $historyid]);
-            $transaction->allow_commit();
-
-            static::board_delete_column_log($boardid, $id);
-        } else {
-            $delete = false;
-            $historyid = 0;
-        }
-
-        static::clear_history();
-        return ['status' => $delete, 'historyid' => $historyid];
-    }
-
-    /**
-     * Locks a columns
-     *
-     * @param int $id
-     * @param bool $locked True to lock the column, false to unlock it.
-     * @return array
-     */
-    public static function board_lock_column(int $id, bool $locked): array {
-        global $DB, $USER;
-
-        static::require_capability_for_column($id);
-        $boardid = $DB->get_field('board_columns', 'boardid', ['id' => $id]);
-
-        $result = $DB->set_field('board_columns', 'locked', $locked, ['id' => $id]);
-        $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => 'lock_column',
-                                        'content' => json_encode(['id' => $id, 'locked' => $locked]),
-                                        'userid' => $USER->id, 'timecreated' => time()]);
-        return ['status' => $result, 'historyid' => $historyid];
-    }
-
-    /**
-     * Triggers the delete column log.
-     *
-     * @param int $boardid
-     * @param int $columnid
-     * @return void
-     */
-    public static function board_delete_column_log($boardid, $columnid) {
-        $event = \mod_board\event\delete_column::create([
-            'objectid' => $columnid,
-            'context' => \context_module::instance(static::coursemodule_for_board(static::get_board($boardid))->id),
-        ]);
-        $event->trigger();
     }
 
     /**
@@ -1046,33 +855,6 @@ class board {
     }
 
     /**
-     * Moves a column to a new position.
-     *
-     * @param int $id the column id
-     * @param int $sortorder the new sortorder
-     */
-    public static function board_move_column(int $id, int $sortorder): array {
-        global $DB, $USER;
-
-        $column = static::get_column($id);
-        $columns = $DB->get_records('board_columns', ['boardid' => $column->boardid], 'sortorder ASC, id ASC');
-        self::repositionan_array_element($columns, $id, $sortorder);
-        $sortorder = 1;
-        $neworder = [];
-        foreach ($columns as $column) {
-            $column->sortorder = $sortorder++;
-            $neworder[] = $column->id;
-            $DB->update_record('board_columns', $column);
-        }
-        $historyid = $DB->insert_record('board_history', [
-            'boardid' => $column->boardid, 'action' => 'move_column',
-            'content' => json_encode(['sortorder' => $neworder]),
-            'userid' => $USER->id, 'timecreated' => time()]);
-        return ['status' => 1, 'historyid' => $historyid];
-
-    }
-
-    /**
      * Reposition an array element by its key.
      *
      * @param array      $array The array being reordered.
@@ -1081,7 +863,7 @@ class board {
      *
      * @throws \Exception
      */
-    private static function repositionan_array_element(array &$array, $key, int $order): void {
+    public static function repositionan_array_element(array &$array, $key, int $order): void {
         if (($a = array_search($key, array_keys($array))) === false) {
             throw new \Exception("The {$key} cannot be found in the given array.");
         }

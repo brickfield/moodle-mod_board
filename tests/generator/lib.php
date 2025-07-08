@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use mod_board\board;
+
 /**
  * Board test generator.
  *
@@ -23,5 +25,85 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_board_generator extends testing_module_generator {
+    /**
+     * @var int keep track of how many columns have been created.
+     */
+    protected $columncount = 3;
 
+    /**
+     * To be called from data reset code only,
+     * do not use in tests.
+     * @return void
+     */
+    public function reset() {
+        $this->columncount = 3;
+        parent::reset();
+    }
+
+    #[\Override]
+    public function create_instance($record = null, ?array $options = null) {
+        $record = (object)(array)$record;
+
+        // Apply the same defaults as in mod_form.
+
+        if (!isset($record->background_color)) {
+            $record->background_color = '';
+        }
+
+        if (!isset($record->addrating)) {
+            $record->addrating = board::RATINGDISABLED;
+        }
+
+        if (!isset($record->hideheaders)) {
+            $record->hideheaders = 0;
+        }
+
+        if (!isset($record->sortby)) {
+            $record->sortby = board::SORTBYNONE;
+        }
+
+        if (!isset($record->singleusermode)) {
+            $record->singleusermode = board::SINGLEUSER_DISABLED;
+        }
+
+        if (!isset($record->userscanedit)) {
+            $record->userscanedit = 0;
+        }
+
+        if (!isset($record->enableblanktarget)) {
+            $record->enableblanktarget = 0;
+        }
+
+        if (!empty($record->postby)) {
+            $record->postbyenabled = 1;
+        }
+
+        return parent::create_instance($record, $options);
+    }
+
+    /**
+     * Create new board column.
+     *
+     * @param array|stdClass|null $record
+     * @return stdClass column record
+     */
+    public function create_column($record = null): stdClass {
+        global $DB;
+
+        $record = (object)(array)$record;
+
+        $this->columncount++;
+
+        if (empty($record->boardid)) {
+            throw new coding_exception('Column generator requires $record->boardid');
+        }
+
+        if (empty($record->name)) {
+            $record->name = "Column {$this->columncount}";
+        }
+
+        $id = \mod_board\local\column::create($record->boardid, $record->name)['id'];
+
+        return $DB->get_record('board_columns', ['id' => $id], '*', MUST_EXIST);
+    }
 }

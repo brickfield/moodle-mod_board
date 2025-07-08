@@ -21,9 +21,10 @@ use core_external\external_value;
 use core_external\external_api;
 use core_external\external_single_structure;
 use mod_board\board;
+use mod_board\local\column;
 
 /**
- * update board column.
+ * Update board column.
  *
  * @package    mod_board
  * @copyright  2021 Brickfield Education Labs <https://www.brickfield.ie/>
@@ -50,18 +51,32 @@ final class update_column extends external_api {
      * @return array
      */
     public static function execute(int $id, string $name): array {
+        global $DB;
+
         // Validate received parameters.
-        $params = self::validate_parameters(self::execute_parameters(), [
+        [
+            'id' => $id,
+            'name' => $name,
+        ] = self::validate_parameters(self::execute_parameters(), [
             'id' => $id,
             'name' => $name,
         ]);
 
-        // Request and permission validation.
-        $column = board::get_column($params['id']);
-        $context = board::context_for_board($column->boardid);
-        self::validate_context($context);
+        $column = $DB->get_record('board_columns', ['id' => $id]);
+        if (!$column) {
+            return [
+                'status' => false,
+                'historyid' => 0,
+            ];
+        }
 
-        return board::board_update_column($params['id'], $params['name']);
+        // Request and permission validation.
+        $context = board::context_for_column($column->id);
+        self::validate_context($context);
+        require_capability('mod/board:view', $context);
+        require_capability('mod/board:manageboard', $context);
+
+        return column::update($column->id, $name);
     }
 
     /**

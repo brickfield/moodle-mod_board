@@ -21,6 +21,7 @@ use core_external\external_value;
 use core_external\external_api;
 use core_external\external_single_structure;
 use mod_board\board;
+use mod_board\local\column;
 
 /**
  * Move bord column.
@@ -50,18 +51,31 @@ final class move_column extends external_api {
      * @return array
      */
     public static function execute(int $id, int $sortorder): array {
-        // Validate recieved parameters.
-        $params = self::validate_parameters(self::execute_parameters(), [
+        global $DB;
+
+        // Validate received parameters.
+        [
+            'id' => $id,
+            'sortorder' => $sortorder,
+        ] = self::validate_parameters(self::execute_parameters(), [
             'id' => $id,
             'sortorder' => $sortorder,
         ]);
 
-        // Request and permission validation.
-        $column = board::get_column($params['id']);
-        $context = board::context_for_board($column->boardid);
-        self::validate_context($context);
+        $column = $DB->get_record('board_columns', ['id' => $id]);
+        if (!$column) {
+            return [
+                'status' => false,
+                'historyid' => 0,
+            ];
+        }
 
-        return board::board_move_column($params['id'], $params['sortorder']);
+        // Request and permission validation.
+        $context = board::context_for_column($column->id);
+        require_capability('mod/board:view', $context);
+        require_capability('mod/board:manageboard', $context);
+
+        return column::move($column->id, $sortorder);
     }
 
     /**
