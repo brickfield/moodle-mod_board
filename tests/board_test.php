@@ -144,30 +144,6 @@ final class board_test extends \advanced_testcase {
         $this->assertFalse($result);
     }
 
-    public function test_board_history(): void {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setAdminUser();
-        $course = $this->getDataGenerator()->create_course();
-        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
-        $record = [
-            'id' => 1,
-            'boardid' => $board->id,
-            'groupid' => 1,
-            'action' => 'action',
-            'userid' => 1,
-            'content' => 'content',
-            'timecreated' => 101010101010,
-        ];
-
-        $DB->insert_record('board_history', $record);
-        $record = $DB->get_record('board_history', ['action' => 'action']);
-
-        $result = board::board_history($board->id, 0, 0, 1);
-        $this->assertEquals($result[$record->id]->boardid, $board->id);
-    }
-
     public function test_get_note_file(): void {
         $this->resetAfterTest();
         $this->setAdminUser();

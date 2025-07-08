@@ -172,19 +172,6 @@ class board {
     }
 
     /**
-     * Adds a capability check to view the board.
-     *
-     * @param int $id
-     * @return void
-     */
-    public static function require_capability_for_board_view($id) {
-        $context = static::context_for_board($id);
-        if ($context) {
-            require_capability('mod/board:view', $context);
-        }
-    }
-
-    /**
      * Adds a capability check for the columns.
      *
      * @param int $id
@@ -320,76 +307,6 @@ class board {
             WHERE {board_columns}.boardid = :boardid
             AND {board_notes}.deleted = 0";
         return $DB->count_records_sql($sql, ['boardid' => $boardid]) > 0;
-    }
-
-    /**
-     * Retrieves the boards history.
-     *
-     * @param int $boardid
-     * @param int $ownerid
-     * @param int $groupid
-     * @param int|null $since
-     * @return array
-     */
-    public static function board_history(int $boardid, int $ownerid, int $groupid, ?int $since): array {
-        global $DB;
-
-        static::require_capability_for_board_view($boardid);
-
-        if (!$board = $DB->get_record('board', ['id' => $boardid])) {
-            return [];
-        }
-
-        if ($board->singleusermode != self::SINGLEUSER_DISABLED) {
-            if (!$ownerid) {
-                return [];
-            }
-            if (!self::can_view_owner($boardid, $ownerid)) {
-                return [];
-            }
-        }
-
-        if ($board->singleusermode != self::SINGLEUSER_DISABLED) {
-            // Groups are not used in single-user-mode apart from user selection.
-            $groupid = 0;
-        } else {
-            $cm = self::coursemodule_for_board($board);
-            $context = \context_module::instance($cm->id);
-            $groupmode = groups_get_activity_groupmode($cm);
-            if ($groupmode == NOGROUPS) {
-                $groupid = 0;
-            } else if ($groupmode == SEPARATEGROUPS) {
-                if ($groupid) {
-                    static::require_access_for_group($groupid, $boardid);
-                } else {
-                    // Only managers can see in "All groups".
-                    if (!has_capability('mod/board:manageboard', $context)) {
-                        return [];
-                    }
-                }
-            }
-        }
-
-        static::clear_history();
-
-        $condition = "boardid = :boardid";
-        $params = ['boardid' => $boardid];
-
-        if ($since !== null) {
-            $condition .= " AND id > :since";
-            $params['since'] = $since;
-        }
-        if ($groupid) {
-            // NOTE: this will not work for non-group posts.
-            $condition .= " AND groupid=:groupid";
-            $params['groupid'] = $groupid;
-        }
-        if ($board->singleusermode == self::SINGLEUSER_PUBLIC || $board->singleusermode == self::SINGLEUSER_PRIVATE) {
-            $condition .= " AND (ownerid=:ownerid OR ownerid=0)"; // Value 0 is used for global actions.
-            $params['ownerid'] = $ownerid;
-        }
-
-        return $DB->get_records_select('board_history', $condition, $params);
     }
 
     /**

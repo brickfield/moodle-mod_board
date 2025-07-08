@@ -55,19 +55,79 @@ final class board_history extends external_api {
      * @return array
      */
     public static function execute(int $id, int $ownerid, int $groupid, ?int $since): array {
+        global $DB;
+
         // Validate received parameters.
-        $params = self::validate_parameters(self::execute_parameters(), [
+        [
+            'id' => $id,
+            'ownerid' => $ownerid,
+            'groupid' => $groupid,
+            'since' => $since,
+        ] = self::validate_parameters(self::execute_parameters(), [
             'id' => $id,
             'ownerid' => $ownerid,
             'groupid' => $groupid,
             'since' => $since,
         ]);
 
-        // Request and permission validation.
-        $context = board::context_for_board($params['id']);
-        self::validate_context($context);
+        $board = $DB->get_record('board', ['id' => $id], '*', MUST_EXIST);
+        $cm = board::coursemodule_for_board($board);
+        $context = \context_module::instance($cm->id);
 
-        return board::board_history($params['id'], $params['ownerid'], $params['groupid'], $params['since']);
+        // Request and permission validation.
+        self::validate_context($context);
+        require_capability('mod/board:view', $context);
+
+        if ($board->singleusermode != board::SINGLEUSER_DISABLED) {
+            if (!$ownerid) {
+                return [];
+            }
+            if (!board::can_view_owner($board->id, $ownerid)) {
+                return [];
+            }
+        }
+
+        if ($board->singleusermode != board::SINGLEUSER_DISABLED) {
+            // Groups are not used in single-user-mode apart from user selection.
+            $groupid = 0;
+        } else {
+            $cm = board::coursemodule_for_board($board);
+            $context = \context_module::instance($cm->id);
+            $groupmode = groups_get_activity_groupmode($cm);
+            if ($groupmode == NOGROUPS) {
+                $groupid = 0;
+            } else if ($groupmode == SEPARATEGROUPS) {
+                if ($groupid) {
+                    board::require_access_for_group($groupid, $board->id);
+                } else {
+                    // Only managers can see in "All groups".
+                    if (!has_capability('mod/board:manageboard', $context)) {
+                        return [];
+                    }
+                }
+            }
+        }
+
+        board::clear_history();
+
+        $condition = "boardid = :boardid";
+        $params = ['boardid' => $board->id];
+
+        if ($since !== null) {
+            $condition .= " AND id > :since";
+            $params['since'] = $since;
+        }
+        if ($groupid) {
+            // NOTE: this will not work for non-group posts.
+            $condition .= " AND groupid=:groupid";
+            $params['groupid'] = $groupid;
+        }
+        if ($board->singleusermode == board::SINGLEUSER_PUBLIC || $board->singleusermode == board::SINGLEUSER_PRIVATE) {
+            $condition .= " AND (ownerid=:ownerid OR ownerid=0)"; // Value 0 is used for global actions.
+            $params['ownerid'] = $ownerid;
+        }
+
+        return $DB->get_records_select('board_history', $condition, $params);
     }
 
     /**
