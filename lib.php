@@ -236,16 +236,9 @@ function mod_board_pluginfile($course, $cm, $context, $filearea, $args, $forcedo
     require_login($course, false, $cm);
 
     if ($filearea === 'images') {
-        $note = board::get_note($args[0]);
-        if (!$note) {
+        if (!board::can_view_note($args[0])) {
             return false;
         }
-        $column = board::get_column($note->columnid);
-        if (!$column) {
-            return false;
-        }
-
-        board::require_capability_for_board_view($column->boardid);
 
         $relativepath = implode('/', $args);
         $fullpath = '/' . $context->id . '/mod_board/images/' . $relativepath;

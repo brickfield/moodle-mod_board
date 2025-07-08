@@ -276,6 +276,58 @@ class board {
     }
 
     /**
+     * Can current user view the note?
+     *
+     * @param int $noteid
+     * @return \context|null null means user cannot view the note
+     */
+    public static function can_view_note(int $noteid): ?\context {
+        global $USER;
+
+        $note = static::get_note($noteid);
+        if (!$note) {
+            return null;
+        }
+        $column = static::get_column($note->columnid);
+        if (!$column) {
+            return null;
+        }
+        $board = static::get_board($column->boardid);
+        if (!$board) {
+            return null;
+        }
+
+        $cm = static::coursemodule_for_board($board);
+        $context = \context_module::instance($cm->id);
+
+        if (!has_capability('mod/board:view', $context)) {
+            return null;
+        }
+
+        if (!has_capability('mod/board:manageboard', $context)) {
+            if ($board->singleusermode == static::SINGLEUSER_PRIVATE) {
+                if (!$USER->id) {
+                    return null;
+                }
+                if ($note->userid != $USER->id && $note->ownerid != $USER->id) {
+                    return null;
+                }
+            }
+
+            if ($note->groupid) {
+                $groupmode = groups_get_activity_groupmode($cm);
+                if ($groupmode == SEPARATEGROUPS) {
+                    if (!static::can_access_group($note->groupid, $context)) {
+                        return null;
+                    }
+                }
+            }
+        }
+
+        return $context;
+    }
+
+    /**
      * Clears the records in the history table for the last minute.
      *
      * @return bool
@@ -1087,6 +1139,11 @@ class board {
 
         $note = static::get_note($id);
         $boardid = $DB->get_field('board_columns', 'boardid', array('id' => $columnid));
+
+        $oldcolumn = static::get_column($note->columnid);
+        if ($oldcolumn->boardid != $boardid) {
+            throw new \invalid_parameter_exception('note cannot be moved to a different board');
+        }
 
         if (!static::board_users_can_edit($boardid) && $USER->id != $note->userid) {
             static::require_capability_for_column($note->columnid);

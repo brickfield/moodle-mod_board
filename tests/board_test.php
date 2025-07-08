@@ -431,6 +431,121 @@ class board_test extends \advanced_testcase {
         $this->assertEquals(COMPLETION_COMPLETE, $customcompletion->get_state('completionnotes'));
     }
 
+    public function test_can_view_note(): void {
+        global $DB, $SESSION;
+
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course([]);
+        $board1 = $this->getDataGenerator()->create_module('board', [
+            'course' => $course->id,
+            'singleusermode' => board::SINGLEUSER_DISABLED,
+            'groupmode' => NOGROUPS,
+        ]);
+        $cm1 = get_coursemodule_from_instance('board', $board1->id, $course->id, false, MUST_EXIST);
+        $context1 = \context_module::instance($cm1->id);
+        $board2 = $this->getDataGenerator()->create_module('board', [
+            'course' => $course->id,
+            'singleusermode' => board::SINGLEUSER_PRIVATE,
+            'groupmode' => NOGROUPS,
+        ]);
+        $cm2 = get_coursemodule_from_instance('board', $board2->id, $course->id, false, MUST_EXIST);
+        $context2 = \context_module::instance($cm2->id);
+        $board3 = $this->getDataGenerator()->create_module('board', [
+            'course' => $course->id,
+            'singleusermode' => board::SINGLEUSER_PUBLIC,
+            'groupmode' => NOGROUPS,
+        ]);
+        $cm3 = get_coursemodule_from_instance('board', $board3->id, $course->id, false, MUST_EXIST);
+        $context3 = \context_module::instance($cm3->id);
+        $board4 = $this->getDataGenerator()->create_module('board', [
+            'course' => $course->id,
+            'singleusermode' => board::SINGLEUSER_DISABLED,
+            'groupmode' => SEPARATEGROUPS,
+        ]);
+        $cm4 = get_coursemodule_from_instance('board', $board4->id, $course->id, false, MUST_EXIST);
+        $context4 = \context_module::instance($cm4->id);
+
+        $group1 = $this->getDataGenerator()->create_group(['courseid' => $course->id]);
+        $group2 = $this->getDataGenerator()->create_group(['courseid' => $course->id]);
+
+        $teacher1 = $this->getDataGenerator()->create_user();
+        $student1 = $this->getDataGenerator()->create_user();
+        $student2 = $this->getDataGenerator()->create_user();
+        $student3 = $this->getDataGenerator()->create_user();
+
+        $this->getDataGenerator()->enrol_user($teacher1->id, $course->id, 'editingteacher');
+        $this->getDataGenerator()->enrol_user($student1->id, $course->id, 'student');
+        $this->getDataGenerator()->enrol_user($student2->id, $course->id, 'student');
+        $this->getDataGenerator()->enrol_user($student3->id, $course->id, 'student');
+
+        $this->getDataGenerator()->create_group_member(['userid' => $student1->id, 'groupid' => $group1->id]);
+        $this->getDataGenerator()->create_group_member(['userid' => $student2->id, 'groupid' => $group2->id]);
+        $this->getDataGenerator()->create_group_member(['userid' => $student3->id, 'groupid' => $group1->id]);
+
+        $columns1 = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
+        $columns2 = array_values($DB->get_records('board_columns', ['boardid' => $board2->id], 'id ASC'));
+        $columns3 = array_values($DB->get_records('board_columns', ['boardid' => $board3->id], 'id ASC'));
+        $columns4 = array_values($DB->get_records('board_columns', ['boardid' => $board4->id], 'id ASC'));
+
+        $this->setUser($student1);
+        $note1x1 = board::board_add_note($columns1[0]->id, $student1->id, 'b1s1h1', 'test', [])['note'];
+        $note2x1 = board::board_add_note($columns2[0]->id, $student1->id, 'b2s1h1', 'test', [])['note'];
+        $note3x1 = board::board_add_note($columns3[0]->id, $student1->id, 'b3s1h1', 'test', [])['note'];
+        $SESSION->activegroup[$cm1->course][SEPARATEGROUPS][0] = $group1->id;
+        $note4x1 = board::board_add_note($columns4[0]->id, $student1->id, 'b4s1h1', 'test', [])['note'];
+        unset($SESSION->activegroup[$cm1->course][SEPARATEGROUPS]);
+        $this->assertSame($group1->id, $note4x1->groupid);
+
+        $this->setUser($student2);
+        $note1x2 = board::board_add_note($columns1[0]->id, $student2->id, 'b1s2h1', 'test', [])['note'];
+        $note2x2 = board::board_add_note($columns2[0]->id, $student2->id, 'b2s2h1', 'test', [])['note'];
+        $note3x2 = board::board_add_note($columns3[0]->id, $student2->id, 'b3s2h1', 'test', [])['note'];
+        $SESSION->activegroup[$cm1->course][SEPARATEGROUPS][0] = $group2->id;
+        $note4x2 = board::board_add_note($columns4[0]->id, $student2->id, 'b4s2h1', 'test', [])['note'];
+        unset($SESSION->activegroup[$cm1->course][SEPARATEGROUPS]);
+
+        $this->setUser($teacher1);
+        $note2x1xt = board::board_add_note($columns2[0]->id, $student1->id, 'b2s1h1', 'teach', [])['note'];
+        $note3x1xt = board::board_add_note($columns3[0]->id, $student1->id, 'b3s1h1', 'teach', [])['note'];
+
+        $this->setUser($student1->id);
+        $this->assertSame($context1->id, board::can_view_note($note1x1->id)->id);
+        $this->assertSame($context2->id, board::can_view_note($note2x1->id)->id);
+        $this->assertSame($context3->id, board::can_view_note($note3x1->id)->id);
+        $this->assertSame($context4->id, board::can_view_note($note4x1->id)->id);
+        $this->assertSame($context1->id, board::can_view_note($note1x2->id)->id);
+        $this->assertSame(null, board::can_view_note($note2x2->id));
+        $this->assertSame($context3->id, board::can_view_note($note3x2->id)->id);
+        $this->assertSame(null, board::can_view_note($note4x2->id));
+        $this->assertSame($context2->id, board::can_view_note($note2x1xt->id)->id);
+        $this->assertSame($context3->id, board::can_view_note($note3x1xt->id)->id);
+
+        $this->setUser($student3->id);
+        $this->assertSame($context1->id, board::can_view_note($note1x1->id)->id);
+        $this->assertSame(null, board::can_view_note($note2x1->id));
+        $this->assertSame($context3->id, board::can_view_note($note3x1->id)->id);
+        $this->assertSame($context4->id, board::can_view_note($note4x1->id)->id);
+        $this->assertSame($context1->id, board::can_view_note($note1x2->id)->id);
+        $this->assertSame(null, board::can_view_note($note2x2->id));
+        $this->assertSame($context3->id, board::can_view_note($note3x2->id)->id);
+        $this->assertSame(null, board::can_view_note($note4x2->id));
+        $this->assertSame(null, board::can_view_note($note2x1xt->id));
+        $this->assertSame($context3->id, board::can_view_note($note3x1xt->id)->id);
+
+        $this->setUser($teacher1->id);
+        $this->assertSame($context1->id, board::can_view_note($note1x1->id)->id);
+        $this->assertSame($context2->id, board::can_view_note($note2x1->id)->id);
+        $this->assertSame($context3->id, board::can_view_note($note3x1->id)->id);
+        $this->assertSame($context4->id, board::can_view_note($note4x1->id)->id);
+        $this->assertSame($context1->id, board::can_view_note($note1x2->id)->id);
+        $this->assertSame($context2->id, board::can_view_note($note2x2->id)->id);
+        $this->assertSame($context3->id, board::can_view_note($note3x2->id)->id);
+        $this->assertSame($context4->id, board::can_view_note($note4x2->id)->id);
+        $this->assertSame($context2->id, board::can_view_note($note2x1xt->id)->id);
+        $this->assertSame($context3->id, board::can_view_note($note3x1xt->id)->id);
+    }
+
     /**
      * Add board helper function.
      * @param int $courseid
