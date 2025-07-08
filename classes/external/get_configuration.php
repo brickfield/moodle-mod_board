@@ -53,23 +53,91 @@ final class get_configuration extends external_api {
      * @return array
      */
     public static function execute(int $id, int $ownerid, int $groupid): array {
+        global $USER, $DB;
+
         // Validate received parameters.
-        $params = self::validate_parameters(self::execute_parameters(), [
+        [
+            'id' => $id,
+            'ownerid' => $ownerid,
+            'groupid' => $groupid,
+        ] = self::validate_parameters(self::execute_parameters(), [
             'id' => $id,
             'ownerid' => $ownerid,
             'groupid' => $groupid,
         ]);
 
+        $board = $DB->get_record('board', ['id' => $id], '*', MUST_EXIST);
+        $cm = board::coursemodule_for_board($board);
+        $context = \context_module::instance($cm->id);
+
         // Request and permission validation.
-        $context = board::context_for_board($params['id']);
         self::validate_context($context);
+        require_capability('mod/board:view', $context);
 
-        $settings = board::get_configuration($params['id'], $params['ownerid'], $params['groupid']);
+        $config = get_config('mod_board');
 
-        $result['settings'] = json_encode($settings);
+        $forcereadonly = false;
 
-        $result['warnings'] = [];
-        return $result;
+        if ($board->singleusermode == board::SINGLEUSER_DISABLED) {
+            if ($ownerid) {
+                debugging('ownerid must be used only in single-user modes', DEBUG_DEVELOPER);
+                $ownerid = 0;
+            }
+            $groupmode = groups_get_activity_groupmode($cm);
+            if ($groupmode == SEPARATEGROUPS) {
+                if (!$groupid) {
+                    // No posting for All groups in separate groups mode for now,
+                    // students would see comments and ratings from other groups.
+                    $forcereadonly = true;
+                }
+            } else if ($groupmode == VISIBLEGROUPS) {
+                if (!$groupid && !has_capability('mod/board:manageboard', $context)) {
+                    // Only managers can post for All groups.
+                    $forcereadonly = true;
+                }
+            } else {
+                $groupid = 0;
+            }
+
+        } else {
+            if (!$ownerid) {
+                debugging('ownerid is required in single-user modes', DEBUG_DEVELOPER);
+                $ownerid = $USER->id;
+            }
+            // Groups are not used in single-user-mode apart from user selection.
+            $groupid = 0;
+        }
+
+        $settings = [
+            'board' => $board,
+            'contextid' => $context->id,
+            'isEditor' => board::board_is_editor($board->id),
+            'usersCanEdit' => board::board_users_can_edit($board->id),
+            'userId' => $USER->id,
+            'ownerId' => $ownerid,
+            'groupId' => $groupid,
+            'readonly' => ($forcereadonly || board::board_readonly($board->id, $groupid) || !board::can_post($board->id, $ownerid)),
+            'columnicon' => $config->new_column_icon,
+            'noteicon' => $config->new_note_icon,
+            'mediaselection' => $config->media_selection,
+            'post_max_length' => $config->post_max_length,
+            'history_refresh' => $config->history_refresh,
+            'file' => [
+                'extensions' => board::get_accepted_file_extensions(),
+                'size_min' => board::ACCEPTED_FILE_MIN_SIZE,
+                'size_max' => board::ACCEPTED_FILE_MAX_SIZE,
+            ],
+            'ratingenabled' => board::board_rating_enabled($board->id),
+            'hideheaders' => board::board_hide_headers($board->id),
+            'sortby' => $board->sortby,
+            'colours' => board::get_column_colours(),
+            'enableblanktarget' => $board->enableblanktarget,
+        ];
+
+        return [
+            'settings' => json_encode($settings),
+            'warnings' => [],
+        ];
     }
 
     /**
