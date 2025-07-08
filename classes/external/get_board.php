@@ -53,18 +53,97 @@ final class get_board extends external_api {
      * @return array
      */
     public static function execute(int $id, int $ownerid, int $groupid): array {
+        global $DB;
+
         // Validate received parameters.
-        $params = self::validate_parameters(self::execute_parameters(), [
+        [
+            'id' => $id,
+            'ownerid' => $ownerid,
+            'groupid' => $groupid,
+        ] = self::validate_parameters(self::execute_parameters(), [
             'id' => $id,
             'ownerid' => $ownerid,
             'groupid' => $groupid,
         ]);
 
-        // Request and permission validation.
-        $context = board::context_for_board($params['id']);
-        self::validate_context($context);
+        $board = $DB->get_record('board', ['id' => $id], '*', MUST_EXIST);
+        $cm = board::coursemodule_for_board($board);
+        $context = \context_module::instance($cm->id);
 
-        return board::board_get($params['id'], $params['ownerid'], $params['groupid']);
+        // Request and permission validation.
+        self::validate_context($context);
+        require_capability('mod/board:view', $context);
+
+        if ($board->singleusermode == board::SINGLEUSER_DISABLED) {
+            if ($ownerid) {
+                debugging('ownerid must be used only in single-user modes', DEBUG_DEVELOPER);
+            }
+            $ownerid = null;
+
+            $groupmode = groups_get_activity_groupmode($cm);
+            if ($groupmode == NOGROUPS) {
+                if ($groupid) {
+                    debugging('groupid is not expected when group mode not used', DEBUG_DEVELOPER);
+                    $groupid = 0;
+                }
+            } else if ($groupmode == SEPARATEGROUPS) {
+                if ($groupid) {
+                    board::require_access_for_group($groupid, $board->id);
+                } else {
+                    if (!has_capability('moodle/site:accessallgroups', $context)
+                        && !has_capability('mod/board:manageboard', $context)
+                    ) {
+                        return [];
+                    }
+                }
+                // NOTE: in visible groups mode everybody can see everything, only posting is restricted to own group.
+            }
+
+        } else {
+            if (!$ownerid) {
+                debugging('ownerid is required in single-user modes', DEBUG_DEVELOPER);
+                return [];
+            }
+            if (!board::can_view_owner($board->id, $ownerid)) {
+                return [];
+            }
+            if ($groupid) {
+                debugging('groupid is not expected in single-user modes', DEBUG_DEVELOPER);
+                $groupid = 0;
+            }
+        }
+
+        $hideheaders = board::board_hide_headers($board->id);
+
+        $columns = $DB->get_records('board_columns', ['boardid' => $board->id], 'sortorder, id', 'id, name, locked');
+        $columnindex = 0;
+
+        foreach ($columns as $columnid => $column) {
+            if ($column->locked === null) {
+                $column->locked = false;
+            }
+            if ($hideheaders) {
+                $column->name = ++$columnindex;
+            }
+            $params = ['columnid' => $columnid, 'deleted' => 0];
+            if (!empty($groupid)) {
+                $params['groupid'] = $groupid;
+            }
+
+            if ($ownerid) {
+                $params['ownerid'] = $ownerid;
+            }
+
+            $column->notes = $DB->get_records('board_notes', $params, 'sortorder',
+                'id, userid, heading, content, type, info, url, timecreated, sortorder');
+            foreach ($column->notes as $colid => $note) {
+                $note->rating = board::get_note_rating($note->id);
+            }
+        }
+
+        board::clear_history();
+
+        return $columns;
     }
 
     /**

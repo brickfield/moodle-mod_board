@@ -144,18 +144,6 @@ final class board_test extends \advanced_testcase {
         $this->assertFalse($result);
     }
 
-    public function test_board_get(): void {
-        $this->resetAfterTest();
-        $this->setAdminUser();
-        $course = $this->getDataGenerator()->create_course();
-        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
-        $column = self::add_column($board->id);
-        $note = self::add_note($column->id);
-
-        $result = board::board_get($board->id, 0, 0);
-        $this->assertEquals($result[$column->id]->name, 'New Heading');
-    }
-
     public function test_board_history(): void {
         global $DB;
 
