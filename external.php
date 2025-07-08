@@ -406,6 +406,10 @@ class mod_board_external extends external_api {
 
             // Process either as an update or insert.
             if ($data->noteid) {
+                $note = board::get_note($data->noteid);
+                if (!$note || $note->columnid != $column->id) {
+                    throw new moodle_exception('formsubmissioninvalid');
+                }
                 $result = board::board_update_note($data->noteid, $data->ownerid, $data->heading, $data->content, $attachment);
                 $result['action'] = 'update';
             } else {
@@ -691,13 +695,12 @@ class mod_board_external extends external_api {
         );
         $params = self::validate_parameters(self::get_comments_parameters(), $arrayparams);
 
-        $comment = new \mod_board\comment($params);
-
-        $context = $comment->get_context();
+        $context = board::can_view_note($params['noteid']);
+        if (!$context) {
+            throw new \invalid_parameter_exception('cannot access note');
+        }
 
         self::validate_context($context);
-
-        require_capability('mod/board:view', $context);
 
         $canpost = has_capability('mod/board:postcomment', $context);
         $candeleteall = has_capability('mod/board:deleteallcomments', $context);
@@ -787,12 +790,14 @@ class mod_board_external extends external_api {
         ];
         $params = self::validate_parameters(self::add_comment_parameters(), $arrayparams);
 
-        $comment = new \mod_board\comment($params);
-
-        $context = $comment->get_context();
+        $context = board::can_view_note($params['noteid']);
+        if (!$context) {
+            throw new \invalid_parameter_exception('cannot access note');
+        }
 
         self::validate_context($context);
 
+        $comment = new \mod_board\comment($params);
         if (!$comment->can_create($context)) {
             $results = array(
                 'count' => '',
@@ -852,11 +857,16 @@ class mod_board_external extends external_api {
         ];
         $params = self::validate_parameters(self::delete_comment_parameters(), $arrayparams);
 
-        $comment = new \mod_board\comment($params);
+        $c = $DB->get_record('board_comments', ['id' => $params['commentid']], '*', MUST_EXIST);
 
-        $context = $comment->get_context();
+        $context = board::can_view_note($c->noteid);
+        if (!$context) {
+            throw new \invalid_parameter_exception('cannot access note');
+        }
+
         self::validate_context($context);
 
+        $comment = new \mod_board\comment($params);
         if (!$comment->delete()) {
             $warnings[] = [
                 'item' => $comment->id,
