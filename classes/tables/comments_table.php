@@ -47,9 +47,9 @@ class comments_table extends table_sql {
      */
     public function __construct($cmid, $boardid, $groupid, $ownerid, $includedeleted) {
         global $DB;
-        parent::__construct('mod_board_notes_table');
+        parent::__construct('mod_board_comments_table');
 
-        // Get the construct paramaters and add them to the export url.
+        // Get the construct parameters and add them to the export url.
         $exportparams = [
             'id' => $cmid,
             'group' => $groupid,

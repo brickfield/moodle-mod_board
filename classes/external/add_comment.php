@@ -22,6 +22,7 @@ use core_external\external_api;
 use core_external\external_single_structure;
 use core_external\external_warnings;
 use mod_board\board;
+use mod_board\local\comment;
 
 /**
  * Add note comment.
@@ -53,37 +54,48 @@ final class add_comment extends external_api {
      * @return array of results
      */
     public static function execute(int $noteid, string $content): array {
-        $warnings = [];
-        $arrayparams = [
+        [
             'noteid' => $noteid,
             'content' => $content,
-        ];
-        $params = self::validate_parameters(self::execute_parameters(), $arrayparams);
+        ] = self::validate_parameters(self::execute_parameters(), [
+            'noteid' => $noteid,
+            'content' => $content,
+        ]);
 
-        $context = board::can_view_note($params['noteid']);
-        if (!$context) {
-            throw new \invalid_parameter_exception('cannot access note');
-        }
-
-        self::validate_context($context);
-
-        $comment = new \mod_board\comment($params);
-        if (!$comment->can_create($context)) {
-            $results = [
+        $note = board::get_note($noteid);
+        if (!$note) {
+            return [
                 'count' => '',
                 'id' => 0,
-                'warnings' => $warnings,
+                'warnings' => [],
             ];
-            return $results;
         }
 
-        $comment->save();
+        $context = board::can_view_note($noteid);
+        if (!$context) {
+            return [
+                'count' => '',
+                'id' => 0,
+                'warnings' => [],
+            ];
+        }
+        self::validate_context($context);
+        require_capability('mod/board:view', $context);
 
-        $results = [
+        if (!has_capability('mod/board:postcomment', $context)) {
+            return [
+                'count' => '',
+                'id' => 0,
+                'warnings' => [],
+            ];
+        }
+
+        $comment = comment::create($note, $content);
+
+        return [
             'id' => $comment->id,
-            'warnings' => $warnings,
+            'warnings' => [],
         ];
-        return $results;
     }
 
     /**

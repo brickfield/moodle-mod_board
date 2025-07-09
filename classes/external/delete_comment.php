@@ -22,6 +22,7 @@ use core_external\external_api;
 use core_external\external_single_structure;
 use core_external\external_warnings;
 use mod_board\board;
+use mod_board\local\comment;
 
 /**
  * Delete note comment.
@@ -49,37 +50,57 @@ final class delete_comment extends external_api {
      * @return array of results
      */
     public static function execute(int $commentid): array {
-        global $DB;
+        global $DB, $USER;
 
-        $warnings = [];
-        $arrayparams = [
+        [
             'commentid' => $commentid,
-        ];
-        $params = self::validate_parameters(self::execute_parameters(), $arrayparams);
+        ] = self::validate_parameters(self::execute_parameters(), [
+            'commentid' => $commentid,
+        ]);
 
-        $c = $DB->get_record('board_comments', ['id' => $params['commentid']], '*', MUST_EXIST);
+        $comment = $DB->get_record('board_comments', ['id' => $commentid], '*', MUST_EXIST);
 
-        $context = board::can_view_note($c->noteid);
+        $context = board::can_view_note($comment->noteid);
         if (!$context) {
-            throw new \invalid_parameter_exception('cannot access note');
+            return [
+                'id' => $comment->id,
+                'warnings' => [
+                    [
+                        'item' => $comment->id,
+                        'warningcode' => 'errorcommentnotdeleted',
+                        'message' => 'The comment could not be deleted.',
+                    ],
+                ],
+            ];
         }
-
         self::validate_context($context);
+        require_capability('mod/board:view', $context);
 
-        $comment = new \mod_board\comment($params);
-        if (!$comment->delete()) {
-            $warnings[] = [
-                'item' => $comment->id,
-                'warningcode' => 'errorcommentnotdeleted',
-                'message' => 'The comment could not be deleted.',
+        $candelete = false;
+        if ($comment->userid == $USER->id && has_capability('mod/board:postcomment', $context)) {
+            $candelete = true;
+        } else if (has_capability('mod/board:deleteallcomments', $context)) {
+            $candelete = true;
+        }
+        if (!$candelete) {
+            return [
+                'id' => $comment->id,
+                'warnings' => [
+                    [
+                        'item' => $comment->id,
+                        'warningcode' => 'errorcommentnotdeleted',
+                        'message' => 'The comment could not be deleted.',
+                    ],
+                ],
             ];
         }
 
-        $results = [
+        comment::delete($comment->id);
+
+        return [
             'id' => $comment->id,
-            'warnings' => $warnings,
+            'warnings' => [],
         ];
-        return $results;
     }
 
     /**
