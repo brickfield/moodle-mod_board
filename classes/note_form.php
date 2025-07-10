@@ -16,6 +16,8 @@
 
 namespace mod_board;
 
+use mod_board\local\note;
+
 defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->libdir . "/formslib.php");
@@ -126,7 +128,7 @@ class note_form extends \moodleform {
         $mform->hideIf('imagetitle', 'mediatype', 'neq', 2);
         $mform->addRule('imagetitle', get_string('maximumchars', '', $maxleninfo), 'maxlength', $maxleninfo, 'client');
 
-        $pickerparams = board::get_image_picker_options();
+        $pickerparams = note::get_image_picker_options();
         $mform->addElement('filemanager', 'imagefile', get_string('form_image_file', 'mod_board'), null, $pickerparams);
         $mform->hideIf('imagefile', 'mediatype', 'neq', 2);
     }

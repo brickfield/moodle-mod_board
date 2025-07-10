@@ -22,6 +22,7 @@ use core_external\external_api;
 use core_external\external_single_structure;
 use core_external\external_warnings;
 use mod_board\board;
+use mod_board\local\note;
 
 /**
  * Returns bord configuration.
@@ -66,9 +67,8 @@ final class get_configuration extends external_api {
             'groupid' => $groupid,
         ]);
 
-        $board = $DB->get_record('board', ['id' => $id], '*', MUST_EXIST);
-        $cm = board::coursemodule_for_board($board);
-        $context = \context_module::instance($cm->id);
+        $board = board::get_board($id, MUST_EXIST);
+        $context = board::context_for_board($board);
 
         // Request and permission validation.
         self::validate_context($context);
@@ -83,6 +83,7 @@ final class get_configuration extends external_api {
                 debugging('ownerid must be used only in single-user modes', DEBUG_DEVELOPER);
                 $ownerid = 0;
             }
+            $cm = board::coursemodule_for_board($board);
             $groupmode = groups_get_activity_groupmode($cm);
             if ($groupmode == SEPARATEGROUPS) {
                 if (!$groupid) {
@@ -111,24 +112,24 @@ final class get_configuration extends external_api {
         $settings = [
             'board' => $board,
             'contextid' => $context->id,
-            'isEditor' => board::board_is_editor($board->id),
-            'usersCanEdit' => board::board_users_can_edit($board->id),
+            'isEditor' => board::board_is_editor($board),
+            'usersCanEdit' => (string)(int)board::board_users_can_edit($board),
             'userId' => $USER->id,
             'ownerId' => $ownerid,
             'groupId' => $groupid,
-            'readonly' => ($forcereadonly || board::board_readonly($board->id, $groupid) || !board::can_post($board->id, $ownerid)),
+            'readonly' => ($forcereadonly || board::board_readonly($board, $groupid) || !board::can_post($board, $ownerid)),
             'columnicon' => $config->new_column_icon,
             'noteicon' => $config->new_note_icon,
             'mediaselection' => $config->media_selection,
             'post_max_length' => $config->post_max_length,
             'history_refresh' => $config->history_refresh,
             'file' => [
-                'extensions' => board::get_accepted_file_extensions(),
+                'extensions' => note::get_accepted_file_extensions(),
                 'size_min' => board::ACCEPTED_FILE_MIN_SIZE,
                 'size_max' => board::ACCEPTED_FILE_MAX_SIZE,
             ],
-            'ratingenabled' => board::board_rating_enabled($board->id),
-            'hideheaders' => board::board_hide_headers($board->id),
+            'ratingenabled' => board::board_rating_enabled($board),
+            'hideheaders' => board::board_hide_headers($board),
             'sortby' => $board->sortby,
             'colours' => board::get_column_colours(),
             'enableblanktarget' => $board->enableblanktarget,

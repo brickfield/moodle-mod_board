@@ -121,7 +121,7 @@ echo $OUTPUT->box_end();
 if ($board->singleusermode == board::SINGLEUSER_PUBLIC ||
     ($board->singleusermode == board::SINGLEUSER_PRIVATE && has_capability('mod/board:manageboard', $context))
 ) {
-    $users = board::get_users_for_board($board->id, $groupid);
+    $users = board::get_users_for_board($board, $groupid);
     if (count($users) == 0) {
         echo $OUTPUT->box_start('mod_introbox', 'pageintro');
         echo $OUTPUT->notification(get_string('nousers', 'mod_board'));

@@ -70,9 +70,8 @@ final class board_history extends external_api {
             'since' => $since,
         ]);
 
-        $board = $DB->get_record('board', ['id' => $id], '*', MUST_EXIST);
-        $cm = board::coursemodule_for_board($board);
-        $context = \context_module::instance($cm->id);
+        $board = board::get_board($id, MUST_EXIST);
+        $context = board::context_for_board($board);
 
         // Request and permission validation.
         self::validate_context($context);
@@ -82,7 +81,7 @@ final class board_history extends external_api {
             if (!$ownerid) {
                 return [];
             }
-            if (!board::can_view_owner($board->id, $ownerid)) {
+            if (!board::can_view_owner($board, $ownerid)) {
                 return [];
             }
         }
@@ -92,13 +91,12 @@ final class board_history extends external_api {
             $groupid = 0;
         } else {
             $cm = board::coursemodule_for_board($board);
-            $context = \context_module::instance($cm->id);
             $groupmode = groups_get_activity_groupmode($cm);
             if ($groupmode == NOGROUPS) {
                 $groupid = 0;
             } else if ($groupmode == SEPARATEGROUPS) {
                 if ($groupid) {
-                    board::require_access_for_group($groupid, $board->id);
+                    board::require_access_for_group($board, $groupid);
                 } else {
                     // Only managers can see in "All groups".
                     if (!has_capability('mod/board:manageboard', $context)) {

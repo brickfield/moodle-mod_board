@@ -54,13 +54,14 @@ final class get_comments extends external_api {
     public static function execute(int $noteid): array {
         global $DB, $USER;
 
-        $warnings = [];
-        $arrayparams = [
+        [
             'noteid' => $noteid,
-        ];
-        $params = self::validate_parameters(self::execute_parameters(), $arrayparams);
+        ] = self::validate_parameters(self::execute_parameters(), [
+            'noteid' => $noteid,
+        ]);
 
-        $context = board::can_view_note($params['noteid']);
+        $note = board::get_note($noteid, MUST_EXIST);
+        $context = board::can_view_note($note);
         if (!$context) {
             throw new \invalid_parameter_exception('cannot access note');
         }
@@ -70,7 +71,7 @@ final class get_comments extends external_api {
         $canpost = has_capability('mod/board:postcomment', $context);
         $candeleteall = has_capability('mod/board:deleteallcomments', $context);
 
-        $notes = $DB->get_records('board_comments', ['noteid' => $params['noteid'], 'deleted' => 0], 'timecreated DESC');
+        $notes = $DB->get_records('board_comments', ['noteid' => $note->id, 'deleted' => 0], 'timecreated DESC, id DESC');
         $comments = [];
         foreach ($notes as $note) {
             $comment = (object)[];
@@ -83,11 +84,11 @@ final class get_comments extends external_api {
         }
 
         $results = [
-            'noteid' => $params['noteid'],
+            'noteid' => $noteid,
             'commentcount' => count($comments),
             'canpost' => $canpost,
             'comments' => $comments,
-            'warnings' => $warnings,
+            'warnings' => [],
         ];
         return $results;
     }

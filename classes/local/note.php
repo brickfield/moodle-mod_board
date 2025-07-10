@@ -17,6 +17,7 @@
 namespace mod_board\local;
 
 use mod_board\board;
+use stdClass;
 
 /**
  * Note helper class.
@@ -52,8 +53,7 @@ final class note {
 
         $column = $DB->get_record('board_columns', ['id' => $columnid], '*', MUST_EXIST);
         $board = $DB->get_record('board', ['id' => $column->boardid], '*', MUST_EXIST);
-        $cm = board::coursemodule_for_board($board);
-        $context = \context_module::instance($cm->id);
+        $context = board::context_for_board($board);
 
         $heading = empty($heading) ? null : mb_substr($heading, 0, board::LENGTH_HEADING);
         $content = empty($content) ? "" : mb_substr($content, 0, get_config('mod_board', 'post_max_length'));
@@ -107,10 +107,13 @@ final class note {
         $DB->update_record('board', ['id' => $board->id, 'historyid' => $historyid]);
         $transaction->allow_commit();
 
-        $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
-        $completion = new \completion_info($course);
-        if ($completion->is_enabled($cm) && $board->completionnotes) {
-            $completion->update_state($cm);
+        if ($board->completionnotes) {
+            $cm = board::coursemodule_for_board($board);
+            $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
+            $completion = new \completion_info($course);
+            if ($completion->is_enabled($cm)) {
+                $completion->update_state($cm);
+            }
         }
 
         $logcontent = $content;
@@ -372,15 +375,15 @@ final class note {
             return false;
         }
 
-        if (!board::board_rating_enabled($board->id)) {
+        if (!board::board_rating_enabled($board)) {
             return false;
         }
 
-        if (board::board_readonly($board->id, $note->groupid)) {
+        if (board::board_readonly($board, $note->groupid)) {
             return false;
         }
 
-        $context = board::context_for_board($board->id);
+        $context = board::context_for_board($board);
         if (!has_capability('mod/board:post', $context)) {
             return false;
         }
@@ -476,7 +479,7 @@ final class note {
         if (!$note || empty($note->url)) {
             return null;
         }
-        $file = board::get_file_storage_settings($noteid);
+        $file = self::get_file_storage_settings($noteid);
         $fs = get_file_storage();
         return $fs->get_file($file->contextid, $file->component, $file->filearea, $file->itemid,
             $file->filepath, basename($note->url));
@@ -503,7 +506,7 @@ final class note {
      * @return string|null
      */
     protected static function store_note_file($noteid, $draftitemid) {
-        $settings = board::get_file_storage_settings($noteid);
+        $settings = self::get_file_storage_settings($noteid);
 
         file_save_draft_area_files($draftitemid, $settings->contextid, $settings->component, $settings->filearea,
             $settings->itemid);
@@ -548,12 +551,73 @@ final class note {
             if (isset($attachment['type']) && $attachment['type'] != 2 && $previoustype == 2) {
                 // This case is if we are changing from a picture type to a non-picture type. We should remove files.
                 $fs = get_file_storage();
-                $settings = board::get_file_storage_settings($noteid);
+                $settings = self::get_file_storage_settings($noteid);
 
                 $fs->delete_area_files($settings->contextid, $settings->component, $settings->filearea, $settings->itemid);
             }
         }
 
         return $attachment;
+    }
+
+    /**
+     * Get the supported filetype extensions
+     *
+     * @return array of strings of supported file extensions.
+     */
+    public static function get_accepted_file_extensions(): array {
+        $config = get_config('mod_board');
+        if (isset($config->acceptedfiletypeforcontent)) {
+            $extensions = explode(',', $config->acceptedfiletypeforcontent);
+        } else {
+            $extensions = [];
+        }
+        return $extensions;
+    }
+
+    /**
+     * Returns basic options for the image file picker.
+     *
+     * @return array
+     */
+    public static function get_image_picker_options() {
+        $extensions = self::get_accepted_file_extensions();
+
+        $extensions = array_map(function($extension) {
+            return '.' . $extension;
+        }, $extensions);
+
+        return [
+            'accepted_types' => $extensions,
+            'maxfiles' => 1,
+            'subdirs' => 0,
+            'maxbytes' => board::ACCEPTED_FILE_MAX_SIZE,
+        ];
+    }
+
+    /**
+     * Retrieves the file storage settings
+     *
+     * @param int $noteid
+     * @return stdClass|null
+     */
+    public static function get_file_storage_settings($noteid): ?stdClass {
+        $note = board::get_note($noteid);
+        if (!$note) {
+            return null;
+        }
+
+        $column = board::get_column($note->columnid);
+        if (!$column) {
+            return null;
+        }
+
+        return (object) [
+            'contextid' => board::context_for_board($column->boardid)->id,
+            'component' => 'mod_board',
+            'filearea'  => 'images',
+            'itemid'    => $noteid,
+            'filepath'  => '/',
+        ];
     }
 }

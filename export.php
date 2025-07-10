@@ -78,7 +78,7 @@ if (!$table->is_downloading()) {
 
     // Print the user selector.
     if ($board->singleusermode == board::SINGLEUSER_PUBLIC || $board->singleusermode == board::SINGLEUSER_PRIVATE) {
-        $users = board::get_users_for_board($board->id, $group);
+        $users = board::get_users_for_board($board, $group);
         // Include board download user selection to have default all users option if required.
         $users = [0 => get_string('all')] + $users;
         if (count($users) == 0) {

@@ -59,8 +59,9 @@ final class delete_comment extends external_api {
         ]);
 
         $comment = $DB->get_record('board_comments', ['id' => $commentid], '*', MUST_EXIST);
+        $note = board::get_note($comment->noteid, MUST_EXIST);
 
-        $context = board::can_view_note($comment->noteid);
+        $context = board::can_view_note($note);
         if (!$context) {
             return [
                 'id' => $comment->id,

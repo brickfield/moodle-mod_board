@@ -23,6 +23,7 @@
  */
 
 use mod_board\board;
+use mod_board\local\note;
 
 /**
  * Specify what the plugin supports.
@@ -219,9 +220,9 @@ function board_extend_settings_navigation(settings_navigation $settings, navigat
 
 /**
  * Handle plugin files.
- * @param object $course
- * @param object $cm
- * @param object $context
+ * @param stdClass $course
+ * @param stdClass $cm
+ * @param context $context
  * @param string $filearea
  * @param array $args
  * @param bool $forcedownload
@@ -239,7 +240,8 @@ function mod_board_pluginfile($course, $cm, $context, $filearea, $args, $forcedo
     require_login($course, false, $cm);
 
     if ($filearea === 'images') {
-        if (!board::can_view_note($args[0])) {
+        $note = board::get_note($args[0]);
+        if (!$note || !board::can_view_note($note)) {
             return false;
         }
 
@@ -329,7 +331,7 @@ function mod_board_output_fragment_note_form($args) {
     }
 
     // Set up the filearea.
-    $pickerparams = board::get_image_picker_options();
+    $pickerparams = note::get_image_picker_options();
     $draftareaid = null;
     file_prepare_draft_area($draftareaid, $context->id, 'mod_board', 'images', $itemid, $pickerparams);
     $formdata['imagefile'] = $draftareaid;

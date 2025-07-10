@@ -16,6 +16,8 @@
 
 namespace mod_board;
 
+use stdClass;
+
 /**
  * The main board class functions.
  * @package     mod_board
@@ -25,7 +27,7 @@ namespace mod_board;
  */
 class board {
 
-    /** @var int Minumum file size of 100 bytes. */
+    /** @var int Minimum file size of 100 bytes. */
     const ACCEPTED_FILE_MIN_SIZE = 100;
 
     /** @var int Maximum file size of 10Mb. */
@@ -76,163 +78,202 @@ class board {
     /**
      * Retrieves the course module for the board
      *
-     * @param object $board
-     * @return object
+     * @param stdClass $board
+     * @return stdClass
      */
-    public static function coursemodule_for_board($board) {
+    public static function coursemodule_for_board(stdClass $board): stdClass {
         return get_coursemodule_from_instance('board', $board->id, $board->course, false, MUST_EXIST);
-    }
-
-    /**
-     * Get the supported filetype extensions
-     *
-     * @return array of strings of supported file extensions.
-     */
-    public static function get_accepted_file_extensions() {
-        $config = get_config('mod_board');
-        if (isset($config->acceptedfiletypeforcontent)) {
-            $extensions = explode(',', $config->acceptedfiletypeforcontent);
-        } else {
-            $extensions = [];
-        }
-        return $extensions;
     }
 
     /**
      * Retrieves a record of the selected board.
      *
      * @param int $id
-     * @return object
+     * @param int $strictness IGNORE_MISSING or MUST_EXIST
+     * @return stdClass|null board record with extra cmid property
      */
-    public static function get_board($id) {
+    public static function get_board(int $id, int $strictness = IGNORE_MISSING): ?stdClass {
         global $DB;
-        return $DB->get_record('board', ['id' => $id]);
+        $sql = "SELECT b.*, cm.id AS cmid
+                  FROM {board} b
+                  JOIN {course_modules} cm ON cm.instance = b.id
+                  JOIN {modules} md ON md.id = cm.module AND md.name = 'board'
+                 WHERE b.id = :id";
+
+        $result = $DB->get_record_sql($sql, ['id' => $id], $strictness);
+        if ($result === false) {
+            $result = null;
+        }
+        return $result;
+    }
+
+    /**
+     * Retrieves a record of board for given column id.
+     *
+     * @param int $columnid
+     * @param int $strictness IGNORE_MISSING or MUST_EXIST
+     * @return stdClass|null board record with extra cmid property
+     */
+    public static function get_board_for_columnid(int $columnid, int $strictness = IGNORE_MISSING): ?stdClass {
+        global $DB;
+        $sql = "SELECT b.*, cm.id AS cmid
+                  FROM {board} b
+                  JOIN {course_modules} cm ON cm.instance = b.id
+                  JOIN {modules} md ON md.id = cm.module AND md.name = 'board'
+                  JOIN {board_columns} c ON c.boardid = b.id
+                 WHERE c.id = :columnid";
+
+        $result = $DB->get_record_sql($sql, ['columnid' => $columnid], $strictness);
+        if ($result === false) {
+            $result = null;
+        }
+        return $result;
+    }
+
+    /**
+     * Retrieves a record of board for given note id.
+     *
+     * NOTE: deleted notes are ignored
+     *
+     * @param int $noteid
+     * @param int $strictness IGNORE_MISSING or MUST_EXIST
+     * @return stdClass|null board record with extra cmid property
+     */
+    public static function get_board_for_noteid(int $noteid, int $strictness = IGNORE_MISSING): ?stdClass {
+        global $DB;
+        $sql = "SELECT b.*, cm.id AS cmid
+                  FROM {board} b
+                  JOIN {course_modules} cm ON cm.instance = b.id
+                  JOIN {modules} md ON md.id = cm.module AND md.name = 'board'
+                  JOIN {board_columns} c ON c.boardid = b.id
+                  JOIN {board_notes} n ON n.columnid = c.id AND n.deleted = 0
+                 WHERE n.id = :noteid";
+
+        $result = $DB->get_record_sql($sql, ['noteid' => $noteid], $strictness);
+        if ($result === false) {
+            $result = null;
+        }
+        return $result;
     }
 
     /**
      * Retrieves a record of the selected column.
      *
      * @param int $id
-     * @return object
+     * @param int $strictness IGNORE_MISSING or MUST_EXIST
+     * @return stdClass|null
      */
-    public static function get_column($id) {
+    public static function get_column(int $id, int $strictness = IGNORE_MISSING): ?stdClass {
         global $DB;
-        return $DB->get_record('board_columns', ['id' => $id]);
+        $result = $DB->get_record('board_columns', ['id' => $id], '*', $strictness);
+        if ($result === false) {
+            $result = null;
+        }
+        return $result;
     }
 
     /**
      * Retrieves a record of the selected note.
      *
+     * NOTE: deleted notes are ignored
+     *
      * @param int $id
-     * @return object
+     * @param int $strictness IGNORE_MISSING or MUST_EXIST
+     * @return stdClass|null
      */
-    public static function get_note($id) {
+    public static function get_note(int $id, int $strictness = IGNORE_MISSING): ?stdClass {
         global $DB;
-        return $DB->get_record('board_notes', ['id' => $id, 'deleted' => 0]);
+        $result = $DB->get_record('board_notes', ['id' => $id, 'deleted' => 0], '*', $strictness);
+        if ($result === false) {
+            $result = null;
+        }
+        return $result;
     }
 
     /**
      * Retrieves the context of the selected board.
      *
-     * @param int $id
+     * @param int|stdClass $boardorid
      * @return \context
      */
-    public static function context_for_board($id) {
-        if (!$board = static::get_board($id)) {
-            return null;
+    public static function context_for_board(int|stdClass $boardorid): \context {
+        if (is_object($boardorid)) {
+            $board = $boardorid;
+            if (!isset($board->id) || !isset($board->course)) {
+                throw new \core\exception\coding_exception('invalid board record');
+            }
+            if (!isset($board->cmid)) {
+                $board = self::get_board($board->id, MUST_EXIST);
+            }
+        } else {
+            $board = self::get_board($boardorid, MUST_EXIST);
         }
-
-        $cm = static::coursemodule_for_board($board);
-        return \context_module::instance($cm->id);
+        return \context_module::instance($board->cmid);
     }
 
     /**
      * Retrieves the context of the selected column.
      *
-     * @param int $id
+     * @param int|stdClass $columnorid
      * @return \context
      */
-    public static function context_for_column($id) {
-        if (!$column = static::get_column($id)) {
-            return null;
+    public static function context_for_column(int|stdClass $columnorid): \context {
+        if (is_object($columnorid)) {
+            $board = self::get_board($columnorid->boardid);
+        } else {
+            $board = self::get_board_for_columnid($columnorid, MUST_EXIST);
         }
-
-        return static::context_for_board($column->boardid);
-    }
-
-    /**
-     * Adds a capability check for the columns.
-     *
-     * @param int $id
-     * @return void
-     */
-    public static function require_capability_for_column($id) {
-        $context = static::context_for_column($id);
-        if ($context) {
-            require_capability('mod/board:manageboard', $context);
-        }
+        return \context_module::instance($board->cmid);
     }
 
     /**
      * Requires the users to be in groups.
      *
+     * @param stdClass $board
      * @param int $groupid
-     * @param int $boardid
      * @return void
      */
-    public static function require_access_for_group(int $groupid, int $boardid) {
+    public static function require_access_for_group(stdClass $board, int $groupid): void {
         if (!$groupid) {
             debugging('groupid expected', DEBUG_DEVELOPER);
         }
 
-        $cm = static::coursemodule_for_board(static::get_board($boardid));
-        $context = \context_module::instance($cm->id);
-
+        $context = self::context_for_board($board);
         if (has_capability('mod/board:manageboard', $context)) {
             return;
         }
 
+        $cm = self::coursemodule_for_board($board);
         $groupmode = groups_get_activity_groupmode($cm);
         if ($groupmode == NOGROUPS) {
             return;
         }
 
-        if (!static::can_access_group($groupid, $context)) {
-            throw new \Exception('Invalid group');
+        if (!self::can_access_group($groupid, $context)) {
+            require_capability('moodle/site:accessallgroups', $context);
         }
     }
 
     /**
      * Can current user view the note?
      *
-     * @param int $noteid
+     * NOTE: deleted notes are not visible
+     *
+     * @param stdClass $note
      * @return \context|null null means user cannot view the note
      */
-    public static function can_view_note(int $noteid): ?\context {
+    public static function can_view_note(stdClass $note): ?\context {
         global $USER;
 
-        $note = static::get_note($noteid);
-        if (!$note) {
-            return null;
-        }
-        $column = static::get_column($note->columnid);
-        if (!$column) {
-            return null;
-        }
-        $board = static::get_board($column->boardid);
-        if (!$board) {
-            return null;
-        }
-
-        $cm = static::coursemodule_for_board($board);
-        $context = \context_module::instance($cm->id);
+        $board = self::get_board_for_noteid($note->id, MUST_EXIST);
+        $context = self::context_for_board($board);
 
         if (!has_capability('mod/board:view', $context)) {
             return null;
         }
 
         if (!has_capability('mod/board:manageboard', $context)) {
-            if ($board->singleusermode == static::SINGLEUSER_PRIVATE) {
+            if ($board->singleusermode == self::SINGLEUSER_PRIVATE) {
                 if (!$USER->id) {
                     return null;
                 }
@@ -242,9 +283,10 @@ class board {
             }
 
             if ($note->groupid) {
+                $cm = self::coursemodule_for_board($board);
                 $groupmode = groups_get_activity_groupmode($cm);
                 if ($groupmode == SEPARATEGROUPS) {
-                    if (!static::can_access_group($note->groupid, $context)) {
+                    if (!self::can_access_group($note->groupid, $context)) {
                         return null;
                     }
                 }
@@ -269,16 +311,15 @@ class board {
     /**
      * Hides the headers of the board.
      *
-     * @param int $boardid
+     * @param stdClass $board
      * @return bool
      */
-    public static function board_hide_headers($boardid) {
-        $board = static::get_board($boardid);
+    public static function board_hide_headers(stdClass $board): bool {
         if (!$board->hideheaders) {
             return false;
         }
 
-        $context = static::context_for_board($boardid);
+        $context = self::context_for_board($board);
         $iseditor = has_capability('mod/board:manageboard', $context);
         return !$iseditor;
     }
@@ -289,39 +330,14 @@ class board {
      * @param int $boardid
      * @return bool true if there are notes.
      */
-    public static function board_has_notes($boardid): bool {
+    public static function board_has_notes(int $boardid): bool {
         global $DB;
-        $sql = "SELECT COUNT(*) FROM {board_notes}
-            LEFT JOIN {board_columns} ON {board_notes}.columnid = {board_columns}.id
-            WHERE {board_columns}.boardid = :boardid
-            AND {board_notes}.deleted = 0";
+        $sql = "SELECT COUNT(*)
+                  FROM {board_notes}
+             LEFT JOIN {board_columns} ON {board_notes}.columnid = {board_columns}.id
+                 WHERE {board_columns}.boardid = :boardid
+                       AND {board_notes}.deleted = 0";
         return $DB->count_records_sql($sql, ['boardid' => $boardid]) > 0;
-    }
-
-    /**
-     * Retrieves the file storage settings
-     *
-     * @param int $noteid
-     * @return object
-     */
-    public static function get_file_storage_settings($noteid) {
-        $note = static::get_note($noteid);
-        if (!$note) {
-            return null;
-        }
-
-        $column = static::get_column($note->columnid);
-        if (!$column) {
-            return null;
-        }
-
-        return (object) [
-            'contextid' => static::context_for_board($column->boardid)->id,
-            'component' => 'mod_board',
-            'filearea'  => 'images',
-            'itemid'    => $noteid,
-            'filepath'  => '/',
-        ];
     }
 
     /**
@@ -330,12 +346,10 @@ class board {
      * @param array      $array The array being reordered.
      * @param string|int $key They key of the element you want to reposition.
      * @param int        $order The position in the array you want to move the element to. (0 is first)
-     *
-     * @throws \Exception
      */
     public static function repositionan_array_element(array &$array, $key, int $order): void {
         if (($a = array_search($key, array_keys($array))) === false) {
-            throw new \Exception("The {$key} cannot be found in the given array.");
+            throw new \core\exception\invalid_parameter_exception("The {$key} cannot be found in the given array.");
         }
         $p1 = array_splice($array, $a, 1);
         $p2 = array_splice($array, 0, $order);
@@ -345,25 +359,20 @@ class board {
     /**
      * Checks to see if rating has been enabled for the board.
      *
-     * @param int $boardid
+     * @param stdClass $board
      * @return bool
      */
-    public static function board_rating_enabled($boardid) {
-        $board = static::get_board($boardid);
-        if (!$board) {
-            return false;
-        }
-
-        return !empty($board->addrating);
+    public static function board_rating_enabled(stdClass $board): bool {
+        return (bool)$board->addrating;
     }
 
     /**
      * Checks if the user can access all groups.
      *
-     * @param mixed $context
-     * @return boolean
+     * @param \context $context
+     * @return bool
      */
-    public static function can_access_all_groups($context) {
+    public static function can_access_all_groups(\context $context): bool {
         return has_capability('moodle/site:accessallgroups', $context);
     }
 
@@ -371,11 +380,11 @@ class board {
      * Checks if the user can access a specific group.
      *
      * @param int $groupid
-     * @param mixed $context
-     * @return boolean
+     * @param \context $context
+     * @return bool
      */
-    public static function can_access_group($groupid, $context) {
-        if (static::can_access_all_groups($context)) {
+    public static function can_access_group(int $groupid, \context $context): bool {
+        if (self::can_access_all_groups($context)) {
             return true;
         }
 
@@ -385,11 +394,11 @@ class board {
     /**
      * Checks if the user can edit the board.
      *
-     * @param int $boardid
+     * @param stdClass $board
      * @return bool
      */
-    public static function board_is_editor($boardid) {
-        $context = static::context_for_board($boardid);
+    public static function board_is_editor(stdClass $board): bool {
+        $context = self::context_for_board($board);
         return has_capability('mod/board:manageboard', $context);
     }
 
@@ -397,51 +406,46 @@ class board {
      * Asserts whether users may edit their own note placement on
      * a particular board.
      *
-     * @param int $boardid
+     * @param stdClass $board
      * @return boolean
      */
-    public static function board_users_can_edit($boardid) {
-        global $DB;
-
-        $context = static::context_for_board($boardid);
-        if (!has_capability('mod/board:post', $context)) {
-            // The user is not allowed to post via capabilities.
+    public static function board_users_can_edit(stdClass $board): bool {
+        if (!$board->userscanedit) {
             return false;
         }
 
-        return $DB->get_field('board', 'userscanedit', ['id' => $boardid], IGNORE_MISSING);
+        $context = self::context_for_board($board);
+        return has_capability('mod/board:post', $context);
     }
 
     /**
      * Checks if the user can only view the board
      *
-     * @param int $boardid
+     * @param stdClass $board
      * @param int|null $groupid
      * @return mixed
      */
-    public static function board_readonly(int $boardid, ?int $groupid): bool {
-        if (!$board = static::get_board($boardid)) {
-            return false;
-        }
+    public static function board_readonly(stdClass $board, ?int $groupid): bool {
+        $context = self::context_for_board($board);
 
-        $iseditor = static::board_is_editor($boardid);
-        $cm = static::coursemodule_for_board($board);
-        $context = static::context_for_board($boardid);
+        $cm = self::coursemodule_for_board($board);
         $groupmode = groups_get_activity_groupmode($cm);
+
+        $iseditor = self::board_is_editor($board);
         $postbyoverdue = !empty($board->postby) && time() > $board->postby;
 
         $readonlyboard = !$iseditor && (($groupmode != NOGROUPS && $board->singleusermode == self::SINGLEUSER_DISABLED
-                            && !static::can_access_group((int)$groupid, $context)) || $postbyoverdue);
+                            && !self::can_access_group((int)$groupid, $context)) || $postbyoverdue);
 
         return $readonlyboard;
     }
 
     /**
      * Prepares board notes for export.
-     * @param object $note
+     * @param stdClass $note
      * @return string
      */
-    public static function get_export_note($note) {
+    public static function get_export_note(stdClass$note): string {
         $breaks = ["<br />", "<br>", "<br/>"];
 
         $rowstring = '';
@@ -464,41 +468,12 @@ class board {
     }
 
     /**
-     * Prepares submissions for export.
-     * @param string $content
-     * @return array|string|string[]
-     */
-    public static function get_export_submission(string $content) {
-        $breaks = ["<br />", "<br>", "<br/>"];
-        return str_ireplace($breaks, "\n", $content);
-    }
-
-    /**
-     * Returns basic options for the image file picker.
-     *
-     * @return array
-     */
-    public static function get_image_picker_options() {
-        $extensions = self::get_accepted_file_extensions();
-
-        $extensions = array_map(function($extension) {
-            return '.' . $extension;
-        }, $extensions);
-
-        return [
-            'accepted_types' => $extensions,
-            'maxfiles' => 1,
-            'subdirs' => 0,
-            'maxbytes' => self::ACCEPTED_FILE_MAX_SIZE,
-        ];
-    }
-
-    /**
      * Gets the available column colours in order or the backup
      * colours if the config is not set.
+     *
      * @return string[] An array of hex colour strings.
      */
-    public static function get_column_colours() {
+    public static function get_column_colours(): array {
         $colours = explode(PHP_EOL, get_config('mod_board', 'column_colours'));
         foreach ($colours as $index => $colour) {
             $colours[$index] = trim($colour,  "\t\n\r\0\x0B#");
@@ -514,27 +489,28 @@ class board {
     /**
      * Returns a single string containing the 7 default colours for
      * column headings.
+     *
      * @return string[]
      */
-    public static function get_default_colours() {
+    public static function get_default_colours(): array {
         return ["1B998B", "2D3047", "FFFD82", "FF9B71", "E84855", "AF9BB6", "F18F01"];
     }
 
     /**
      * Get the users you can view if the board is set to single user with public posts.
-     * @param int $boardid the board id.
-     * @param int $groupid the group id.
+     * @param stdClass $board the board id.
+     * @param int|null $groupid the group id.
      * @return array the users.
      */
-    public static function get_users_for_board($boardid, $groupid = 0): array {
+    public static function get_users_for_board(stdClass $board, ?int $groupid = 0): array {
         if ($groupid) {
             $groups[] = $groupid;
         } else {
             $groups = 0;
         }
-        $context = static::context_for_board($boardid);
+        $context = self::context_for_board($board);
         $onlyactive = !has_capability('mod/board:manageboard', $context);
-        $userlist = get_enrolled_users(static::context_for_board($boardid), 'mod/board:view', $groups, 'u.id,
+        $userlist = get_enrolled_users($context, 'mod/board:view', $groups, 'u.id,
             u.lastname, u.firstname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename',
             onlyactive: $onlyactive);
         $users = [];
@@ -547,15 +523,14 @@ class board {
     /**
      * Check if you can view the notes for this user.
      *
-     * @param int $boardid the board id.
+     * @param stdClass $board the board.
      * @param int $ownerid the user id.
      * @return bool true if you can view the notes, false otherwise.
      */
-    public static function can_view_owner(int $boardid, int $ownerid): bool {
+    public static function can_view_owner(stdClass $board, int $ownerid): bool {
         global $USER;
 
-        $board = static::get_board($boardid);
-        $context = static::context_for_board($boardid);
+        $context = self::context_for_board($board);
         if (has_capability('mod/board:manageboard', $context)) {
             return true;
         }
@@ -575,16 +550,19 @@ class board {
     /**
      * Check if current user can post on this board
      *
-     * @param int $boardid the board id.
+     * @param stdClass $board the board.
      * @param int $ownerid the board owner
      */
-    public static function can_post(int $boardid, int $ownerid): bool {
+    public static function can_post(stdClass $board, int $ownerid): bool {
         global $USER;
 
-        $board = static::get_board($boardid);
-        $context = static::context_for_board($boardid);
+        $context = self::context_for_board($board);
 
         if ($board->singleusermode == self::SINGLEUSER_DISABLED) {
+            if ($ownerid && $ownerid != $USER->id) {
+                debugging('ownerid should not be used when single user mode disabled', DEBUG_DEVELOPER);
+                return false;
+            }
             return has_capability('mod/board:post', $context);
         }
 

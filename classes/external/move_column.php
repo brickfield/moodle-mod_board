@@ -51,8 +51,6 @@ final class move_column extends external_api {
      * @return array
      */
     public static function execute(int $id, int $sortorder): array {
-        global $DB;
-
         // Validate received parameters.
         [
             'id' => $id,
@@ -62,7 +60,7 @@ final class move_column extends external_api {
             'sortorder' => $sortorder,
         ]);
 
-        $column = $DB->get_record('board_columns', ['id' => $id]);
+        $column = board::get_column($id);
         if (!$column) {
             return [
                 'status' => false,
@@ -71,7 +69,7 @@ final class move_column extends external_api {
         }
 
         // Request and permission validation.
-        $context = board::context_for_column($column->id);
+        $context = board::context_for_column($column);
         require_capability('mod/board:view', $context);
         require_capability('mod/board:manageboard', $context);
 

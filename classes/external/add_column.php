@@ -62,7 +62,7 @@ final class add_column extends external_api {
             'name' => $name,
         ]);
 
-        $board = $DB->get_record('board', ['id' => $boardid], '*', MUST_EXIST);
+        $board = board::get_board($boardid, MUST_EXIST);
 
         // Request and permission validation.
         $context = board::context_for_board($board->id);

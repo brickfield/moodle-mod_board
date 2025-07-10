@@ -62,8 +62,8 @@ final class delete_note extends external_api {
         if (!$note) {
             return ['status' => true, 'historyid' => 0];
         }
-        $column = board::get_column($note->columnid);
-        $board = board::get_board($column->boardid);
+        $column = board::get_column($note->columnid, MUST_EXIST);
+        $board = board::get_board($column->boardid, MUST_EXIST);
         $context = board::context_for_board($board->id);
 
         // Request and permission validation.
@@ -76,10 +76,10 @@ final class delete_note extends external_api {
         }
 
         if ($note->groupid) {
-            board::require_access_for_group($note->groupid, $board->id);
+            board::require_access_for_group($board, $note->groupid);
         }
 
-        if (board::board_readonly($board->id, $note->groupid)) {
+        if (board::board_readonly($board, $note->groupid)) {
             throw new \Exception('board_delete_note not available');
         }
 

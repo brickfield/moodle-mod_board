@@ -51,9 +51,7 @@ final class lock_column extends external_api {
      * @return array
      */
     public static function execute(int $id, bool $status): array {
-        global $DB;
-
-        // Validate recieved parameters.
+        // Validate received parameters.
         [
             'id' => $id,
             'status' => $status,
@@ -62,7 +60,7 @@ final class lock_column extends external_api {
             'status' => $status,
         ]);
 
-        $column = $DB->get_record('board_columns', ['id' => $id]);
+        $column = board::get_column($id);
         if (!$column) {
             return [
                 'status' => false,
@@ -71,7 +69,7 @@ final class lock_column extends external_api {
         }
 
         // Request and permission validation.
-        $context = board::context_for_column($column->id);
+        $context = board::context_for_column($column);
         self::validate_context($context);
         require_capability('mod/board:view', $context);
         require_capability('mod/board:manageboard', $context);

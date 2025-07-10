@@ -39,8 +39,8 @@ use mod_board\local\note;
  */
 class board_table extends flexible_table {
 
-    /** @var int The board id. */
-    protected $boardid;
+    /** @var int The board. */
+    protected $board;
 
     /** @var int The group id. */
     protected $groupid;
@@ -69,11 +69,11 @@ class board_table extends flexible_table {
         global $DB;
         parent::__construct('mod_board_table');
 
-        $this->boardid = $boardid;
+        $this->board = board::get_board($boardid);
         $this->groupid = $groupid;
         $this->includedeleted = $includedeleted;
         $this->ownerid = $ownerid;
-        $this->hasrating = board::board_rating_enabled($boardid);
+        $this->hasrating = board::board_rating_enabled($this->board);
 
         // Get the construct paramaters and add them to the export url.
         $exportparams = [
@@ -87,7 +87,7 @@ class board_table extends flexible_table {
         $this->define_baseurl($exporturl);
 
         // Get the columns from the database.
-        $columns = $DB->get_records('board_columns', ['boardid' => $boardid], 'sortorder', 'id, name, sortorder');
+        $columns = $DB->get_records('board_columns', ['boardid' => $this->board->id], 'sortorder', 'id, name, sortorder');
 
         $columnids = array_map(function($column) {
             return $column->name . $column->id;
@@ -131,7 +131,7 @@ class board_table extends flexible_table {
         global $DB;
 
         // Get the columns from the database.
-        $columns = $DB->get_records('board_columns', ['boardid' => $this->boardid], 'sortorder', 'id, name, sortorder');
+        $columns = $DB->get_records('board_columns', ['boardid' => $this->board->id], 'sortorder', 'id, name, sortorder');
         // Get the notes for each column.
         foreach ($columns as $column) {
             $params = ['columnid' => $column->id];

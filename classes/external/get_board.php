@@ -67,9 +67,9 @@ final class get_board extends external_api {
             'groupid' => $groupid,
         ]);
 
-        $board = $DB->get_record('board', ['id' => $id], '*', MUST_EXIST);
+        $board = board::get_board($id, MUST_EXIST);
         $cm = board::coursemodule_for_board($board);
-        $context = \context_module::instance($cm->id);
+        $context = board::context_for_board($board);
 
         // Request and permission validation.
         self::validate_context($context);
@@ -89,7 +89,7 @@ final class get_board extends external_api {
                 }
             } else if ($groupmode == SEPARATEGROUPS) {
                 if ($groupid) {
-                    board::require_access_for_group($groupid, $board->id);
+                    board::require_access_for_group($board, $groupid);
                 } else {
                     if (!has_capability('moodle/site:accessallgroups', $context)
                         && !has_capability('mod/board:manageboard', $context)
@@ -105,7 +105,7 @@ final class get_board extends external_api {
                 debugging('ownerid is required in single-user modes', DEBUG_DEVELOPER);
                 return [];
             }
-            if (!board::can_view_owner($board->id, $ownerid)) {
+            if (!board::can_view_owner($board, $ownerid)) {
                 return [];
             }
             if ($groupid) {
@@ -114,7 +114,7 @@ final class get_board extends external_api {
             }
         }
 
-        $hideheaders = board::board_hide_headers($board->id);
+        $hideheaders = board::board_hide_headers($board);
 
         $columns = $DB->get_records('board_columns', ['boardid' => $board->id], 'sortorder, id', 'id, name, locked');
         $columnindex = 0;

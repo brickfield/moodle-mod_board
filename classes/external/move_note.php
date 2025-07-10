@@ -70,9 +70,11 @@ final class move_note extends external_api {
         if (!$note) {
             return ['status' => false, 'historyid' => 0];
         }
-        $column = board::get_column($note->columnid);
-        $context = board::context_for_board($column->boardid);
-        $newcolumn = board::get_column($columnid);
+        $column = board::get_column($note->columnid, MUST_EXIST);
+        $board = board::get_board($column->boardid, MUST_EXIST);
+        $context = board::context_for_board($board);
+
+        $newcolumn = board::get_column($columnid, MUST_EXIST);
         if ($newcolumn->boardid != $column->boardid) {
             return ['status' => false, 'historyid' => 0];
         }
@@ -81,8 +83,8 @@ final class move_note extends external_api {
         self::validate_context($context);
         require_capability('mod/board:view', $context);
 
-        if ($USER->id != $note->userid && !board::board_users_can_edit($column->boardid)) {
-            board::require_capability_for_column($note->columnid);
+        if ($USER->id != $note->userid && !board::board_users_can_edit($board)) {
+            require_capability('mod/board:manageboard', $context);
         }
 
         return note::move($id, $columnid, $sortorder);

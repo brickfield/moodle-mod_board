@@ -71,7 +71,7 @@ final class add_comment extends external_api {
             ];
         }
 
-        $context = board::can_view_note($noteid);
+        $context = board::can_view_note($note);
         if (!$context) {
             return [
                 'count' => '',

@@ -107,7 +107,6 @@ final class get_configuration_test extends \advanced_testcase {
         $response = get_configuration::clean_returnvalue(get_configuration::execute_returns(), $response);
         $this->assertSame([], $response['warnings']);
         $settings = json_decode($response['settings']);
-        unset($board1->cmid);
         $this->assertEquals($board1, $settings->board);
         $this->assertSame($context1->id, $settings->contextid);
         $this->assertFalse($settings->isEditor);
@@ -125,7 +124,6 @@ final class get_configuration_test extends \advanced_testcase {
         $response = get_configuration::clean_returnvalue(get_configuration::execute_returns(), $response);
         $this->assertSame([], $response['warnings']);
         $settings = json_decode($response['settings']);
-        unset($board2->cmid);
         $this->assertEquals($board2, $settings->board);
         $this->assertSame($context2->id, $settings->contextid);
         $this->assertFalse($settings->isEditor);
@@ -143,7 +141,6 @@ final class get_configuration_test extends \advanced_testcase {
         $response = get_configuration::clean_returnvalue(get_configuration::execute_returns(), $response);
         $this->assertSame([], $response['warnings']);
         $settings = json_decode($response['settings']);
-        unset($board3->cmid);
         $this->assertEquals($board3, $settings->board);
         $this->assertSame($context3->id, $settings->contextid);
         $this->assertFalse($settings->isEditor);
@@ -161,7 +158,6 @@ final class get_configuration_test extends \advanced_testcase {
         $response = get_configuration::clean_returnvalue(get_configuration::execute_returns(), $response);
         $this->assertSame([], $response['warnings']);
         $settings = json_decode($response['settings']);
-        unset($board4->cmid);
         $this->assertEquals($board4, $settings->board);
         $this->assertSame($context4->id, $settings->contextid);
         $this->assertFalse($settings->isEditor);
@@ -179,7 +175,6 @@ final class get_configuration_test extends \advanced_testcase {
         $response = get_configuration::clean_returnvalue(get_configuration::execute_returns(), $response);
         $this->assertSame([], $response['warnings']);
         $settings = json_decode($response['settings']);
-        unset($board4->cmid);
         $this->assertEquals($board4, $settings->board);
         $this->assertSame($context4->id, $settings->contextid);
         $this->assertFalse($settings->isEditor);
@@ -197,7 +192,6 @@ final class get_configuration_test extends \advanced_testcase {
         $response = get_configuration::clean_returnvalue(get_configuration::execute_returns(), $response);
         $this->assertSame([], $response['warnings']);
         $settings = json_decode($response['settings']);
-        unset($board4->cmid);
         $this->assertEquals($board4, $settings->board);
         $this->assertSame($context4->id, $settings->contextid);
         $this->assertFalse($settings->isEditor);
@@ -217,7 +211,6 @@ final class get_configuration_test extends \advanced_testcase {
         $response = get_configuration::clean_returnvalue(get_configuration::execute_returns(), $response);
         $this->assertSame([], $response['warnings']);
         $settings = json_decode($response['settings']);
-        unset($board1->cmid);
         $this->assertEquals($board1, $settings->board);
         $this->assertSame($context1->id, $settings->contextid);
         $this->assertTrue($settings->isEditor);
@@ -235,7 +228,6 @@ final class get_configuration_test extends \advanced_testcase {
         $response = get_configuration::clean_returnvalue(get_configuration::execute_returns(), $response);
         $this->assertSame([], $response['warnings']);
         $settings = json_decode($response['settings']);
-        unset($board2->cmid);
         $this->assertEquals($board2, $settings->board);
         $this->assertSame($context2->id, $settings->contextid);
         $this->assertTrue($settings->isEditor);
@@ -253,7 +245,6 @@ final class get_configuration_test extends \advanced_testcase {
         $response = get_configuration::clean_returnvalue(get_configuration::execute_returns(), $response);
         $this->assertSame([], $response['warnings']);
         $settings = json_decode($response['settings']);
-        unset($board3->cmid);
         $this->assertEquals($board3, $settings->board);
         $this->assertSame($context3->id, $settings->contextid);
         $this->assertTrue($settings->isEditor);
@@ -271,7 +262,6 @@ final class get_configuration_test extends \advanced_testcase {
         $response = get_configuration::clean_returnvalue(get_configuration::execute_returns(), $response);
         $this->assertSame([], $response['warnings']);
         $settings = json_decode($response['settings']);
-        unset($board4->cmid);
         $this->assertEquals($board4, $settings->board);
         $this->assertSame($context4->id, $settings->contextid);
         $this->assertTrue($settings->isEditor);
@@ -289,7 +279,6 @@ final class get_configuration_test extends \advanced_testcase {
         $response = get_configuration::clean_returnvalue(get_configuration::execute_returns(), $response);
         $this->assertSame([], $response['warnings']);
         $settings = json_decode($response['settings']);
-        unset($board4->cmid);
         $this->assertEquals($board4, $settings->board);
         $this->assertSame($context4->id, $settings->contextid);
         $this->assertTrue($settings->isEditor);
@@ -307,7 +296,6 @@ final class get_configuration_test extends \advanced_testcase {
         $response = get_configuration::clean_returnvalue(get_configuration::execute_returns(), $response);
         $this->assertSame([], $response['warnings']);
         $settings = json_decode($response['settings']);
-        unset($board4->cmid);
         $this->assertEquals($board4, $settings->board);
         $this->assertSame($context4->id, $settings->contextid);
         $this->assertTrue($settings->isEditor);

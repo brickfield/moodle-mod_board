@@ -61,8 +61,8 @@ final class rate_note extends external_api {
         if (!$note) {
             return ['status' => false, 'rating' => 0, 'historyid' => 0];
         }
-        $column = $DB->get_record('board_columns', ['id' => $note->columnid], '*', MUST_EXIST);
-        $board = $DB->get_record('board', ['id' => $column->boardid], '*', MUST_EXIST);
+        $column = board::get_column($note->columnid, MUST_EXIST);
+        $board = board::get_board($column->boardid, MUST_EXIST);
         $context = board::context_for_board($board->id);
 
         // Request and permission validation.

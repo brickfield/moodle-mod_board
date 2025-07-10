@@ -49,8 +49,6 @@ final class delete_column extends external_api {
      * @return array
      */
     public static function execute(int $id): array {
-        global $DB;
-
         // Validate received parameters.
         [
             'id' => $id,
@@ -58,7 +56,7 @@ final class delete_column extends external_api {
             'id' => $id,
         ]);
 
-        $column = $DB->get_record('board_columns', ['id' => $id]);
+        $column = board::get_column($id);
         if (!$column) {
             return [
                 'status' => true,
@@ -67,12 +65,12 @@ final class delete_column extends external_api {
         }
 
         // Request and permission validation.
-        $context = board::context_for_column($column->id);
+        $context = board::context_for_column($column);
         self::validate_context($context);
         require_capability('mod/board:view', $context);
         require_capability('mod/board:manageboard', $context);
 
-        return column::delete($id);
+        return column::delete($column->id);
     }
 
     /**

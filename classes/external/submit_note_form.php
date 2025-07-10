@@ -82,9 +82,9 @@ final class submit_note_form extends external_api {
         $data = $form->get_data();
         if ($data) {
             // Check that the passed context, and the context with this note/column match.
-            $column = $DB->get_record('board_columns', ['id' => $data->columnid], '*', MUST_EXIST);
-            $board = $DB->get_record('board', ['id' => $column->boardid], '*', MUST_EXIST);
-            $colcontext = board::context_for_board($column->boardid);
+            $column = board::get_column($data->columnid, MUST_EXIST);
+            $board = board::get_board($column->boardid, MUST_EXIST);
+            $colcontext = board::context_for_board($board);
             if ($context->id !== $colcontext->id) {
                 throw new moodle_exception('formcontextmismatch');
             }
@@ -135,7 +135,7 @@ final class submit_note_form extends external_api {
 
             // Process either as an update or insert.
             if ($data->noteid) {
-                $note = $DB->get_record('board_notes', ['id' => $data->noteid, 'deleted' => 0], '*', MUST_EXIST);
+                $note = board::get_note($data->noteid, MUST_EXIST);
                 if (!$note || $note->columnid != $column->id) {
                     throw new moodle_exception('formsubmissioninvalid');
                 }
@@ -143,9 +143,9 @@ final class submit_note_form extends external_api {
                     require_capability('mod/board:manageboard', $context);
                 }
                 if (!empty($note->groupid)) {
-                    board::require_access_for_group($note->groupid, $board->id);
+                    board::require_access_for_group($board, $note->groupid);
                 }
-                if (board::board_readonly($board->id, $note->groupid)) {
+                if (board::board_readonly($board, $note->groupid)) {
                     throw new \Exception('board_update_note not available');
                 }
                 $result = note::update($data->noteid, $data->heading, $data->content, $attachment);
@@ -162,7 +162,7 @@ final class submit_note_form extends external_api {
                         $data->groupid = null;
                     } else {
                         if ($data->groupid) {
-                            board::require_access_for_group($data->groupid, $board->id);
+                            board::require_access_for_group($board, $data->groupid);
                         } else {
                             // Only managers can post in "All groups".
                             require_capability('mod/board:manageboard', $context);
@@ -170,7 +170,7 @@ final class submit_note_form extends external_api {
                     }
                 }
 
-                if (board::board_readonly($board->id, $data->groupid)) {
+                if (board::board_readonly($board, $data->groupid)) {
                     throw new \Exception('board_add_note not available');
                 }
 
@@ -189,7 +189,7 @@ final class submit_note_form extends external_api {
                     }
                 }
 
-                if (!board::can_post($board->id, $data->ownerid)) {
+                if (!board::can_post($board, $data->ownerid)) {
                     throw new \Exception('board_add_note not available');
                 }
 

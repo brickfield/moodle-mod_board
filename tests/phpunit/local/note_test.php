@@ -16,6 +16,7 @@
 
 namespace mod_board\phpunit\local;
 
+use stdClass;
 use mod_board\local\note;
 use mod_board\board;
 
@@ -668,5 +669,18 @@ final class note_test extends \advanced_testcase {
         $this->setUser($user2);
         note::rate($note1->id);
         $this->assertSame(2, note::get_rating($note1->id));
+    }
+
+    public function test_get_accepted_file_extensions(): void {
+        $extensions = note::get_accepted_file_extensions();
+        foreach ($extensions as $k => $v) {
+            $this->assertIsInt($k);
+            $this->assertMatchesRegularExpression('/^[a-z]+$/', $v);
+        }
+    }
+
+    public function test_get_image_picker_options(): void {
+        $options = note::get_image_picker_options();
+        $this->assertNotEmpty($options);
     }
 }
