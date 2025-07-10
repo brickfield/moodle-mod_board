@@ -64,13 +64,13 @@ class notes_table extends table_sql {
             'group' => $groupid,
             'tabletype' => 'notes',
             'ownerid' => $ownerid,
-            'includedeleted' => $includedeleted
+            'includedeleted' => $includedeleted,
         ];
         $exporturl = new moodle_url('/mod/board/export.php', $exportparams);
         $this->define_baseurl($exporturl);
 
         // Define the list of columns to show.
-        $columns = array('firstname', 'lastname', 'email', 'heading', 'content', 'info', 'url', 'timecreated', 'deleted');
+        $columns = ['firstname', 'lastname', 'email', 'heading', 'content', 'info', 'url', 'timecreated', 'deleted'];
         $this->define_columns($columns);
 
         // Define the titles of columns to show in header.

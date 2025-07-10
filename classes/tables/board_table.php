@@ -80,7 +80,7 @@ class board_table extends flexible_table {
             'group' => $groupid,
             'tabletype' => 'board',
             'ownerid' => $ownerid,
-            'includedeleted' => $includedeleted
+            'includedeleted' => $includedeleted,
         ];
         $exporturl = new moodle_url('/mod/board/export.php', $exportparams);
         $this->define_baseurl($exporturl);
@@ -191,7 +191,7 @@ class board_table extends flexible_table {
      */
     public function get_row_html($row, $classname = '') {
         static $suppresslastrow = null;
-        $rowclasses = array();
+        $rowclasses = [];
 
         if ($classname) {
             $rowclasses[] = $classname;
@@ -200,13 +200,13 @@ class board_table extends flexible_table {
         $rowid = $this->uniqueid . '_r' . $this->currentrow;
         $html = '';
 
-        $html .= html_writer::start_tag('tr', array('class' => implode(' ', $rowclasses), 'id' => $rowid));
+        $html .= html_writer::start_tag('tr', ['class' => implode(' ', $rowclasses), 'id' => $rowid]);
 
         // If we have a separator, print it.
         if ($row === null) {
             $colcount = count($this->columns);
             $html .= html_writer::tag('td', html_writer::tag('div', '',
-                    array('class' => 'tabledivider')), array('colspan' => $colcount));
+                    ['class' => 'tabledivider']), ['colspan' => $colcount]);
 
         } else {
             $colbyindex = array_flip($this->columns);

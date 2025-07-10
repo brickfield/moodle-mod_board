@@ -25,14 +25,14 @@
 
 namespace mod_board\privacy;
 
-use \core_privacy\local\request\userlist;
-use \core_privacy\local\request\approved_contextlist;
-use \core_privacy\local\request\approved_userlist;
-use \core_privacy\local\request\deletion_criteria;
-use \core_privacy\local\request\writer;
-use \core_privacy\local\request\helper as request_helper;
-use \core_privacy\local\metadata\collection;
-use \core_privacy\local\request\transform;
+use core_privacy\local\request\userlist;
+use core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\approved_userlist;
+use core_privacy\local\request\deletion_criteria;
+use core_privacy\local\request\writer;
+use core_privacy\local\request\helper as request_helper;
+use core_privacy\local\metadata\collection;
+use core_privacy\local\request\transform;
 use tool_dataprivacy\context_instance;
 
 /**
@@ -58,7 +58,7 @@ class provider implements
      * @param   collection     $items The initialised collection to add items to.
      * @return  collection     A listing of user data stored through this system.
      */
-    public static function get_metadata(collection $items) : collection {
+    public static function get_metadata(collection $items): collection {
         // The 'board' table does not store any specific user data.
         $items->add_database_table('board_notes', [
             'columnid' => 'privacy:metadata:board_notes:columnid',
@@ -105,7 +105,7 @@ class provider implements
      * @param   int         $userid     The user to search.
      * @return  contextlist $contextlist  The contextlist containing the list of contexts used in this plugin.
      */
-    public static function get_contexts_for_userid(int $userid) : \core_privacy\local\request\contextlist {
+    public static function get_contexts_for_userid(int $userid): \core_privacy\local\request\contextlist {
         $contextlist = new \core_privacy\local\request\contextlist();
 
         $params = [
@@ -358,7 +358,7 @@ class provider implements
      * @param   string      $exportarea The area being compiled for the export data.
      * @return  array       Further note export data.
      */
-    protected static function get_export_area(\stdClass $note, string $exportarea = 'posts') : Array {
+    protected static function get_export_area(\stdClass $note, string $exportarea = 'posts'): Array {
         $pathparts = [];
 
         $parts = [
@@ -532,7 +532,7 @@ class provider implements
      * @param   stdClass    $note The note from which to compile the export data.
      * @return  string      An identifiable note title for export data.
      */
-    protected static function get_note_title(\stdClass $note) : String {
+    protected static function get_note_title(\stdClass $note): String {
         $notetitle = '';
 
         // Just need either heading, or content, or info for note 'title'.

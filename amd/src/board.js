@@ -99,7 +99,7 @@ const decodeText = function(encodedText) {
  */
 const handleAction = function(elem, callback) {
     return elem.on('click keypress', function(e) {
-        if (e.type == 'keypress') {
+        if (e.type === 'keypress') {
             if (isAriaTriggerKey(e.keyCode)) {
                 e.preventDefault();
             } else {
@@ -127,7 +127,7 @@ const handleEditableAction = function(elem, callback, callBeforeOnKeyEditing) {
 
     // Can't use on(edit) here because we want to do actions (save cache) before the control goes into edit mode
     return elem.on('dblclick keypress', function(e) {
-        if (e.type == 'keypress') {
+        if (e.type === 'keypress') {
             if (isAriaTriggerKey(e.keyCode) && !elem.is(':editing')) {
                 e.preventDefault();
                 if (callBeforeOnKeyEditing) {
@@ -154,6 +154,9 @@ const handleEditableAction = function(elem, callback, callBeforeOnKeyEditing) {
 export default function(settings) {
     // An array of strings to load as a batch later.
     // Not necessary, but used to load all the strings in one ajax call.
+
+    /* eslint camelcase: off */
+
     var strings = {
         default_column_heading: '',
         post_button_text: '',
@@ -168,7 +171,7 @@ export default function(settings) {
         rate_note_text: '',
         rate_remove_note_text: '',
         Ok: '',
-        delete: '',
+        "delete": '',
         Cancel: '',
         warning: '',
         modal_title_new: '',
@@ -243,7 +246,7 @@ export default function(settings) {
             if (callback) {
                 callback.apply(null, arguments);
             }
-            if (method !== 'board_history' && method != 'get_board') {
+            if (method !== 'board_history' && method !== 'get_board') {
                 updateBoard(true);
             }
         }, failcallback);
@@ -469,7 +472,7 @@ export default function(settings) {
             strings.delete,
             strings.Cancel,
             function() {
-                serviceCall('delete_note', { id: ident }, function (result) {
+                serviceCall('delete_note', {id: ident}, function(result) {
                     if (result.status) {
                         lastHistoryId = result.historyid;
                         let note = getNote(ident);
@@ -1145,13 +1148,13 @@ export default function(settings) {
                 }
 
                 var data = JSON.parse(item.content);
-                if (item.action == 'add_note') {
+                if (item.action === 'add_note') {
                     let sortorder = sortby == 3 ? data.sortorder : data.timecreated;
                     addNote(data.columnid, data.id, data.heading, data.content, data.attachment,
                         {id: item.userid}, sortorder, data.rating);
                     updateNoteAria(data.id);
                     sortNotes($('.board_column[data-ident=' + data.columnid + '] .board_column_content'));
-                } else if (item.action == 'update_note') {
+                } else if (item.action === 'update_note') {
                     let note = getNote(data.id),
                         formModal = editModal,
                         historyData = data;
@@ -1187,18 +1190,18 @@ export default function(settings) {
                     }
                     note.remove();
 
-                } else if (item.action == 'add_column') {
+                } else if (item.action === 'add_column') {
                     addColumn(data.id, data.name, false, {}, selectHeadingColour());
-                } else if (item.action == 'move_column') {
+                } else if (item.action === 'move_column') {
                     const board = $('.mod_board');
                     data.sortorder.forEach(column => {
                         const columnElement = board.find(`.board_column[data-ident='${column}']`);
                         columnElement.detach().appendTo(board);
                     });
-                } else if (item.action == 'update_column') {
+                } else if (item.action === 'update_column') {
                     $(".board_column[data-ident='" + data.id + "'] .mod_board_column_name").html(data.name);
                     updateColumnAria(data.id);
-                } else if (item.action == 'lock_column') {
+                } else if (item.action === 'lock_column') {
                     $(".board_column[data-ident='" + data.id + "']").attr("data-locked", data.locked);
                     if (data.locked) {
                         $(".board_column[data-ident='" + data.id + "']").find('.board_button.newnote').addClass('d-none');
@@ -1206,13 +1209,13 @@ export default function(settings) {
                         $(".board_column[data-ident='" + data.id + "']").find('.board_button.newnote').removeClass('d-none');
                     }
                     updateSortable();
-                } else if (item.action == 'delete_column') {
+                } else if (item.action === 'delete_column') {
                     var column = $(".board_column[data-ident='" + data.id + "']");
                     if (editingNote && column.find('.board_note[data-ident="' + editingNote + '"]').length) {
                         stopNoteEdit();
                     }
                     column.remove();
-                } else if (item.action == 'rate_note') {
+                } else if (item.action === 'rate_note') {
                     var note = getNote(data.id);
                     note.find('.mod_board_rating').html(data.rating);
                     if (sortby == SORTBY_RATING) {
@@ -1271,10 +1274,10 @@ export default function(settings) {
             }
         }
         if (toggle) {
-            direction = direction == 'asc' ? 'desc' : 'asc';
+            direction = direction === 'asc' ? 'desc' : 'asc';
         }
 
-        if (direction == 'asc') {
+        if (direction === 'asc') {
             sortCol.removeClass('fa-angle-down');
             sortCol.addClass('fa-angle-up');
         } else {
@@ -1559,14 +1562,14 @@ export default function(settings) {
                 modal.setSaveButtonText(strings.post_button_text);
                 modal.setButtonText('cancel', strings.cancel_button_text);
 
-                modal.getRoot().on(ModalEvents.hidden, function () {
+                modal.getRoot().on(ModalEvents.hidden, function() {
                     stopNoteEdit();
                     if (!note.data('ident')) {
                         note.remove();
                     }
                 });
 
-                modal.getRoot().on(ModalEvents.save, function (e) {
+                modal.getRoot().on(ModalEvents.save, function(e) {
                     e.preventDefault();
                     modal.getRoot().find('form').submit();
                 });
@@ -1574,7 +1577,7 @@ export default function(settings) {
                 var changeEvent = document.createEvent('HTMLEvents');
                 changeEvent.initEvent('change', true, true);
 
-                modal.getRoot().on('submit', 'form', function (e) {
+                modal.getRoot().on('submit', 'form', function(e) {
                     e.preventDefault();
 
                     // Prevent multiple form submissions from being sent.
@@ -1594,7 +1597,7 @@ export default function(settings) {
                     // Normally this would happen when the form is submitted, but
                     // since we aren't submitting the form normally we need to run client side
                     // validation.
-                    modal.getRoot().find(':input').each(function (index, element) {
+                    modal.getRoot().find(':input').each(function(index, element) {
                         element.dispatchEvent(changeEvent);
                     });
 
@@ -1613,9 +1616,9 @@ export default function(settings) {
                     }
 
                     var formData = JSON.stringify(modal.getRoot().find('form').serialize());
-                    serviceCall('submit_form', {contextid: contextid, jsonformdata: formData}, function (result) {
+                    serviceCall('submit_form', {contextid: contextid, jsonformdata: formData}, function(result) {
                         if (result.status) {
-                            if (result.action == 'insert') {
+                            if (result.action === 'insert') {
                                 // Added a new note.
                                 lastHistoryId = result.historyid;
                                 note.remove();
@@ -1745,7 +1748,7 @@ export default function(settings) {
             });
             modal.show();
             // Handle hidden event.
-            modal.getRoot().on(ModalEvents.hidden, function () {
+            modal.getRoot().on(ModalEvents.hidden, function() {
                 // Destroy when hidden.
                 modal.destroy();
             });

@@ -55,13 +55,13 @@ class comments_table extends table_sql {
             'group' => $groupid,
             'tabletype' => 'comments',
             'ownerid' => $ownerid,
-            'includedeleted' => $includedeleted
+            'includedeleted' => $includedeleted,
         ];
         $exporturl = new moodle_url('/mod/board/export.php', $exportparams);
         $this->define_baseurl($exporturl);
 
         // Define the list of columns to show.
-        $columns = array('heading', 'firstname', 'lastname', 'content', 'timecreated', 'deleted');
+        $columns = ['heading', 'firstname', 'lastname', 'content', 'timecreated', 'deleted'];
         $this->define_columns($columns);
 
         // Define the titles of columns to show in header.
