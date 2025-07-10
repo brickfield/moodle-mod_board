@@ -32,7 +32,7 @@ use mod_board\local\note;
  * @copyright  2021 Brickfield Education Labs <https://www.brickfield.ie/>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-final class submit_form extends external_api {
+final class submit_note_form extends external_api {
     /**
      * Describes the external function arguments.
      *

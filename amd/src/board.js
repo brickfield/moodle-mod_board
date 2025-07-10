@@ -1618,7 +1618,7 @@ export default function(settings) {
                     }
 
                     var formData = JSON.stringify(modal.getRoot().find('form').serialize());
-                    serviceCall('submit_form', {contextid: contextid, jsonformdata: formData}, function(result) {
+                    serviceCall('submit_note_form', {contextid: contextid, jsonformdata: formData}, function(result) {
                         if (result.status) {
                             if (result.action === 'insert') {
                                 // Added a new note.

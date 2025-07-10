@@ -16,7 +16,7 @@
 
 namespace mod_board\phpunit\external;
 
-use mod_board\external\submit_form;
+use mod_board\external\submit_note_form;
 use mod_board\board;
 
 /**
@@ -25,9 +25,9 @@ use mod_board\board;
  * @package    mod_board
  * @copyright  2025 Brickfield Education Labs <https://www.brickfield.ie/>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \mod_board\external\submit_form
+ * @covers     \mod_board\external\submit_note_form
  */
-final class submit_form_test extends \advanced_testcase {
+final class submit_note_form_test extends \advanced_testcase {
     public function test_execute(): void {
         global $DB;
 
@@ -123,8 +123,8 @@ final class submit_form_test extends \advanced_testcase {
         // phpcs:ignore moodle.Files.LineLength.TooLong
         $jsonformdata = "noteid=&columnid={$columns1[0]->id}&ownerid=0&groupid=0&sesskey={$sesskey}&_qf__mod_board_note_form=1&heading=pokus&content=haha&mediatype=0";
         $jsonformdata = json_encode($jsonformdata);
-        $result = submit_form::execute($context1->id, $jsonformdata);
-        $result = submit_form::clean_returnvalue(submit_form::execute_returns(), $result);
+        $result = submit_note_form::execute($context1->id, $jsonformdata);
+        $result = submit_note_form::clean_returnvalue(submit_note_form::execute_returns(), $result);
         $this->assertTrue($result['status']);
         $this->assertSame('insert', $result['action']);
         $this->assertNotEmpty($result['historyid']);
@@ -147,8 +147,8 @@ final class submit_form_test extends \advanced_testcase {
         // phpcs:ignore moodle.Files.LineLength.TooLong
         $jsonformdata = "noteid={$note->id}&columnid={$columns1[0]->id}&ownerid=0&groupid=0&sesskey={$sesskey}&_qf__mod_board_note_form=1&heading=pokusX&content=hahaX&mediatype=0";
         $jsonformdata = json_encode($jsonformdata);
-        $result = submit_form::execute($context1->id, $jsonformdata);
-        $result = submit_form::clean_returnvalue(submit_form::execute_returns(), $result);
+        $result = submit_note_form::execute($context1->id, $jsonformdata);
+        $result = submit_note_form::clean_returnvalue(submit_note_form::execute_returns(), $result);
         $this->assertTrue($result['status']);
         $this->assertSame('update', $result['action']);
         $this->assertNotEmpty($result['historyid']);
@@ -169,7 +169,7 @@ final class submit_form_test extends \advanced_testcase {
         $this->setUser($student4);
 
         try {
-            submit_form::execute($context1->id, $jsonformdata);
+            submit_note_form::execute($context1->id, $jsonformdata);
             $this->fail('Exception expected');
         } catch (\core\exception\moodle_exception $ex) {
             $this->assertInstanceOf(\core\exception\require_login_exception::class, $ex);
@@ -179,7 +179,7 @@ final class submit_form_test extends \advanced_testcase {
         $this->setUser($student5);
 
         try {
-            submit_form::execute($context1->id, $jsonformdata);
+            submit_note_form::execute($context1->id, $jsonformdata);
             $this->fail('Exception expected');
         } catch (\core\exception\moodle_exception $ex) {
             $this->assertInstanceOf(\core\exception\require_login_exception::class, $ex);
