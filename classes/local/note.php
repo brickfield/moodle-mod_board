@@ -51,8 +51,8 @@ final class note {
             throw new \core\exception\invalid_parameter_exception('Invalid userid');
         }
 
-        $column = $DB->get_record('board_columns', ['id' => $columnid], '*', MUST_EXIST);
-        $board = $DB->get_record('board', ['id' => $column->boardid], '*', MUST_EXIST);
+        $column = board::get_column($columnid, MUST_EXIST);
+        $board = board::get_board($column->boardid, MUST_EXIST);
         $context = board::context_for_board($board);
 
         $heading = empty($heading) ? null : mb_substr($heading, 0, board::LENGTH_HEADING);
@@ -87,24 +87,38 @@ final class note {
         $url = !empty($type) ? mb_substr($attachment['url'], 0, board::LENGTH_URL) : null;
 
         $notecreated = time();
-        $noteid = $DB->insert_record('board_notes', ['groupid' => $groupid, 'columnid' => $columnid, 'ownerid' => $ownerid,
-            'heading' => $heading, 'content' => $content, 'type' => $type, 'info' => $info,
-            'url' => $url, 'userid' => $userid, 'timecreated' => $notecreated,
-            'sortorder' => $countnotes, 'deleted' => 0]);
+        $noteid = $DB->insert_record('board_notes', [
+            'groupid' => $groupid,
+            'columnid' => $columnid,
+            'ownerid' => $ownerid,
+            'heading' => $heading,
+            'content' => $content,
+            'type' => $type,
+            'info' => $info,
+            'url' => $url,
+            'userid' => $userid,
+            'timecreated' => $notecreated,
+            'sortorder' => $countnotes,
+            'deleted' => 0,
+        ]);
 
         $attachment = self::update_note_attachment($noteid, $attachment);
         $url = $attachment['url'];
         $DB->update_record('board_notes', ['id' => $noteid, 'url' => $url]);
 
+        $note = board::get_note($noteid, MUST_EXIST);
+
         $historyid = $DB->insert_record('board_history', ['boardid' => $board->id, 'groupid' => $groupid,
             'action' => 'add_note', 'ownerid' => $ownerid, 'userid' => $userid,
-            'content' => json_encode(['id' => $noteid, 'columnid' => $columnid,
+            'content' => json_encode(['id' => $note->id, 'columnid' => $columnid,
                 'heading' => $heading, 'content' => $content,
                 'attachment' => ['type' => $type, 'info' => $info, 'url' => $url], 'rating' => 0,
                 'timecreated' => $notecreated, 'sortorder' => $countnotes]),
             'timecreated' => time()]);
 
-        $DB->update_record('board', ['id' => $board->id, 'historyid' => $historyid]);
+        $DB->set_field('board', 'historyid', $historyid, ['id' => $board->id]);
+        $board->historyid = (string)$historyid;
+
         $transaction->allow_commit();
 
         if ($board->completionnotes) {
@@ -116,27 +130,9 @@ final class note {
             }
         }
 
-        $logcontent = $content;
-        if (!get_config('mod_board', 'addnotetolog')) {
-            $logcontent = '';
-        }
-        $logheading = $heading;
-        if (!get_config('mod_board', 'addheadingtolog')) {
-            $logheading = '';
-        }
-        $logattachment = $attachment;
-        if (!get_config('mod_board', 'addattachmenttolog')) {
-            $logattachment = '';
-        }
-        $event = \mod_board\event\add_note::create([
-            'objectid' => $noteid,
-            'context' => $context,
-            'other' => ['groupid' => $groupid, 'columnid' => $columnid,
-                'heading' => $logheading, 'content' => $logcontent, 'attachment' => $logattachment],
-        ]);
-        $event->trigger();
+        $event = \mod_board\event\add_note::create_from_note($note, $attachment, $column, $board, $context);
+        $event->trigger();;
 
-        $note = $DB->get_record('board_notes', ['id' => $noteid, 'deleted' => 0], '*', MUST_EXIST);
         $note->rating = 0;
 
         board::clear_history();
@@ -159,10 +155,10 @@ final class note {
         $content = empty($content) ? "" : mb_substr($content, 0, get_config('mod_board', 'post_max_length'));
         $content = clean_text($content, FORMAT_HTML);
 
-        $note = $DB->get_record('board_notes', ['id' => $id, 'deleted' => 0], '*', MUST_EXIST);
-        $column = $DB->get_record('board_columns', ['id' => $note->columnid], '*', MUST_EXIST);
-        $board = $DB->get_record('board', ['id' => $column->boardid], '*', MUST_EXIST);
-        $context = board::context_for_board($board->id);
+        $note = board::get_note($id, MUST_EXIST);
+        $column = board::get_column($note->columnid, MUST_EXIST);
+        $board = board::get_board($column->boardid, MUST_EXIST);
+        $context = board::context_for_board($board);
 
         $transaction = $DB->start_delegated_transaction();
 
@@ -173,38 +169,29 @@ final class note {
         $info = !empty($type) ? mb_substr(s($attachment['info']), 0, board::LENGTH_INFO) : null;
         $url = !empty($type) ? mb_substr($attachment['url'], 0, board::LENGTH_URL) : null;
 
+        $DB->update_record('board_notes', [
+            'id' => $note->id,
+            'heading' => $heading,
+            'content' => $content,
+            'type' => $type,
+            'info' => $info,
+            'url' => $url,
+        ]);
+        $note = board::get_note($note->id, MUST_EXIST);
+
         $historyid = $DB->insert_record('board_history', ['boardid' => $board->id, 'action' => 'update_note',
             'ownerid' => $note->ownerid, 'userid' => $USER->id, 'content' => json_encode(['id' => $id,
                 'columnid' => $column->id, 'heading' => $heading, 'content' => $content,
                 'attachment' => ['type' => $type, 'info' => $info, 'url' => $url]]),
             'timecreated' => time()]);
-        $DB->update_record('board_notes', ['id' => $id, 'heading' => $heading, 'content' => $content,
-            'type' => $type, 'info' => $info, 'url' => $url]);
-        $DB->update_record('board', ['id' => $board->id, 'historyid' => $historyid]);
+
+        $DB->set_field('board', 'historyid', $historyid, ['id' => $board->id]);
+        $board->historyid = (string)$historyid;
 
         $transaction->allow_commit();
 
-        $logcontent = $content;
-        if (!get_config('mod_board', 'addnotetolog')) {
-            $logcontent = '';
-        }
-        $logheading = $heading;
-        if (!get_config('mod_board', 'addheadingtolog')) {
-            $logheading = '';
-        }
-        $logattachment = $attachment;
-        if (!get_config('mod_board', 'addattachmenttolog')) {
-            $logattachment = '';
-        }
-        $event = \mod_board\event\update_note::create([
-            'objectid' => $id,
-            'context' => $context,
-            'other' => ['columnid' => $column->id,
-                'heading' => $logheading, 'content' => $logcontent, 'attachment' => $logattachment],
-        ]);
-        $event->trigger();
-
-        $note = $DB->get_record('board_notes', ['id' => $id, 'deleted' => 0], '*', MUST_EXIST);
+        $event = \mod_board\event\update_note::create_from_note($note, $attachment, $column, $board, $context);
+        $event->trigger();;
 
         board::clear_history();
         return ['status' => true, 'note' => $note, 'historyid' => $historyid];
@@ -219,10 +206,11 @@ final class note {
     public static function delete(int $id): array {
         global $DB, $USER;
 
-        $note = $DB->get_record('board_notes', ['id' => $id], '*', MUST_EXIST);
-        $column = $DB->get_record('board_columns', ['id' => $note->columnid], '*', MUST_EXIST);
-        $board = $DB->get_record('board', ['id' => $column->boardid], '*', MUST_EXIST);
-        $context = board::context_for_board($board->id);
+        $note = board::get_note($id, MUST_EXIST);
+        $column = board::get_column($note->columnid, MUST_EXIST);
+        $board = board::get_board($column->boardid, MUST_EXIST);
+        $context = board::context_for_board($board);
+
         $sortorder = $note->sortorder;
 
         $transaction = $DB->start_delegated_transaction();
@@ -233,8 +221,7 @@ final class note {
         // Delete all note comments.
         $commentrecords = $DB->get_records('board_comments', ['noteid' => $note->id]);
         foreach ($commentrecords as $commentrecord) {
-            $comment = new \mod_board\comment(['commentid' => $commentrecord->id]);
-            $comment->delete();
+            comment::delete($commentrecord->id);
         }
 
         $DB->update_record('board_notes', ['id' => $id, 'deleted' => 1]);
@@ -247,15 +234,12 @@ final class note {
                  WHERE sortorder > :sortorder AND columnid = :columnid";
         $DB->execute($sql, ['sortorder' => $sortorder, 'columnid' => $column->id]);
 
-        $DB->update_record('board', ['id' => $board->id, 'historyid' => $historyid]);
+        $DB->set_field('board', 'historyid', $historyid, ['id' => $board->id]);
+        $board->historyid = (string)$historyid;
 
         $transaction->allow_commit();
 
-        $event = \mod_board\event\delete_note::create([
-            'objectid' => $id,
-            'context' => $context,
-            'other' => ['columnid' => $column->id],
-        ]);
+        $event = \mod_board\event\delete_note::create_from_note($note, $column, $board, $context);
         $event->trigger();
 
         board::clear_history();
@@ -273,10 +257,10 @@ final class note {
     public static function move(int $id, int $columnid, int $sortorder): array {
         global $DB, $USER;
 
-        $note = $DB->get_record('board_notes', ['id' => $id, 'deleted' => 0], '*', MUST_EXIST);
-        $column = $DB->get_record('board_columns', ['id' => $note->columnid], '*', MUST_EXIST);
-        $board = $DB->get_record('board', ['id' => $column->boardid], '*', MUST_EXIST);
-        $context = board::context_for_board($board->id);
+        $note = board::get_note($id, MUST_EXIST);
+        $column = board::get_column($note->columnid, MUST_EXIST);
+        $board = board::get_board($column->boardid, MUST_EXIST);
+        $context = board::context_for_board($board);
 
         $newcolumn = $DB->get_record('board_columns', ['id' => $columnid], '*', MUST_EXIST);
         if ($newcolumn->boardid != $column->boardid) {
@@ -332,19 +316,19 @@ final class note {
             $DB->execute($sql, ['oldsort' => $note->sortorder, 'columnid' => $note->columnid]);
         }
         // Update the note record.
-        $note->columnid = $columnid;
-        $note->sortorder = $sortorder;
-        $DB->update_record('board_notes', $note);
+        $DB->update_record('board_notes', [
+            'id' => $note->id,
+            'columnid' => $columnid,
+            'sortorder' => $sortorder,
+        ]);
+        $note = board::get_note($note->id, MUST_EXIST);
 
-        $DB->update_record('board', ['id' => $board->id, 'historyid' => $historyid]);
+        $DB->set_field('board', 'historyid', $historyid, ['id' => $board->id]);
+        $board->historyid = (string)$historyid;
 
         $transaction->allow_commit();
 
-        $event = \mod_board\event\move_note::create([
-            'objectid' => $id,
-            'context' => $context,
-            'other' => ['columnid' => $columnid],
-        ]);
+        $event = \mod_board\event\move_note::create_from_note($note, $column, $board, $context);
         $event->trigger();
 
         board::clear_history();
@@ -364,16 +348,9 @@ final class note {
         if (!$note) {
             return false;
         }
-
-        $column = board::get_column($note->columnid);
-        if (!$column) {
-            return false;
-        }
-
-        $board = board::get_board($column->boardid);
-        if (!$board) {
-            return false;
-        }
+        $column = board::get_column($note->columnid, MUST_EXIST);
+        $board = board::get_board($column->boardid, MUST_EXIST);
+        $context = board::context_for_board($board);
 
         if (!board::board_rating_enabled($board)) {
             return false;
@@ -383,7 +360,6 @@ final class note {
             return false;
         }
 
-        $context = board::context_for_board($board);
         if (!has_capability('mod/board:post', $context)) {
             return false;
         }
@@ -418,19 +394,23 @@ final class note {
     public static function rate(int $noteid): array {
         global $DB, $USER;
 
-        $note = $DB->get_record('board_notes', ['id' => $noteid, 'deleted' => 0], '*', MUST_EXIST);
-        $column = $DB->get_record('board_columns', ['id' => $note->columnid], '*', MUST_EXIST);
-        $board = $DB->get_record('board', ['id' => $column->boardid], '*', MUST_EXIST);
-        $context = board::context_for_board($board->id);
+        $note = board::get_note($noteid, MUST_EXIST);
+        $column = board::get_column($note->columnid, MUST_EXIST);
+        $board = board::get_board($column->boardid, MUST_EXIST);
+        $context = board::context_for_board($board);
 
         $transaction = $DB->start_delegated_transaction();
+
         $hasrating = $DB->record_exists('board_note_ratings', ['userid' => $USER->id, 'noteid' => $noteid]);
         $action = $hasrating ? 'delete_note_rating' : 'add_note_rating';
         if ($hasrating) {
             $DB->delete_records('board_note_ratings', ['userid' => $USER->id, 'noteid' => $noteid]);
         } else {
-            $DB->insert_record('board_note_ratings', ['userid' => $USER->id, 'noteid' => $noteid,
-                'timecreated' => time()]);
+            $DB->insert_record('board_note_ratings', [
+                'userid' => $USER->id,
+                'noteid' => $noteid,
+                'timecreated' => time(),
+            ]);
         }
 
         $rating = self::get_rating($noteid);
@@ -438,19 +418,12 @@ final class note {
             'content' => json_encode(['id' => $note->id, 'rating' => $rating]),
             'userid' => $USER->id, 'timecreated' => time()]);
 
-        $DB->update_record('board', ['id' => $board->id, 'historyid' => $historyid]);
+        $DB->set_field('board', 'historyid', $historyid, ['id' => $board->id]);
+        $board->historyid = (string)$historyid;
 
         $transaction->allow_commit();
 
-        $lograting = $rating;
-        if (!get_config('mod_board', 'addratingtolog')) {
-            $lograting = '';
-        }
-        $event = \mod_board\event\rate_note::create([
-            'objectid' => $noteid,
-            'context' => $context,
-            'other' => ['rating' => $lograting],
-        ]);
+        $event = \mod_board\event\rate_note::create_from_note($note, $rating, $column, $board, $context);
         $event->trigger();
 
         board::clear_history();
@@ -491,7 +464,7 @@ final class note {
      * @param int $noteid
      * @return void
      */
-    protected static function delete_note_file($noteid) {
+    public static function delete_note_file($noteid) {
         $storedfile = self::get_note_file($noteid);
         if ($storedfile) {
             $storedfile->delete();
@@ -534,7 +507,7 @@ final class note {
      * @param int|null $previoustype
      * @return array
      */
-    protected static function update_note_attachment(int $noteid, $attachment, $previoustype = null) {
+    protected static function update_note_attachment(int $noteid, $attachment, $previoustype = null): array {
         if (!empty($attachment['draftitemid'])) {
             $attachment['url'] = self::store_note_file($noteid, $attachment['draftitemid']);
             unset($attachment['draftitemid']);

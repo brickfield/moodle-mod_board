@@ -53,7 +53,7 @@ final class comment_test extends \advanced_testcase {
         $this->setUser($user1);
 
         $this->setCurrentTimeStart();
-        $comment1 = comment::create($note1, 'Cmt 1');
+        $comment1 = comment::create($note1->id, 'Cmt 1');
         $this->assertSame($note1->id, $comment1->noteid);
         $this->assertSame('Cmt 1', $comment1->content);
         $this->assertSame($user1->id, $comment1->userid);
@@ -85,8 +85,8 @@ final class comment_test extends \advanced_testcase {
 
         $this->setUser($user1);
 
-        $comment1 = comment::create($note1, 'Cmt 1');
-        $comment2 = comment::create($note1, 'Cmt 2');
+        $comment1 = comment::create($note1->id, 'Cmt 1');
+        $comment2 = comment::create($note1->id, 'Cmt 2');
 
         $this->setCurrentTimeStart();
         comment::delete($comment1->id);

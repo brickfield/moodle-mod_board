@@ -65,9 +65,9 @@ final class get_comments_test extends \advanced_testcase {
 
         $this->setUser($student1);
 
-        $comment1x1 = comment::create($note1, 'C 1x1');
-        $comment1x2 = comment::create($note1, 'C 1x2');
-        $comment3x1 = comment::create($note3, 'C 3x1');
+        $comment1x1 = comment::create($note1->id, 'C 1x1');
+        $comment1x2 = comment::create($note1->id, 'C 1x2');
+        $comment3x1 = comment::create($note3->id, 'C 3x1');
 
         $result = get_comments::execute($note1->id);
         $result = get_comments::clean_returnvalue(get_comments::execute_returns(), $result);

@@ -30,12 +30,17 @@ final class comment {
     /**
      * Add comment.
      *
-     * @param stdClass $note
+     * @param int $noteid
      * @param string $content
      * @return stdClass
      */
-    public static function create(stdClass $note, string $content): stdClass {
+    public static function create(int $noteid, string $content): stdClass {
         global $DB, $USER;
+
+        $note = board::get_note($noteid, MUST_EXIST);
+        $column = board::get_column($note->columnid, MUST_EXIST);
+        $board = board::get_board($column->boardid, MUST_EXIST);
+        $context = board::context_for_board($board);
 
         $content = clean_param(html_to_text($content, 5000, false), PARAM_TEXT);
 
@@ -50,15 +55,7 @@ final class comment {
 
         $comment = $DB->get_record('board_comments', ['id' => $id], '*', MUST_EXIST);
 
-        $logcontent = $content;
-        if (!get_config('mod_board', 'addcommenttolog')) {
-            $logcontent = '';
-        }
-        $event = \mod_board\event\add_comment::create([
-            'objectid' => $id,
-            'context' => board::context_for_column($note->columnid),
-            'other' => ['noteid' => $note->id, 'content' => $logcontent],
-        ]);
+        $event = \mod_board\event\add_comment::create_from_comment($comment, $note, $column, $board, $context);
         $event->trigger();
 
         return $comment;
@@ -75,23 +72,21 @@ final class comment {
         global $DB;
 
         $comment = $DB->get_record('board_comments', ['id' => $commentid]);
-        if ($comment->deleted) {
+        if (!$comment || $comment->deleted) {
             return;
         }
 
-        $DB->update_record('board_comments', ['id' => $comment->id, 'deleted' => 1]);
+        $DB->set_field('board_comments', 'deleted', 1, ['id' => $comment->id]);
 
-        $note = $DB->get_record('board_notes', ['id' => $comment->noteid]);
+        $note = board::get_note($comment->noteid);
         if (!$note) {
             return;
         }
-        $context = board::context_for_column($note->columnid);
+        $column = board::get_column($note->columnid, MUST_EXIST);
+        $board = board::get_board($column->boardid, MUST_EXIST);
+        $context = board::context_for_board($board);
 
-        $event = \mod_board\event\delete_comment::create([
-            'objectid' => $comment->id,
-            'context' => $context,
-            'other' => ['noteid' => $note->id],
-        ]);
+        $event = \mod_board\event\delete_comment::create_from_comment($comment, $note, $column, $board, $context);
         $event->trigger();
     }
 }

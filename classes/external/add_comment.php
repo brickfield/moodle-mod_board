@@ -90,7 +90,7 @@ final class add_comment extends external_api {
             ];
         }
 
-        $comment = comment::create($note, $content);
+        $comment = comment::create($note->id, $content);
 
         return [
             'id' => $comment->id,

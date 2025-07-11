@@ -194,7 +194,7 @@ class board {
      * Retrieves the context of the selected board.
      *
      * @param int|stdClass $boardorid
-     * @return \context
+     * @return \context_module
      */
     public static function context_for_board(int|stdClass $boardorid): \context {
         if (is_object($boardorid)) {
@@ -215,7 +215,7 @@ class board {
      * Retrieves the context of the selected column.
      *
      * @param int|stdClass $columnorid
-     * @return \context
+     * @return \context_module
      */
     public static function context_for_column(int|stdClass $columnorid): \context {
         if (is_object($columnorid)) {

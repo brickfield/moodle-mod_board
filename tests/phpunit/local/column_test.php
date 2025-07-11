@@ -105,6 +105,7 @@ final class column_test extends \advanced_testcase {
         global $DB;
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course([]);
+        $user = $this->getDataGenerator()->create_user();
 
         /** @var \mod_board_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_board');
@@ -113,11 +114,14 @@ final class column_test extends \advanced_testcase {
             'course' => $course->id,
         ]);
         $column4 = $generator->create_column(['boardid' => $board->id, 'name' => 'Col X']);
+        $note = $generator->create_note(['columnid' => $column4->id, 'userid' => $user->id]);
 
         $result = column::delete($column4->id);
         $this->assertTrue($result['status']);
         $this->assertNotEmpty($result['historyid']);
         $this->assertFalse($DB->record_exists('board_columns', ['id' => $column4->id]));
+        $note = $DB->get_record('board_notes', ['id' => $note->id], '*', MUST_EXIST);
+        $this->assertSame('1', $note->deleted);
     }
 
     public function test_move(): void {

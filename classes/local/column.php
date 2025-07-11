@@ -36,44 +36,34 @@ final class column {
     public static function create(int $boardid, string $name): array {
         global $DB, $USER;
 
+        $board = board::get_board($boardid, MUST_EXIST);
+        $context = board::context_for_board($board);
         $name = mb_substr($name, 0, board::LENGTH_COLNAME);
 
         $transaction = $DB->start_delegated_transaction();
 
-        $maxsortorder = $DB->get_field('board_columns', 'MAX(sortorder)', ['boardid' => $boardid]);
+        $maxsortorder = $DB->get_field('board_columns', 'MAX(sortorder)', ['boardid' => $board->id]);
 
-        $columnid = $DB->insert_record('board_columns', ['boardid' => $boardid, 'name' => $name,
-            'sortorder' => $maxsortorder + 1]);
-        $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => 'add_column',
-            'ownerid' => 0, 'userid' => $USER->id, 'content' => json_encode(['id' => $columnid, 'name' => $name]),
+        $columnid = $DB->insert_record('board_columns', [
+            'boardid' => $board->id,
+            'name' => $name,
+            'sortorder' => $maxsortorder + 1,
+        ]);
+        $column = board::get_column($columnid, MUST_EXIST);
+
+        $historyid = $DB->insert_record('board_history', ['boardid' => $board->id, 'action' => 'add_column',
+            'ownerid' => 0, 'userid' => $USER->id, 'content' => json_encode(['id' => $column->id, 'name' => $name]),
             'timecreated' => time()]);
-        $DB->update_record('board', ['id' => $boardid, 'historyid' => $historyid]);
+        $DB->set_field('board', 'historyid', $historyid, ['id' => $board->id]);
+        $board->historyid = (string)$historyid;
+
         $transaction->allow_commit();
 
-        self::board_add_column_log($boardid, $name, $columnid);
+        $event = \mod_board\event\add_column::create_from_column($column, $board, $context);
+        $event->trigger();
 
         board::clear_history();
         return ['id' => $columnid, 'historyid' => $historyid];
-    }
-
-    /**
-     * Triggers the add column event log.
-     *
-     * @param int $boardid
-     * @param string $name
-     * @param int $columnid
-     * @return void
-     */
-    protected static function board_add_column_log($boardid, $name, $columnid) {
-        if (!get_config('mod_board', 'addcolumnnametolog')) {
-            $name = '';
-        }
-        $event = \mod_board\event\add_column::create([
-            'objectid' => $columnid,
-            'context' => \context_module::instance(board::coursemodule_for_board(board::get_board($boardid))->id),
-            'other' => ['name' => $name],
-        ]);
-        $event->trigger();
     }
 
     /**
@@ -86,46 +76,30 @@ final class column {
     public static function update(int $id, string $name): array {
         global $DB, $USER;
 
+        $column = board::get_column($id, MUST_EXIST);
+        $board = board::get_board($column->boardid, MUST_EXIST);
+        $context = board::context_for_board($board);
+
         $name = mb_substr($name, 0, board::LENGTH_COLNAME);
 
-        $boardid = $DB->get_field('board_columns', 'boardid', ['id' => $id]);
-        if ($boardid) {
-            $transaction = $DB->start_delegated_transaction();
-            $update = $DB->update_record('board_columns', ['id' => $id, 'name' => $name]);
-            $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => 'update_column',
-                'ownerid' => 0, 'userid' => $USER->id, 'content' => json_encode(['id' => $id, 'name' => $name]),
-                'timecreated' => time()]);
-            $DB->update_record('board', ['id' => $id, 'historyid' => $historyid]);
-            $transaction->allow_commit();
+        $transaction = $DB->start_delegated_transaction();
 
-            self::board_update_column_log($boardid, $name, $id);
-        } else {
-            $update = false;
-            $historyid = 0;
-        }
+        $DB->set_field('board_columns', 'name' , $name, ['id' => $column->id]);
+        $column->name = $name;
+
+        $historyid = $DB->insert_record('board_history', ['boardid' => $column->boardid, 'action' => 'update_column',
+            'ownerid' => 0, 'userid' => $USER->id, 'content' => json_encode(['id' => $id, 'name' => $name]),
+            'timecreated' => time()]);
+        $DB->set_field('board', 'historyid', $historyid, ['id' => $board->id]);
+        $board->historyid = (string)$historyid;
+
+        $transaction->allow_commit();
+
+        $event = \mod_board\event\update_column::create_from_column($column, $board, $context);
+        $event->trigger();
 
         board::clear_history();
-        return ['status' => $update, 'historyid' => $historyid];
-    }
-
-    /**
-     * Triggers the update column log.
-     *
-     * @param int $boardid
-     * @param string $name
-     * @param int $columnid
-     * @return void
-     */
-    protected static function board_update_column_log($boardid, $name, $columnid) {
-        if (!get_config('mod_board', 'addcolumnnametolog')) {
-            $name = '';
-        }
-        $event = \mod_board\event\update_column::create([
-            'objectid' => $columnid,
-            'context' => \context_module::instance(board::coursemodule_for_board(board::get_board($boardid))->id),
-            'other' => ['name' => $name],
-        ]);
-        $event->trigger();
+        return ['status' => true, 'historyid' => $historyid];
     }
 
     /**
@@ -137,35 +111,33 @@ final class column {
     public static function delete(int $id): array {
         global $DB, $USER;
 
-        $boardid = $DB->get_field('board_columns', 'boardid', ['id' => $id]);
-        if ($boardid) {
-            $transaction = $DB->start_delegated_transaction();
-            $notes = $DB->get_records('board_notes', ['columnid' => $id]);
-            foreach ($notes as $noteid => $note) {
-                $DB->delete_records('board_note_ratings', ['noteid' => $note->id]);
-                $DB->update_record('board_notes', ['id' => $note->id, 'deleted' => 1]);
-                board::delete_note_file($note->id);
-            }
-            $delete = $DB->delete_records('board_columns', ['id' => $id]);
-            $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => 'delete_column',
-                'ownerid' => 0, 'content' => json_encode(['id' => $id]),
-                'userid' => $USER->id, 'timecreated' => time()]);
-            $DB->update_record('board', ['id' => $boardid, 'historyid' => $historyid]);
-            $transaction->allow_commit();
+        $column = board::get_column($id, MUST_EXIST);
+        $board = board::get_board($column->boardid, MUST_EXIST);
+        $context = board::context_for_board($board);
 
-            $event = \mod_board\event\delete_column::create([
-                'objectid' => $id,
-                'context' => \context_module::instance(board::coursemodule_for_board(board::get_board($boardid))->id),
-            ]);
-            $event->trigger();
+        $transaction = $DB->start_delegated_transaction();
 
-        } else {
-            $delete = false;
-            $historyid = 0;
+        $notes = $DB->get_records('board_notes', ['columnid' => $id]);
+        foreach ($notes as $note) {
+            $DB->delete_records('board_note_ratings', ['noteid' => $note->id]);
+            $DB->set_field('board_notes', 'deleted', 1, ['id' => $note->id]);
+            note::delete_note_file($note->id);
         }
+        $DB->delete_records('board_columns', ['id' => $id]);
+        $historyid = $DB->insert_record('board_history', ['boardid' => $board->id, 'action' => 'delete_column',
+            'ownerid' => 0, 'content' => json_encode(['id' => $id]),
+            'userid' => $USER->id, 'timecreated' => time()]);
+        $DB->set_field('board', 'historyid', $historyid, ['id' => $board->id]);
+
+        $board = board::get_board($column->boardid, MUST_EXIST);
+
+        $transaction->allow_commit();
+
+        $event = \mod_board\event\delete_column::create_from_column($column, $board, $context);
+        $event->trigger();
 
         board::clear_history();
-        return ['status' => $delete, 'historyid' => $historyid];
+        return ['status' => true, 'historyid' => $historyid];
     }
 
     /**
