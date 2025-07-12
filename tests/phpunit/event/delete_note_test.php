@@ -41,8 +41,7 @@ final class delete_note_test extends \advanced_testcase {
 
         $this->setUser($user);
 
-        $noteid = note::create($column->id, $user->id, 0, 'NH 1', 'NC 1', [])['note']->id;
-        $note = board::get_note($noteid, MUST_EXIST);
+        $note = note::create($column->id, $user->id, 0, 'NH 1', 'NC 1', []);
 
         $sink = $this->redirectEvents();
         note::delete($note->id);

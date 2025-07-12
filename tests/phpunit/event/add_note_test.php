@@ -46,8 +46,7 @@ final class add_note_test extends \advanced_testcase {
         set_config('addattachmenttolog', 1, 'mod_board');
 
         $sink = $this->redirectEvents();
-        $noteid = note::create($column->id, $user->id, 0, 'NH 1', 'NC 1', [])['note']->id;
-        $note = board::get_note($noteid, MUST_EXIST);
+        $note = note::create($column->id, $user->id, 0, 'NH 1', 'NC 1', []);
         $events = $sink->get_events();
         $sink->close();
         $this->assertCount(1, $events);

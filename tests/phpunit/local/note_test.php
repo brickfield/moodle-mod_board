@@ -52,10 +52,8 @@ final class note_test extends \advanced_testcase {
         $this->setUser($user1);
         $this->setCurrentTimeStart();
 
-        $result = note::create($column1->id, $user1->id, null, 'NH 1', 'NC 1', ['type' => 0, 'info' => '', 'url' => '']);
-        $this->assertSame(true, $result['status']);
-        $this->assertNotEmpty($result['historyid']);
-        $note1 = $result['note'];
+        $note1 = note::create($column1->id, $user1->id, null, 'NH 1', 'NC 1', ['type' => 0, 'info' => '', 'url' => '']);
+        $this->assertNotEmpty($note1->historyid);
         $this->assertSame($column1->id, $note1->columnid);
         $this->assertSame($user1->id, $note1->ownerid);
         $this->assertSame($user1->id, $note1->userid);
@@ -69,10 +67,8 @@ final class note_test extends \advanced_testcase {
         $this->assertSame('0', $note1->sortorder);
         $this->assertSame('0', $note1->deleted);
 
-        $result = note::create($column1->id, $user1->id, $group->id, 'NH 2', '', ['type' => 0, 'info' => '', 'url' => '']);
-        $this->assertSame(true, $result['status']);
-        $this->assertNotEmpty($result['historyid']);
-        $note2 = $result['note'];
+        $note2 = note::create($column1->id, $user1->id, $group->id, 'NH 2', '', ['type' => 0, 'info' => '', 'url' => '']);
+        $this->assertNotEmpty($note2->historyid);
         $this->assertSame($column1->id, $note2->columnid);
         $this->assertSame($user1->id, $note2->ownerid);
         $this->assertSame($user1->id, $note2->userid);
@@ -89,10 +85,8 @@ final class note_test extends \advanced_testcase {
         list($column1, $column2, $column3)
             = array_values($DB->get_records('board_columns', ['boardid' => $board2->id], 'id ASC'));
 
-        $result = note::create($column1->id, $user1->id, null, '', 'NC 3', ['type' => 0, 'info' => '', 'url' => ''], $user2->id);
-        $this->assertSame(true, $result['status']);
-        $this->assertNotEmpty($result['historyid']);
-        $note3 = $result['note'];
+        $note3 = note::create($column1->id, $user1->id, null, '', 'NC 3', ['type' => 0, 'info' => '', 'url' => ''], $user2->id);
+        $this->assertNotEmpty($note3->historyid);
         $this->assertSame($column1->id, $note3->columnid);
         $this->assertSame($user1->id, $note3->ownerid);
         $this->assertSame($user2->id, $note3->userid);
@@ -178,12 +172,10 @@ final class note_test extends \advanced_testcase {
 
         $this->setUser($user1);
 
-        $note1 = note::create($column1->id, $user1->id, null, 'NH 1', 'NC 1', ['type' => 0, 'info' => '', 'url' => ''])['note'];
+        $note1 = note::create($column1->id, $user1->id, null, 'NH 1', 'NC 1', ['type' => 0, 'info' => '', 'url' => '']);
 
-        $result = note::update($note1->id, 'NH X', 'NC X', ['type' => 0, 'info' => '', 'url' => '']);
-        $this->assertSame(true, $result['status']);
-        $this->assertNotEmpty($result['historyid']);
-        $note1 = $result['note'];
+        $note1 = note::update($note1->id, 'NH X', 'NC X', ['type' => 0, 'info' => '', 'url' => '']);
+        $this->assertNotEmpty($note1->historyid);
         $this->assertSame($column1->id, $note1->columnid);
         $this->assertSame($user1->id, $note1->ownerid);
         $this->assertSame($user1->id, $note1->userid);
@@ -196,10 +188,8 @@ final class note_test extends \advanced_testcase {
         $this->assertSame('0', $note1->sortorder);
         $this->assertSame('0', $note1->deleted);
 
-        $result = note::update($note1->id, 'NH Y', '', ['type' => 0, 'info' => '', 'url' => '']);
-        $this->assertSame(true, $result['status']);
-        $this->assertNotEmpty($result['historyid']);
-        $note1 = $result['note'];
+        $note1 = note::update($note1->id, 'NH Y', '', ['type' => 0, 'info' => '', 'url' => '']);
+        $this->assertNotEmpty($note1->historyid);
         $this->assertSame($column1->id, $note1->columnid);
         $this->assertSame($user1->id, $note1->ownerid);
         $this->assertSame($user1->id, $note1->userid);
@@ -220,10 +210,8 @@ final class note_test extends \advanced_testcase {
             'filecontents' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABpAAAAQaCAIAhEUgAABpAAAAQaCAIAAADL9awBAAAACXBIWXMAASAS', // phpcs:ignore
         ];
 
-        $result = note::update($note1->id, '', 'NC Z', $attachment);
-        $this->assertSame(true, $result['status']);
-        $this->assertNotEmpty($result['historyid']);
-        $note1 = $result['note'];
+        $note1 = note::update($note1->id, '', 'NC Z', $attachment);
+        $this->assertNotEmpty($note1->historyid);
         $this->assertSame($column1->id, $note1->columnid);
         $this->assertSame($user1->id, $note1->ownerid);
         $this->assertSame($user1->id, $note1->userid);
@@ -254,14 +242,13 @@ final class note_test extends \advanced_testcase {
 
         $this->setUser($user1);
 
-        $note1 = note::create($column1->id, $user1->id, null, 'NH 1', 'NC 1', ['type' => 0, 'info' => '', 'url' => ''])['note'];
-        $note2 = note::create($column1->id, $user1->id, null, 'NH 2', 'NC 2', ['type' => 0, 'info' => '', 'url' => ''])['note'];
-        $note3 = note::create($column1->id, $user1->id, null, 'NH 3', 'NC 3', ['type' => 0, 'info' => '', 'url' => ''])['note'];
-        $note4 = note::create($column1->id, $user1->id, null, 'NH 4', 'NC 4', ['type' => 0, 'info' => '', 'url' => ''])['note'];
+        $note1 = note::create($column1->id, $user1->id, null, 'NH 1', 'NC 1', ['type' => 0, 'info' => '', 'url' => '']);
+        $note2 = note::create($column1->id, $user1->id, null, 'NH 2', 'NC 2', ['type' => 0, 'info' => '', 'url' => '']);
+        $note3 = note::create($column1->id, $user1->id, null, 'NH 3', 'NC 3', ['type' => 0, 'info' => '', 'url' => '']);
+        $note4 = note::create($column1->id, $user1->id, null, 'NH 4', 'NC 4', ['type' => 0, 'info' => '', 'url' => '']);
 
-        $result = note::delete($note2->id);
-        $this->assertSame(true, $result['status']);
-        $this->assertNotEmpty($result['historyid']);
+        $hisotryid = note::delete($note2->id);
+        $this->assertNotEmpty($hisotryid);
 
         list($note1, $note2, $note3, $note4)
             = array_values($DB->get_records('board_notes', ['columnid' => $column1->id], 'id ASC'));
@@ -292,14 +279,13 @@ final class note_test extends \advanced_testcase {
 
         $this->setUser($user1);
 
-        $note1 = note::create($column1->id, $user1->id, null, 'NH 1', 'NC 1', ['type' => 0, 'info' => '', 'url' => ''])['note'];
-        $note2 = note::create($column1->id, $user1->id, null, 'NH 2', 'NC 2', ['type' => 0, 'info' => '', 'url' => ''])['note'];
-        $note3 = note::create($column1->id, $user1->id, null, 'NH 3', 'NC 3', ['type' => 0, 'info' => '', 'url' => ''])['note'];
-        $note4 = note::create($column1->id, $user1->id, null, 'NH 4', 'NC 4', ['type' => 0, 'info' => '', 'url' => ''])['note'];
+        $note1 = note::create($column1->id, $user1->id, null, 'NH 1', 'NC 1', ['type' => 0, 'info' => '', 'url' => '']);
+        $note2 = note::create($column1->id, $user1->id, null, 'NH 2', 'NC 2', ['type' => 0, 'info' => '', 'url' => '']);
+        $note3 = note::create($column1->id, $user1->id, null, 'NH 3', 'NC 3', ['type' => 0, 'info' => '', 'url' => '']);
+        $note4 = note::create($column1->id, $user1->id, null, 'NH 4', 'NC 4', ['type' => 0, 'info' => '', 'url' => '']);
 
-        $result = note::move($note3->id, $column1->id, 1);
-        $this->assertSame(true, $result['status']);
-        $this->assertNotEmpty($result['historyid']);
+        $historyid = note::move($note3->id, $column1->id, 1);
+        $this->assertNotEmpty($historyid);
         list($note1, $note2, $note3, $note4)
             = array_values($DB->get_records('board_notes', ['columnid' => $column1->id], 'id ASC'));
         $this->assertSame('0', $note1->sortorder);
@@ -307,9 +293,8 @@ final class note_test extends \advanced_testcase {
         $this->assertSame('2', $note2->sortorder);
         $this->assertSame('3', $note4->sortorder);
 
-        $result = note::move($note3->id, $column1->id, 10);
-        $this->assertSame(true, $result['status']);
-        $this->assertNotEmpty($result['historyid']);
+        $historyid = note::move($note3->id, $column1->id, 10);
+        $this->assertNotEmpty($historyid);
         list($note1, $note2, $note3, $note4)
             = array_values($DB->get_records('board_notes', ['columnid' => $column1->id], 'id ASC'));
         $this->assertSame('0', $note1->sortorder);
@@ -317,9 +302,8 @@ final class note_test extends \advanced_testcase {
         $this->assertSame('2', $note4->sortorder);
         $this->assertSame('10', $note3->sortorder);
 
-        $result = note::move($note2->id, $column2->id, 0);
-        $this->assertSame(true, $result['status']);
-        $this->assertNotEmpty($result['historyid']);
+        $historyid = note::move($note2->id, $column2->id, 0);
+        $this->assertNotEmpty($historyid);
         list($note1, $note3, $note4)
             = array_values($DB->get_records('board_notes', ['columnid' => $column1->id], 'id ASC'));
         $this->assertSame('0', $note1->sortorder);
@@ -616,24 +600,21 @@ final class note_test extends \advanced_testcase {
 
         $this->setUser($user1);
 
-        $note1 = note::create($column1->id, $user1->id, null, 'NH 1', 'NC 1', ['type' => 0, 'info' => '', 'url' => ''])['note'];
-        $note2 = note::create($column1->id, $user1->id, null, 'NH 2', 'NC 2', ['type' => 0, 'info' => '', 'url' => ''])['note'];
+        $note1 = note::create($column1->id, $user1->id, null, 'NH 1', 'NC 1', ['type' => 0, 'info' => '', 'url' => '']);
+        $note2 = note::create($column1->id, $user1->id, null, 'NH 2', 'NC 2', ['type' => 0, 'info' => '', 'url' => '']);
 
         $this->setUser($user1);
-        $result = note::rate($note1->id);
-        $this->assertTrue($result['status']);
-        $this->assertNotEmpty($result['historyid']);
-        $this->assertSame(1, $result['rating']);
+        $historyid = note::rate($note1->id);
+        $this->assertNotEmpty($historyid);
+        $this->assertSame(1, note::get_rating($note1->id));
 
         $this->setUser($user2);
-        $result = note::rate($note1->id);
-        $this->assertTrue($result['status']);
-        $this->assertNotEmpty($result['historyid']);
-        $this->assertSame(2, $result['rating']);
-        $result = note::rate($note1->id);
-        $this->assertTrue($result['status']);
-        $this->assertNotEmpty($result['historyid']);
-        $this->assertSame(1, $result['rating']);
+        $historyid = note::rate($note1->id);
+        $this->assertNotEmpty($historyid);
+        $this->assertSame(2, note::get_rating($note1->id));
+        $historyid = note::rate($note1->id);
+        $this->assertNotEmpty($historyid);
+        $this->assertSame(1, note::get_rating($note1->id));
     }
 
     public function test_get_rating(): void {
@@ -658,8 +639,8 @@ final class note_test extends \advanced_testcase {
 
         $this->setUser($user1);
 
-        $note1 = note::create($column1->id, $user1->id, null, 'NH 1', 'NC 1', ['type' => 0, 'info' => '', 'url' => ''])['note'];
-        $note2 = note::create($column1->id, $user1->id, null, 'NH 2', 'NC 2', ['type' => 0, 'info' => '', 'url' => ''])['note'];
+        $note1 = note::create($column1->id, $user1->id, null, 'NH 1', 'NC 1', ['type' => 0, 'info' => '', 'url' => '']);
+        $note2 = note::create($column1->id, $user1->id, null, 'NH 2', 'NC 2', ['type' => 0, 'info' => '', 'url' => '']);
 
         $this->setUser($user1);
         $this->assertSame(0, note::get_rating($note1->id));

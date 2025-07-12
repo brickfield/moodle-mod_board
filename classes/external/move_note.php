@@ -87,7 +87,9 @@ final class move_note extends external_api {
             require_capability('mod/board:manageboard', $context);
         }
 
-        return note::move($id, $columnid, $sortorder);
+        $historyid = note::move($id, $columnid, $sortorder);
+
+        return ['status' => true, 'historyid' => $historyid];
     }
 
     /**

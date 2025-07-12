@@ -348,20 +348,20 @@ final class board_test extends \advanced_testcase {
         $columns4 = array_values($DB->get_records('board_columns', ['boardid' => $board4->id], 'id ASC'));
 
         $this->setUser($student1);
-        $note1x1 = note::create($columns1[0]->id, $student1->id, 0, 'b1s1h1', 'test', [])['note'];
-        $note2x1 = note::create($columns2[0]->id, $student1->id, 0, 'b2s1h1', 'test', [])['note'];
-        $note3x1 = note::create($columns3[0]->id, $student1->id, 0, 'b3s1h1', 'test', [])['note'];
-        $note4x1 = note::create($columns4[0]->id, $student1->id, $group1->id, 'b4s1h1', 'test', [])['note'];
+        $note1x1 = note::create($columns1[0]->id, $student1->id, 0, 'b1s1h1', 'test', []);
+        $note2x1 = note::create($columns2[0]->id, $student1->id, 0, 'b2s1h1', 'test', []);
+        $note3x1 = note::create($columns3[0]->id, $student1->id, 0, 'b3s1h1', 'test', []);
+        $note4x1 = note::create($columns4[0]->id, $student1->id, $group1->id, 'b4s1h1', 'test', []);
 
         $this->setUser($student2);
-        $note1x2 = note::create($columns1[0]->id, $student2->id, 0, 'b1s2h1', 'test', [])['note'];
-        $note2x2 = note::create($columns2[0]->id, $student2->id, 0, 'b2s2h1', 'test', [])['note'];
-        $note3x2 = note::create($columns3[0]->id, $student2->id, 0, 'b3s2h1', 'test', [])['note'];
-        $note4x2 = note::create($columns4[0]->id, $student2->id, $group2->id, 'b4s2h1', 'test', [])['note'];
+        $note1x2 = note::create($columns1[0]->id, $student2->id, 0, 'b1s2h1', 'test', []);
+        $note2x2 = note::create($columns2[0]->id, $student2->id, 0, 'b2s2h1', 'test', []);
+        $note3x2 = note::create($columns3[0]->id, $student2->id, 0, 'b3s2h1', 'test', []);
+        $note4x2 = note::create($columns4[0]->id, $student2->id, $group2->id, 'b4s2h1', 'test', []);
 
         $this->setUser($teacher1);
-        $note2x1xt = note::create($columns2[0]->id, $student1->id, 0, 'b2s1h1', 'teach', [])['note'];
-        $note3x1xt = note::create($columns3[0]->id, $student1->id, 0, 'b3s1h1', 'teach', [])['note'];
+        $note2x1xt = note::create($columns2[0]->id, $student1->id, 0, 'b2s1h1', 'teach', []);
+        $note3x1xt = note::create($columns3[0]->id, $student1->id, 0, 'b3s1h1', 'teach', []);
 
         $this->setUser($student1->id);
         $this->assertSame($context1->id, board::can_view_note($note1x1)->id);

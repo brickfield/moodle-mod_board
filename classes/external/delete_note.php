@@ -83,7 +83,9 @@ final class delete_note extends external_api {
             throw new \Exception('board_delete_note not available');
         }
 
-        return note::delete($id);
+        $historyid = note::delete($id);
+
+        return ['status' => true, 'historyid' => $historyid];
     }
 
     /**

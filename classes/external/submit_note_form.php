@@ -148,8 +148,16 @@ final class submit_note_form extends external_api {
                 if (board::board_readonly($board, $note->groupid)) {
                     throw new \Exception('board_update_note not available');
                 }
-                $result = note::update($data->noteid, $data->heading, $data->content, $attachment);
-                $result['action'] = 'update';
+                $note = note::update($data->noteid, $data->heading, $data->content, $attachment);
+                $historyid = $note->historyid;
+                unset($note->historyid);
+
+                $result = [
+                    'status' => true,
+                    'action' => 'update',
+                    'note' => $note,
+                    'historyid' => $historyid,
+                ];
 
             } else {
                 if ($board->singleusermode != board::SINGLEUSER_DISABLED) {
@@ -193,9 +201,18 @@ final class submit_note_form extends external_api {
                     throw new \Exception('board_add_note not available');
                 }
 
-                $result = note::create(
+                $note = note::create(
                     $data->columnid, $data->ownerid, $data->groupid, $data->heading, $data->content, $attachment);
-                $result['action'] = 'insert';
+                $historyid = $note->historyid;
+                unset($note->historyid);
+                $note->rating = 0;
+
+                $result = [
+                    'status' => true,
+                    'action' => 'insert',
+                    'note' => $note,
+                    'historyid' => $historyid,
+                ];
             }
 
             return $result;

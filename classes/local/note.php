@@ -37,11 +37,11 @@ final class note {
      * @param string $content
      * @param array $attachment
      * @param int|null $userid NULL means current user
-     * @return array
+     * @return stdClass note record with extra historyid property
      */
     public static function create(
         int $columnid, int $ownerid, ?int $groupid, string $heading, string $content, array $attachment, ?int $userid = null
-    ): array {
+    ): stdClass {
         global $DB, $USER;
 
         if ($userid === null) {
@@ -133,10 +133,10 @@ final class note {
         $event = \mod_board\event\add_note::create_from_note($note, $attachment, $column, $board, $context);
         $event->trigger();;
 
-        $note->rating = 0;
+        $note->historyid = $historyid;
 
         board::clear_history();
-        return ['status' => true, 'note' => $note, 'historyid' => $historyid];
+        return $note;
     }
 
     /**
@@ -146,9 +146,9 @@ final class note {
      * @param string $heading
      * @param string $content
      * @param array $attachment
-     * @return array
+     * @return stdClass note record with extra historyid property
      */
-    public static function update(int $id, string $heading, string $content, array $attachment): array {
+    public static function update(int $id, string $heading, string $content, array $attachment): stdClass {
         global $DB, $USER;
 
         $heading = empty($heading) ? null : mb_substr($heading, 0, board::LENGTH_HEADING);
@@ -194,16 +194,19 @@ final class note {
         $event->trigger();;
 
         board::clear_history();
-        return ['status' => true, 'note' => $note, 'historyid' => $historyid];
+
+        $note->historyid = $historyid;
+
+        return $note;
     }
 
     /**
      * Delete a note from the board.
      *
      * @param int $id
-     * @return array
+     * @return int history id
      */
-    public static function delete(int $id): array {
+    public static function delete(int $id): int {
         global $DB, $USER;
 
         $note = board::get_note($id, MUST_EXIST);
@@ -243,7 +246,8 @@ final class note {
         $event->trigger();
 
         board::clear_history();
-        return ['status' => true, 'historyid' => $historyid];
+
+        return $historyid;
     }
 
     /**
@@ -252,9 +256,9 @@ final class note {
      * @param int $id
      * @param int $columnid
      * @param int $sortorder The order in the column the note was placed.
-     * @return array
+     * @return int history id
      */
-    public static function move(int $id, int $columnid, int $sortorder): array {
+    public static function move(int $id, int $columnid, int $sortorder): int {
         global $DB, $USER;
 
         $note = board::get_note($id, MUST_EXIST);
@@ -332,7 +336,8 @@ final class note {
         $event->trigger();
 
         board::clear_history();
-        return ['status' => true, 'historyid' => $historyid];
+
+        return $historyid;
     }
 
     /**
@@ -389,9 +394,9 @@ final class note {
      * Rate the note.
      *
      * @param int $noteid
-     * @return array
+     * @return int history id
      */
-    public static function rate(int $noteid): array {
+    public static function rate(int $noteid): int {
         global $DB, $USER;
 
         $note = board::get_note($noteid, MUST_EXIST);
@@ -427,7 +432,8 @@ final class note {
         $event->trigger();
 
         board::clear_history();
-        return ['status' => true, 'rating' => $rating, 'historyid' => $historyid];
+
+        return $historyid;
     }
 
     /**

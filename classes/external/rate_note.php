@@ -73,7 +73,10 @@ final class rate_note extends external_api {
             return ['status' => false, 'rating' => 0, 'historyid' => 0];
         }
 
-        return note::rate($id);
+        $historyid = note::rate($id);
+        $rating = note::get_rating($note->id);
+
+        return ['status' => true, 'rating' => $rating, 'historyid' => $historyid];
     }
 
     /**

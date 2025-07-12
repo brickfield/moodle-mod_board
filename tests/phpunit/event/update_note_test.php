@@ -45,8 +45,7 @@ final class update_note_test extends \advanced_testcase {
         set_config('addheadingtolog', 1, 'mod_board');
         set_config('addattachmenttolog', 1, 'mod_board');
 
-        $noteid = note::create($column->id, $user->id, 0, 'NH 1', 'NC 1', [])['note']->id;
-        $note = board::get_note($noteid, MUST_EXIST);
+        $note = note::create($column->id, $user->id, 0, 'NH 1', 'NC 1', []);
 
         $sink = $this->redirectEvents();
         note::update($note->id, 'NH 1b', 'NC 1b', []);

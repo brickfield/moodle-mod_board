@@ -88,8 +88,6 @@ class mod_board_generator extends testing_module_generator {
      * @return stdClass column record
      */
     public function create_column($record = null): stdClass {
-        global $DB;
-
         $record = (object)(array)$record;
 
         $this->columncount++;
@@ -133,10 +131,11 @@ class mod_board_generator extends testing_module_generator {
         $groupid = $record->groupid ?? 0;
         $attachment = []; // Not supported here for now.
 
-        $id = \mod_board\local\note::create(
+        $note = \mod_board\local\note::create(
             $record->columnid, $ownerid, $groupid, $heading, $content, $attachment, $userid
-        )['note']->id;
+        );
+        unset($note->historyid);
 
-        return $DB->get_record('board_notes', ['id' => $id], '*', MUST_EXIST);
+        return $note;
     }
 }

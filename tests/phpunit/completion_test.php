@@ -54,7 +54,7 @@ final class completion_test extends \advanced_testcase {
 
         $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
         $this->setUser($student);
-        $result = note::create($column->id, $student->id, 0, 'Test heading', 'Test content', $attachment);
+        note::create($column->id, $student->id, 0, 'Test heading', 'Test content', $attachment);
 
         $cm = get_coursemodule_from_instance('board', $board->id);
         // Make sure we're using a cm_info object.
@@ -63,7 +63,7 @@ final class completion_test extends \advanced_testcase {
 
         $this->assertEquals(COMPLETION_INCOMPLETE, $customcompletion->get_state('completionnotes'));
 
-        $result = note::create($column->id, $student->id, 0, 'Test heading 2', 'Test content 2', $attachment);
+        note::create($column->id, $student->id, 0, 'Test heading 2', 'Test content 2', $attachment);
         $this->assertEquals(COMPLETION_COMPLETE, $customcompletion->get_state('completionnotes'));
     }
 }
