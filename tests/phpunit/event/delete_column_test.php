@@ -36,8 +36,7 @@ final class delete_column_test extends \advanced_testcase {
         $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
         $context = board::context_for_board($board);
 
-        $columnid = column::create($board->id, 'Col A')['id'];
-        $column = board::get_column($columnid);
+        $column = column::create($board->id, 'Col A');
 
         $this->setUser($user);
 
@@ -60,12 +59,11 @@ final class delete_column_test extends \advanced_testcase {
         $this->assertIsString($event->get_description());
         $this->assertSame('/mod/board/view.php?id=' . $board->cmid, $event->get_url()->out_as_local_url(false));
 
-        $columnid = column::create($board->id, 'Col A')['id'];
-        $column = board::get_column($columnid);
+        $column = column::create($board->id, 'Col A');
 
         set_config('addcolumnnametolog', 0, 'mod_board');
         $sink = $this->redirectEvents();
-        $result = column::delete($column->id);
+        column::delete($column->id);
         $events = $sink->get_events();
         $sink->close();
         $this->assertCount(1, $events);

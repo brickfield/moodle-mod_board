@@ -37,8 +37,7 @@ final class update_note_test extends \advanced_testcase {
         $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
         $context = board::context_for_board($board);
 
-        $columnid = column::create($board->id, 'Col A')['id'];
-        $column = board::get_column($columnid);
+        $column = column::create($board->id, 'Col A');
 
         $this->setUser($user);
 

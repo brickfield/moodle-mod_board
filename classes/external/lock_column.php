@@ -74,7 +74,9 @@ final class lock_column extends external_api {
         require_capability('mod/board:view', $context);
         require_capability('mod/board:manageboard', $context);
 
-        return column::lock($column->id, $status);
+        $historyid = column::lock($column->id, $status);
+
+        return ['status' => true, 'historyid' => $historyid];
     }
 
     /**

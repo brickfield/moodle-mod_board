@@ -70,7 +70,9 @@ final class delete_column extends external_api {
         require_capability('mod/board:view', $context);
         require_capability('mod/board:manageboard', $context);
 
-        return column::delete($column->id);
+        $historyid = column::delete($column->id);
+
+        return ['status' => true, 'historyid' => $historyid];
     }
 
     /**

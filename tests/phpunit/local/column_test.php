@@ -37,13 +37,15 @@ final class column_test extends \advanced_testcase {
             'course' => $course->id,
         ]);
 
-        $result = column::create($board->id, 'Col X');
-        $this->assertNotEmpty($result['historyid']);
-        $column4 = $DB->get_record('board_columns', ['id' => $result['id']], '*', MUST_EXIST);
+        $column4 = column::create($board->id, 'Col X');
+        $this->assertNotEmpty($column4->historyid);
         $this->assertSame($board->id, $column4->boardid);
         $this->assertSame('Col X', $column4->name);
         $this->assertSame('0', $column4->locked);
         $this->assertSame('4', $column4->sortorder);
+
+        unset($column4->historyid);
+        $this->assertEquals($column4, $DB->get_record('board_columns', ['id' => $column4->id]));
     }
 
     public function test_update(): void {
@@ -59,14 +61,15 @@ final class column_test extends \advanced_testcase {
         ]);
         $column4 = $generator->create_column(['boardid' => $board->id, 'name' => 'Col X']);
 
-        $result = column::update($column4->id, 'Col Y');
-        $this->assertTrue($result['status']);
-        $this->assertNotEmpty($result['historyid']);
-        $column4 = $DB->get_record('board_columns', ['id' => $column4->id], '*', MUST_EXIST);
+        $column4 = column::update($column4->id, 'Col Y');
+        $this->assertNotEmpty($column4->historyid);
         $this->assertSame($board->id, $column4->boardid);
         $this->assertSame('Col Y', $column4->name);
         $this->assertSame('0', $column4->locked);
         $this->assertSame('4', $column4->sortorder);
+
+        unset($column4->historyid);
+        $this->assertEquals($column4, $DB->get_record('board_columns', ['id' => $column4->id]));
     }
 
     public function test_lock(): void {
@@ -82,18 +85,16 @@ final class column_test extends \advanced_testcase {
         ]);
         $column4 = $generator->create_column(['boardid' => $board->id, 'name' => 'Col X']);
 
-        $result = column::lock($column4->id, true);
-        $this->assertTrue($result['status']);
-        $this->assertNotEmpty($result['historyid']);
+        $historyid = column::lock($column4->id, true);
+        $this->assertNotEmpty($historyid);
         $column4 = $DB->get_record('board_columns', ['id' => $column4->id], '*', MUST_EXIST);
         $this->assertSame($board->id, $column4->boardid);
         $this->assertSame('Col X', $column4->name);
         $this->assertSame('1', $column4->locked);
         $this->assertSame('4', $column4->sortorder);
 
-        $result = column::lock($column4->id, false);
-        $this->assertTrue($result['status']);
-        $this->assertNotEmpty($result['historyid']);
+        $historyid = column::lock($column4->id, false);
+        $this->assertNotEmpty($historyid);
         $column4 = $DB->get_record('board_columns', ['id' => $column4->id], '*', MUST_EXIST);
         $this->assertSame($board->id, $column4->boardid);
         $this->assertSame('Col X', $column4->name);
@@ -116,9 +117,8 @@ final class column_test extends \advanced_testcase {
         $column4 = $generator->create_column(['boardid' => $board->id, 'name' => 'Col X']);
         $note = $generator->create_note(['columnid' => $column4->id, 'userid' => $user->id]);
 
-        $result = column::delete($column4->id);
-        $this->assertTrue($result['status']);
-        $this->assertNotEmpty($result['historyid']);
+        $historyid = column::delete($column4->id);
+        $this->assertNotEmpty($historyid);
         $this->assertFalse($DB->record_exists('board_columns', ['id' => $column4->id]));
         $note = $DB->get_record('board_notes', ['id' => $note->id], '*', MUST_EXIST);
         $this->assertSame('1', $note->deleted);
@@ -143,9 +143,8 @@ final class column_test extends \advanced_testcase {
         $this->assertSame('3', $column3->sortorder);
         $this->assertSame('4', $column4->sortorder);
 
-        $result = column::move($column4->id, 2);
-        $this->assertTrue($result['status']);
-        $this->assertNotEmpty($result['historyid']);
+        $historyid = column::move($column4->id, 2);
+        $this->assertNotEmpty($historyid);
         list($column1, $column2, $column3, $column4)
             = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
         $this->assertSame('1', $column1->sortorder);
@@ -153,19 +152,16 @@ final class column_test extends \advanced_testcase {
         $this->assertSame('3', $column4->sortorder);
         $this->assertSame('4', $column3->sortorder);
 
-        $result = column::move($column4->id, 2);
-        $this->assertTrue($result['status']);
-        $this->assertNotEmpty($result['historyid']);
-        list($column1, $column2, $column3, $column4)
+        $historyid = column::move($column4->id, 2);
+        $this->assertNotEmpty($historyid);        list($column1, $column2, $column3, $column4)
             = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
         $this->assertSame('1', $column1->sortorder);
         $this->assertSame('2', $column2->sortorder);
         $this->assertSame('3', $column4->sortorder);
         $this->assertSame('4', $column3->sortorder);
 
-        $result = column::move($column4->id, 0);
-        $this->assertTrue($result['status']);
-        $this->assertNotEmpty($result['historyid']);
+        $historyid = column::move($column4->id, 0);
+        $this->assertNotEmpty($historyid);
         list($column1, $column2, $column3, $column4)
             = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
         $this->assertSame('1', $column4->sortorder);
@@ -173,9 +169,8 @@ final class column_test extends \advanced_testcase {
         $this->assertSame('3', $column2->sortorder);
         $this->assertSame('4', $column3->sortorder);
 
-        $result = column::move($column4->id, 10);
-        $this->assertTrue($result['status']);
-        $this->assertNotEmpty($result['historyid']);
+        $historyid = column::move($column4->id, 10);
+        $this->assertNotEmpty($historyid);
         list($column1, $column2, $column3, $column4)
             = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
         $this->assertSame('1', $column1->sortorder);

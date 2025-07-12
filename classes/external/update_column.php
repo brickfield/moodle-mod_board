@@ -74,7 +74,9 @@ final class update_column extends external_api {
         require_capability('mod/board:view', $context);
         require_capability('mod/board:manageboard', $context);
 
-        return column::update($column->id, $name);
+        $column = column::update($column->id, $name);
+
+        return ['status' => true, 'historyid' => $column->historyid];
     }
 
     /**

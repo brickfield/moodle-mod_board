@@ -17,6 +17,7 @@
 namespace mod_board\local;
 
 use mod_board\board;
+use stdClass;
 
 /**
  * Column helper class.
@@ -31,9 +32,9 @@ final class column {
      *
      * @param int $boardid
      * @param string $name
-     * @return array
+     * @return stdClass column record with extra historyid
      */
-    public static function create(int $boardid, string $name): array {
+    public static function create(int $boardid, string $name): stdClass {
         global $DB, $USER;
 
         $board = board::get_board($boardid, MUST_EXIST);
@@ -63,7 +64,9 @@ final class column {
         $event->trigger();
 
         board::clear_history();
-        return ['id' => $columnid, 'historyid' => $historyid];
+
+        $column->historyid = $historyid;
+        return $column;
     }
 
     /**
@@ -71,9 +74,9 @@ final class column {
      *
      * @param int $id
      * @param string $name
-     * @return array
+     * @return stdClass column record with extra historyid
      */
-    public static function update(int $id, string $name): array {
+    public static function update(int $id, string $name): stdClass {
         global $DB, $USER;
 
         $column = board::get_column($id, MUST_EXIST);
@@ -99,16 +102,18 @@ final class column {
         $event->trigger();
 
         board::clear_history();
-        return ['status' => true, 'historyid' => $historyid];
+
+        $column->historyid = $historyid;
+        return $column;
     }
 
     /**
      * Deletes a column.
      *
      * @param int $id
-     * @return array
+     * @return int history id
      */
-    public static function delete(int $id): array {
+    public static function delete(int $id): int {
         global $DB, $USER;
 
         $column = board::get_column($id, MUST_EXIST);
@@ -128,8 +133,7 @@ final class column {
             'ownerid' => 0, 'content' => json_encode(['id' => $id]),
             'userid' => $USER->id, 'timecreated' => time()]);
         $DB->set_field('board', 'historyid', $historyid, ['id' => $board->id]);
-
-        $board = board::get_board($column->boardid, MUST_EXIST);
+        $board->historyid = (string)$historyid;
 
         $transaction->allow_commit();
 
@@ -137,7 +141,8 @@ final class column {
         $event->trigger();
 
         board::clear_history();
-        return ['status' => true, 'historyid' => $historyid];
+
+        return $historyid;
     }
 
     /**
@@ -145,18 +150,19 @@ final class column {
      *
      * @param int $id
      * @param bool $locked True to lock the column, false to unlock it.
-     * @return array
+     * @return int history id
      */
-    public static function lock(int $id, bool $locked): array {
+    public static function lock(int $id, bool $locked): int {
         global $DB, $USER;
 
         $boardid = $DB->get_field('board_columns', 'boardid', ['id' => $id]);
 
-        $result = $DB->set_field('board_columns', 'locked', $locked, ['id' => $id]);
+        $DB->set_field('board_columns', 'locked', $locked, ['id' => $id]);
         $historyid = $DB->insert_record('board_history', ['boardid' => $boardid, 'action' => 'lock_column',
             'content' => json_encode(['id' => $id, 'locked' => $locked]),
             'userid' => $USER->id, 'timecreated' => time()]);
-        return ['status' => $result, 'historyid' => $historyid];
+
+        return $historyid;
     }
 
     /**
@@ -164,8 +170,9 @@ final class column {
      *
      * @param int $id the column id
      * @param int $sortorder the new sortorder
+     * @return int history id
      */
-    public static function move(int $id, int $sortorder): array {
+    public static function move(int $id, int $sortorder): int {
         global $DB, $USER;
 
         $boardid = $DB->get_field('board_columns', 'boardid', ['id' => $id]);
@@ -183,6 +190,7 @@ final class column {
             'boardid' => $column->boardid, 'action' => 'move_column',
             'content' => json_encode(['sortorder' => $neworder]),
             'userid' => $USER->id, 'timecreated' => time()]);
-        return ['status' => true, 'historyid' => $historyid];
+
+        return $historyid;
     }
 }

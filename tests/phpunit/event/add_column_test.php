@@ -41,13 +41,13 @@ final class add_column_test extends \advanced_testcase {
         set_config('addcolumnnametolog', 1, 'mod_board');
 
         $sink = $this->redirectEvents();
-        $result = column::create($board->id, 'Col X');
+        $columns = column::create($board->id, 'Col X');
         $events = $sink->get_events();
         $sink->close();
         $this->assertCount(1, $events);
         $event = $events[0];
         $this->assertInstanceOf(\mod_board\event\add_column::class, $event);
-        $this->assertSame((string)$result['id'], $event->objectid);
+        $this->assertSame($columns->id, $event->objectid);
         $this->assertSame('board_columns', $event->objecttable);
         $this->assertSame($context->id, $event->contextid);
         $this->assertSame($user->id, $event->userid);
@@ -60,7 +60,7 @@ final class add_column_test extends \advanced_testcase {
 
         set_config('addcolumnnametolog', 0, 'mod_board');
         $sink = $this->redirectEvents();
-        $result = column::create($board->id, 'Col Z');
+        column::create($board->id, 'Col Z');
         $events = $sink->get_events();
         $sink->close();
         $this->assertCount(1, $events);

@@ -73,7 +73,9 @@ final class move_column extends external_api {
         require_capability('mod/board:view', $context);
         require_capability('mod/board:manageboard', $context);
 
-        return column::move($column->id, $sortorder);
+        $historyid = column::move($column->id, $sortorder);
+
+        return ['status' => true, 'historyid' => $historyid];
     }
 
     /**

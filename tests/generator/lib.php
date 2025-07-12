@@ -102,9 +102,10 @@ class mod_board_generator extends testing_module_generator {
             $record->name = "Column {$this->columncount}";
         }
 
-        $id = \mod_board\local\column::create($record->boardid, $record->name)['id'];
+        $column = \mod_board\local\column::create($record->boardid, $record->name);
+        unset($column->historyid);
 
-        return $DB->get_record('board_columns', ['id' => $id], '*', MUST_EXIST);
+        return $column;
     }
 
     /**

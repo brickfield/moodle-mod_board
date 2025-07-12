@@ -51,8 +51,6 @@ final class add_column extends external_api {
      * @return array
      */
     public static function execute(int $boardid, string $name): array {
-        global $DB;
-
         // Validate received parameters.
         [
             'boardid' => $boardid,
@@ -70,7 +68,9 @@ final class add_column extends external_api {
         require_capability('mod/board:view', $context);
         require_capability('mod/board:manageboard', $context);
 
-        return column::create($board->id, $name);
+        $column = column::create($board->id, $name);
+
+        return ['id' => $column->id, 'historyid' => $column->historyid];
     }
 
     /**
