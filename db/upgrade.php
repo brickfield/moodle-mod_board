@@ -307,5 +307,60 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2025070704, 'board');
     }
 
+    if ($oldversion < 2025070706) {
+        // Remove duplicate index on board_columns.boardid field.
+        $table = new xmldb_table('board_columns');
+        $key = new xmldb_key('fk_board', XMLDB_KEY_FOREIGN, ['boardid'], 'board', ['id']);
+        $dbman->drop_key($table, $key);
+        $index = new xmldb_index('boardid', XMLDB_INDEX_NOTUNIQUE, ['boardid']);
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+        $dbman->add_key($table, $key);
+
+        // Remove duplicate index on board_notes.columnid field.
+        $table = new xmldb_table('board_notes');
+        $key = new xmldb_key('fk_column', XMLDB_KEY_FOREIGN, ['columnid'], 'board_columns', ['id']);
+        $dbman->drop_key($table, $key);
+        $index = new xmldb_index('columnid', XMLDB_INDEX_NOTUNIQUE, ['columnid']);
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+        $dbman->add_key($table, $key);
+
+        // Remove duplicate index on board_history.boardid field.
+        $table = new xmldb_table('board_history');
+        $key = new xmldb_key('fk_board', XMLDB_KEY_FOREIGN, ['boardid'], 'board', ['id']);
+        $dbman->drop_key($table, $key);
+        $index = new xmldb_index('boardid', XMLDB_INDEX_NOTUNIQUE, ['boardid']);
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+        $dbman->add_key($table, $key);
+
+        // Define key fk_course (foreign) to be added to board.
+        $table = new xmldb_table('board');
+        $key = new xmldb_key('fk_course', XMLDB_KEY_FOREIGN, ['course'], 'course', ['id']);
+        $dbman->add_key($table, $key);
+
+        // Define key fk_ownerid (foreign) to be added to board_notes.
+        $table = new xmldb_table('board_notes');
+        $key = new xmldb_key('fk_ownerid', XMLDB_KEY_FOREIGN, ['ownerid'], 'user', ['id']);
+        $dbman->add_key($table, $key);
+
+        // Define key fk_groupid (foreign) to be added to board_notes.
+        $table = new xmldb_table('board_notes');
+        $key = new xmldb_key('fk_groupid', XMLDB_KEY_FOREIGN, ['groupid'], 'groups', ['id']);
+        $dbman->add_key($table, $key);
+
+        // Define key fk_comment_noteid (foreign) to be added to board_comments.
+        $table = new xmldb_table('board_comments');
+        $key = new xmldb_key('fk_comment_noteid', XMLDB_KEY_FOREIGN, ['noteid'], 'board_notes', ['id']);
+        $dbman->add_key($table, $key);
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2025070706, 'board');
+    }
+
     return true;
 }
