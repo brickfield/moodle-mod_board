@@ -19,6 +19,7 @@ defined('MOODLE_INTERNAL') || die;
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
 
 use mod_board\board;
+use mod_board\local\note;
 
 /**
  * The mod form.

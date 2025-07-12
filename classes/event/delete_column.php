@@ -73,7 +73,7 @@ class delete_column extends \core\event\base {
      * @return \lang_string|string|null
      */
     public function get_description() {
-        $obj = new \stdClass;
+        $obj = new stdClass;
         $obj->userid = $this->userid;
         $obj->objectid = $this->objectid;
         return get_string('event_delete_column_desc', 'mod_board', $obj);

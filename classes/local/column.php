@@ -39,7 +39,7 @@ final class column {
 
         $board = board::get_board($boardid, MUST_EXIST);
         $context = board::context_for_board($board);
-        $name = mb_substr($name, 0, board::LENGTH_COLNAME);
+        $name = \core_text::substr($name, 0, board::LENGTH_COLNAME);
 
         $transaction = $DB->start_delegated_transaction();
 
@@ -83,7 +83,7 @@ final class column {
         $board = board::get_board($column->boardid, MUST_EXIST);
         $context = board::context_for_board($board);
 
-        $name = mb_substr($name, 0, board::LENGTH_COLNAME);
+        $name = \core_text::substr($name, 0, board::LENGTH_COLNAME);
 
         $transaction = $DB->start_delegated_transaction();
 
@@ -146,7 +146,7 @@ final class column {
     }
 
     /**
-     * Locks a columns
+     * Locks or unlock a columns
      *
      * @param int $id
      * @param bool $locked True to lock the column, false to unlock it.
@@ -175,21 +175,24 @@ final class column {
     public static function move(int $id, int $sortorder): int {
         global $DB, $USER;
 
-        $boardid = $DB->get_field('board_columns', 'boardid', ['id' => $id]);
+        $column = board::get_column($id, MUST_EXIST);
 
-        $columns = $DB->get_records('board_columns', ['boardid' => $boardid], 'sortorder ASC, id ASC');
+        $columns = $DB->get_records('board_columns', ['boardid' => $column->boardid], 'sortorder ASC, id ASC');
         board::repositionan_array_element($columns, $id, $sortorder);
         $sortorder = 1;
         $neworder = [];
-        foreach ($columns as $column) {
-            $column->sortorder = $sortorder++;
-            $neworder[] = $column->id;
-            $DB->update_record('board_columns', $column);
+        foreach ($columns as $c) {
+            $c->sortorder = $sortorder++;
+            $neworder[] = $c->id;
+            $DB->update_record('board_columns', $c);
         }
+
         $historyid = $DB->insert_record('board_history', [
-            'boardid' => $column->boardid, 'action' => 'move_column',
+            'boardid' => $column->boardid,
+            'action' => 'move_column',
             'content' => json_encode(['sortorder' => $neworder]),
-            'userid' => $USER->id, 'timecreated' => time()]);
+            'userid' => $USER->id, 'timecreated' => time(),
+        ]);
 
         return $historyid;
     }

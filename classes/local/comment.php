@@ -28,7 +28,7 @@ use stdClass;
  */
 final class comment {
     /**
-     * Add comment.
+     * Add a comment.
      *
      * @param int $noteid
      * @param string $content
@@ -62,7 +62,7 @@ final class comment {
     }
 
     /**
-     * Delete comment.
+     * Delete a comment.
      *
      * @param int $commentid
      * @return void

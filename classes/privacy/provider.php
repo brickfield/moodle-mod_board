@@ -28,12 +28,11 @@ namespace mod_board\privacy;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\approved_userlist;
-use core_privacy\local\request\deletion_criteria;
 use core_privacy\local\request\writer;
 use core_privacy\local\request\helper as request_helper;
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\transform;
-use tool_dataprivacy\context_instance;
+use core_privacy\local\request\contextlist;
 
 /**
  * Implementation of the privacy subsystem plugin provider for the Brickfield board module.
@@ -55,12 +54,12 @@ class provider implements
     /**
      * Returns meta data about this system.
      *
-     * @param   collection     $items The initialised collection to add items to.
+     * @param   collection     $collection The initialised collection to add items to.
      * @return  collection     A listing of user data stored through this system.
      */
-    public static function get_metadata(collection $items): collection {
+    public static function get_metadata(collection $collection): collection {
         // The 'board' table does not store any specific user data.
-        $items->add_database_table('board_notes', [
+        $collection->add_database_table('board_notes', [
             'columnid' => 'privacy:metadata:board_notes:columnid',
             'userid' => 'privacy:metadata:board_notes:userid',
             'heading' => 'privacy:metadata:board_notes:heading',
@@ -71,7 +70,7 @@ class provider implements
         ], 'privacy:metadata:board_notes');
 
         // The 'board_history' table stores the metadata about each board update.
-        $items->add_database_table('board_history', [
+        $collection->add_database_table('board_history', [
             'boardid' => 'privacy:metadata:board_history:boardid',
             'userid' => 'privacy:metadata:board_history:userid',
             'action' => 'privacy:metadata:board_history:action',
@@ -80,21 +79,21 @@ class provider implements
         ], 'privacy:metadata:board_history');
 
         // The 'board_note_ratings' table stores information about which notes a user has rated.
-        $items->add_database_table('board_note_ratings', [
+        $collection->add_database_table('board_note_ratings', [
             'noteid' => 'privacy:metadata:board_note_ratings:noteid',
             'userid' => 'privacy:metadata:board_note_ratings:userid',
             'timecreated' => 'privacy:metadata:board_note_ratings:timecreated',
         ], 'privacy:metadata:board_note_ratings');
 
         // The 'board_comments' table stores comments a user has added to a note.
-        $items->add_database_table('board_comments', [
+        $collection->add_database_table('board_comments', [
             'noteid' => 'privacy:metadata:board_comments:noteid',
             'userid' => 'privacy:metadata:board_comments:userid',
             'content' => 'privacy:metadata:board_comments:content',
             'timecreated' => 'privacy:metadata:board_comments:timecreated',
         ], 'privacy:metadata:board_comments');
 
-        return $items;
+        return $collection;
     }
 
     /**
@@ -105,8 +104,8 @@ class provider implements
      * @param   int         $userid     The user to search.
      * @return  contextlist $contextlist  The contextlist containing the list of contexts used in this plugin.
      */
-    public static function get_contexts_for_userid(int $userid): \core_privacy\local\request\contextlist {
-        $contextlist = new \core_privacy\local\request\contextlist();
+    public static function get_contexts_for_userid(int $userid): contextlist {
+        $contextlist = new contextlist();
 
         $params = [
             'modname'       => 'board',
@@ -354,7 +353,7 @@ class provider implements
     /**
      * Retrieve information about a specific note or rating for privacy export.
      *
-     * @param   stdClass    $note The note from which to compile the export data.
+     * @param   \stdClass   $note The note from which to compile the export data.
      * @param   string      $exportarea The area being compiled for the export data.
      * @return  array       Further note export data.
      */
@@ -529,7 +528,7 @@ class provider implements
     /**
      * Retrieve information about a specific note title for privacy export.
      *
-     * @param   stdClass    $note The note from which to compile the export data.
+     * @param   \stdClass   $note The note from which to compile the export data.
      * @return  string      An identifiable note title for export data.
      */
     protected static function get_note_title(\stdClass $note): String {
@@ -556,7 +555,7 @@ class provider implements
     /**
      * Delete all data for all users in the specified context.
      *
-     * @param   context                 $context   The specific context to delete data for.
+     * @param  \context                 $context   The specific context to delete data for.
      */
     public static function delete_data_for_all_users_in_context(\context $context) {
         global $DB;

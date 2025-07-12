@@ -68,9 +68,10 @@ final class can_rate_note extends external_api {
         self::validate_context($context);
         require_capability('mod/board:view', $context);
 
+        $canrate = note::can_rate($note->id);
         $hasrated = $DB->record_exists('board_note_ratings', ['userid' => $USER->id, 'noteid' => $id]);
 
-        return ['canrate' => note::can_rate($id), 'hasrated' => $hasrated];
+        return ['canrate' => $canrate, 'hasrated' => $hasrated];
     }
 
     /**

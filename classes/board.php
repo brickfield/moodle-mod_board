@@ -419,7 +419,7 @@ class board {
     }
 
     /**
-     * Checks if the user can only view the board
+     * Checks if the user can only view the board.
      *
      * @param stdClass $board
      * @param int|null $groupid
@@ -442,6 +442,7 @@ class board {
 
     /**
      * Prepares board notes for export.
+     *
      * @param stdClass $note
      * @return string
      */
@@ -498,6 +499,7 @@ class board {
 
     /**
      * Get the users you can view if the board is set to single user with public posts.
+     *
      * @param stdClass $board the board id.
      * @param int|null $groupid the group id.
      * @return array the users.
@@ -548,10 +550,11 @@ class board {
     }
 
     /**
-     * Check if current user can post on this board
+     * Check if current user can post on this board.
      *
      * @param stdClass $board the board.
      * @param int $ownerid the board owner
+     * @return bool
      */
     public static function can_post(stdClass $board, int $ownerid): bool {
         global $USER;

@@ -55,8 +55,8 @@ final class note {
         $board = board::get_board($column->boardid, MUST_EXIST);
         $context = board::context_for_board($board);
 
-        $heading = empty($heading) ? null : mb_substr($heading, 0, board::LENGTH_HEADING);
-        $content = empty($content) ? "" : mb_substr($content, 0, get_config('mod_board', 'post_max_length'));
+        $heading = empty($heading) ? null : \core_text::substr($heading, 0, board::LENGTH_HEADING);
+        $content = empty($content) ? "" : \core_text::substr($content, 0, get_config('mod_board', 'post_max_length'));
         $content = clean_text($content, FORMAT_HTML);
 
         if (!$groupid) {
@@ -83,8 +83,8 @@ final class note {
         $countnotes = $DB->count_records('board_notes', ['columnid' => $columnid, 'deleted' => 0]);
 
         $type = !empty($attachment['type']) ? $attachment['type'] : 0;
-        $info = !empty($type) ? mb_substr(s($attachment['info']), 0, board::LENGTH_INFO) : null;
-        $url = !empty($type) ? mb_substr($attachment['url'], 0, board::LENGTH_URL) : null;
+        $info = !empty($type) ? \core_text::substr(s($attachment['info']), 0, board::LENGTH_INFO) : null;
+        $url = !empty($type) ? \core_text::substr($attachment['url'], 0, board::LENGTH_URL) : null;
 
         $notecreated = time();
         $noteid = $DB->insert_record('board_notes', [
@@ -151,8 +151,8 @@ final class note {
     public static function update(int $id, string $heading, string $content, array $attachment): stdClass {
         global $DB, $USER;
 
-        $heading = empty($heading) ? null : mb_substr($heading, 0, board::LENGTH_HEADING);
-        $content = empty($content) ? "" : mb_substr($content, 0, get_config('mod_board', 'post_max_length'));
+        $heading = empty($heading) ? null : \core_text::substr($heading, 0, board::LENGTH_HEADING);
+        $content = empty($content) ? "" : \core_text::substr($content, 0, get_config('mod_board', 'post_max_length'));
         $content = clean_text($content, FORMAT_HTML);
 
         $note = board::get_note($id, MUST_EXIST);
@@ -166,8 +166,8 @@ final class note {
         $attachment = self::update_note_attachment($id, $attachment, $previoustype);
 
         $type = !empty($attachment['type']) ? $attachment['type'] : 0;
-        $info = !empty($type) ? mb_substr(s($attachment['info']), 0, board::LENGTH_INFO) : null;
-        $url = !empty($type) ? mb_substr($attachment['url'], 0, board::LENGTH_URL) : null;
+        $info = !empty($type) ? \core_text::substr(s($attachment['info']), 0, board::LENGTH_INFO) : null;
+        $url = !empty($type) ? \core_text::substr($attachment['url'], 0, board::LENGTH_URL) : null;
 
         $DB->update_record('board_notes', [
             'id' => $note->id,
@@ -251,7 +251,7 @@ final class note {
     }
 
     /**
-     * Move a note to a different column.
+     * Move a note to a different column or position in the same column.
      *
      * @param int $id
      * @param int $columnid
@@ -391,7 +391,7 @@ final class note {
     }
 
     /**
-     * Rate the note.
+     * Rate or unrate the note.
      *
      * @param int $noteid
      * @return int history id
@@ -451,17 +451,21 @@ final class note {
      * Retrieve the file added to a note.
      *
      * @param int $noteid
-     * @return object
+     * @return \stored_file|bool
      */
-    public static function get_note_file($noteid) {
+    public static function get_note_file(int $noteid): ?\stored_file {
         $note = board::get_note($noteid);
         if (!$note || empty($note->url)) {
             return null;
         }
         $file = self::get_file_storage_settings($noteid);
         $fs = get_file_storage();
-        return $fs->get_file($file->contextid, $file->component, $file->filearea, $file->itemid,
+        $f = $fs->get_file($file->contextid, $file->component, $file->filearea, $file->itemid,
             $file->filepath, basename($note->url));
+        if ($f === false) {
+            $f = null;
+        }
+        return $f;
     }
 
     /**
@@ -470,7 +474,7 @@ final class note {
      * @param int $noteid
      * @return void
      */
-    public static function delete_note_file($noteid) {
+    public static function delete_note_file(int $noteid): void {
         $storedfile = self::get_note_file($noteid);
         if ($storedfile) {
             $storedfile->delete();
@@ -484,7 +488,7 @@ final class note {
      * @param int $draftitemid
      * @return string|null
      */
-    protected static function store_note_file($noteid, $draftitemid) {
+    protected static function store_note_file(int $noteid, int $draftitemid) {
         $settings = self::get_file_storage_settings($noteid);
 
         file_save_draft_area_files($draftitemid, $settings->contextid, $settings->component, $settings->filearea,
@@ -559,7 +563,7 @@ final class note {
      *
      * @return array
      */
-    public static function get_image_picker_options() {
+    public static function get_image_picker_options(): array {
         $extensions = self::get_accepted_file_extensions();
 
         $extensions = array_map(function($extension) {
@@ -580,7 +584,7 @@ final class note {
      * @param int $noteid
      * @return stdClass|null
      */
-    public static function get_file_storage_settings($noteid): ?stdClass {
+    public static function get_file_storage_settings(int $noteid): ?stdClass {
         $note = board::get_note($noteid);
         if (!$note) {
             return null;
