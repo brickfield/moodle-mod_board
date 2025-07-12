@@ -47,7 +47,7 @@ final class generator_test extends \advanced_testcase {
         $this->assertTimeCurrent($board->timemodified);
         $this->assertSame('Test board 1', $board->intro);
         $this->assertSame(FORMAT_MOODLE, $board->introformat);
-        $this->assertSame(null, $board->historyid);
+        $this->assertSame('0', $board->historyid);
         $this->assertSame('', $board->background_color);
         $this->assertSame('0', $board->addrating);
         $this->assertSame('0', $board->hideheaders);
@@ -82,7 +82,7 @@ final class generator_test extends \advanced_testcase {
         $this->assertTimeCurrent($board->timemodified);
         $this->assertSame('Some intro', $board->intro);
         $this->assertSame(FORMAT_HTML, $board->introformat);
-        $this->assertSame(null, $board->historyid);
+        $this->assertSame('0', $board->historyid);
         $this->assertSame('#fff', $board->background_color);
         $this->assertSame('1', $board->addrating);
         $this->assertSame('1', $board->hideheaders);
