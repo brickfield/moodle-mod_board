@@ -118,8 +118,17 @@ class mod_board_generator extends testing_module_generator {
         $record = (object)(array)$record;
 
         if (empty($record->columnid)) {
-            throw new coding_exception('Note generator requires $record->columnid');
+            if (empty($record->column) || empty($record->boardid)) {
+                throw new coding_exception('Note generator requires $record->columnid');
+            } else {
+                $board = $DB->get_record('board', ['id' => $record->boardid], '*', MUST_EXIST);
+                $column = $DB->get_record('board_columns',
+                    ['boardid' => $board->id, 'sortorder' => $record->column], '*', MUST_EXIST);
+                $record->columnid = $column->id;
+            }
         }
+        unset($record->column);
+        unset($record->boardid);
 
         if (empty($record->heading) && empty($record->content)) {
             $record->heading = 'Some note';

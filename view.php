@@ -73,7 +73,7 @@ $PAGE->set_heading($course->fullname);
 $PAGE->set_activity_record($board);
 
 // Logic to limit view when board is in singleuser mode.
-if ($board->singleusermode != board::SINGLEUSER_DISABLED && !board::can_view_owner($board->id, $ownerid)) {
+if ($board->singleusermode != board::SINGLEUSER_DISABLED && !board::can_view_owner($board, $ownerid)) {
     echo $OUTPUT->header();
     echo $OUTPUT->heading(get_string('nopermission', 'mod_board'));
     echo $OUTPUT->footer();
@@ -161,7 +161,12 @@ if (!$ownerid && $board->singleusermode != board::SINGLEUSER_DISABLED) {
         $img = html_writer::img($OUTPUT->image_url('brickfield-logo-poweredby', 'mod_board'),
             get_string('brickfieldlogo', 'mod_board'),
             ['style' => 'display: block !important; width: 140px;']);
-        $img .= html_writer::tag('span', get_string('opensinnewwindow', 'mod_board'), ['class' => 'sr-only']);
+        if (get_config('core', 'version') > 2024100799) {
+            $visuallyhidden = 'visually-hidden';
+        } else {
+            $visuallyhidden = 'sr-only';
+        }
+        $img .= html_writer::tag('span', get_string('opensinnewwindow', 'mod_board'), ['class' => $visuallyhidden]);
         echo html_writer::link('https://www.brickfield.ie/docs/mod_board/', $img, ['target' => '_blank',
             'style' => 'margin-left: auto; margin-right: 90px; display: block !important; width: 140px;']);
     }

@@ -210,5 +210,20 @@ final class generator_test extends \advanced_testcase {
         $this->assertTimeCurrent($note->timecreated);
         $this->assertSame('1', $note->sortorder);
         $this->assertSame('0', $note->deleted);
+
+        $this->setCurrentTimeStart();
+        $note = $generator->create_note(['column' => 1, 'boardid' => $board2->id, 'userid' => $user1->id]);
+        $this->assertSame($column1->id, $note->columnid);
+        $this->assertSame($user1->id, $note->ownerid);
+        $this->assertSame($user1->id, $note->userid);
+        $this->assertSame(null, $note->groupid);
+        $this->assertSame('', $note->content);
+        $this->assertSame('Some note', $note->heading);
+        $this->assertSame('0', $note->type);
+        $this->assertSame(null, $note->info);
+        $this->assertSame(null, $note->url);
+        $this->assertTimeCurrent($note->timecreated);
+        $this->assertSame('2', $note->sortorder);
+        $this->assertSame('0', $note->deleted);
     }
 }
