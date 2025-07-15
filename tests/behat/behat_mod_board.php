@@ -69,6 +69,23 @@ class behat_mod_board extends behat_base {
         $chars = str_split($name); // No Unicode support here, sorry.
         $chars[] = behat_keys::ENTER;
         behat_base::type_keys($this->getSession(), $chars);
+        $this->wait_for_pending_js();
+    }
+
+    /**
+     * Click on Add comment and type text.
+     *
+     * @When /^I type mod_board comment "(?P<comment_string>(?:[^"]|\\")*)"$/
+     * @param string $comment
+     */
+    public function i_type_note_comment(string $comment) {
+        $xpath = "//div[contains(@class,'comment-input ')]";
+        $this->get_selected_node('xpath', $xpath)->click();
+        $this->wait_for_pending_js();
+
+        $chars = str_split($comment); // No Unicode support here, sorry.
+        behat_base::type_keys($this->getSession(), $chars);
+        $this->wait_for_pending_js();
     }
 
     /**
@@ -83,6 +100,22 @@ class behat_mod_board extends behat_base {
             ]),
             new behat_component_named_selector('button', [
                 "//div[@role='button' and @title=%locator%]",
+            ]),
+            new behat_component_named_selector('note', [
+                "//div[contains(@class,'board_note ') and div/div[contains(@class,'mod_board_note_heading')]=%locator%]",
+            ]),
+        ];
+    }
+
+    /**
+     * Return the list of partial named selectors.
+     *
+     * @return array
+     */
+    public static function get_partial_named_selectors(): array {
+        return [
+            new behat_component_named_selector('comment', [
+                "//div[contains(@class,'comment ') and div[contains(@class,'comment-content') and contains(text(), %locator%)]]",
             ]),
         ];
     }
