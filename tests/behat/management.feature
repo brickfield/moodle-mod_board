@@ -1,4 +1,4 @@
-@mod @mod_board
+@mod @mod_board @javascript
 Feature: Basic mod_board management tasks
 
   Background:
@@ -14,7 +14,6 @@ Feature: Basic mod_board management tasks
       | student1 | C1     | student        |
       | teacher1 | C1     | editingteacher |
 
-  @javascript
   Scenario: Create and update mod_board instance
     Given I am on the "Course 1" course page logged in as "teacher1"
     And I turn editing mode on
@@ -75,7 +74,6 @@ Feature: Basic mod_board management tasks
       | Enable blank target                                       | 1                      |
     And I press "Cancel"
 
-  @javascript
   Scenario: Add, edit, move and delete columns in mod_board
     Given the following "activity" exists:
       | activity       | board                  |
@@ -145,8 +143,9 @@ Feature: Basic mod_board management tasks
     And I should see "Fourth Column" in the "4" "mod_board > column"
 
     When I click on "Column Third Column unlocked" "mod_board > button" in the "3" "mod_board > column"
+    Then "Add new post to column Third Column" "mod_board > button" should not be visible
     When I click on "Column Third Column locked" "mod_board > button" in the "3" "mod_board > column"
-    And "Column Third Column unlocked" "mod_board > button" should exist in the "3" "mod_board > column"
+    Then "Add new post to column Third Column" "mod_board > button" should be visible
 
     When I click on "Delete column Third Column" "mod_board > button" in the "3" "mod_board > column"
     And I click on "Delete" "button" in the "Confirm" "dialogue"

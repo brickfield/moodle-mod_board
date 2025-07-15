@@ -1,4 +1,4 @@
-@mod @mod_board
+@mod @mod_board @javascript
 Feature: Use mod_board generator to create test data
 
   Background:
@@ -13,7 +13,7 @@ Feature: Use mod_board generator to create test data
       | Course 2 | C2        | 1                | 1                        | 2         | 1              |
       | Course 3 | C3        | 1                | 1                        | 1         | 1              |
     And the following "groups" exist:
-      | name     | course | idnumber |
+      | name     | course | idnumber  |
       | Group AV | C2     | GAV       |
       | Group BV | C2     | GBV       |
       | Group AS | C3     | GAS       |
@@ -36,7 +36,6 @@ Feature: Use mod_board generator to create test data
       | student1 | GAS    |
       | student2 | GBS    |
 
-  @javascript
   Scenario: Use generator to create mod_board instance
     When the following "activity" exists:
       | activity       | board                  |
@@ -46,7 +45,6 @@ Feature: Use mod_board generator to create test data
     And I am on the "Sample board" "board activity" page logged in as "teacher1"
     Then I should see "Sample test baord intro"
 
-  @javascript
   Scenario: Use generator to create columns in mod_board
     Given the following "activity" exists:
       | activity       | board                  |
@@ -60,7 +58,6 @@ Feature: Use mod_board generator to create test data
     Then I should see "Sloupec 4"
     And I should see "Sloupec 5"
 
-  @javascript
   Scenario: Use generator to create posts in general mod_board
     Given the following "activity" exists:
       | activity       | board                  |
@@ -74,7 +71,6 @@ Feature: Use mod_board generator to create test data
     Then I should see "Heading 1x1" in the "1" "mod_board > column"
     And I should see "Content 2x2" in the "2" "mod_board > column"
 
-  @javascript
   Scenario: Use generator to create posts in private single user mod_board
     Given the following "activity" exists:
       | activity       | board                  |
@@ -97,7 +93,6 @@ Feature: Use mod_board generator to create test data
     Then I should see "Heading AAA" in the "1" "mod_board > column"
     And I should not see "Heading BBB" in the "1" "mod_board > column"
 
-  @javascript
   Scenario: Use generator to create posts in visible groups mod_board
     Given the following "activity" exists:
       | activity       | board                  |
@@ -125,7 +120,6 @@ Feature: Use mod_board generator to create test data
     And I should see "Heading AAA" in the "1" "mod_board > column"
     And I should see "Heading BBB" in the "1" "mod_board > column"
 
-  @javascript
   Scenario: Use generator to create posts in separate groups mod_board
     Given the following "activity" exists:
       | activity       | board                  |
