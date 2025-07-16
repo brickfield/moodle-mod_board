@@ -66,6 +66,11 @@ if ($board->singleusermode == board::SINGLEUSER_DISABLED) {
 }
 
 $pageurl = new moodle_url('/mod/board/view.php', ['id' => $cm->id, 'ownerid' => $ownerid]);
+$baseurl = new moodle_url('/mod/board/view.php', ['id' => $cm->id]);
+if ($embed) {
+    $pageurl->param('embed', $embed);
+    $baseurl->param('embed', $embed);
+}
 $PAGE->set_url($pageurl);
 
 $PAGE->set_title(format_string($board->name));
@@ -113,7 +118,6 @@ if (get_config('mod_board', 'enableprivacystatement')) {
 
 echo $OUTPUT->box_start('mod_introbox', 'group_menu');
 if ($board->singleusermode != board::SINGLEUSER_PRIVATE || has_capability('mod/board:manageboard', $context)) {
-    $baseurl = new moodle_url('/mod/board/view.php', ['id' => $cm->id]);
     echo groups_print_activity_menu($cm, $baseurl, true);
 }
 echo $OUTPUT->box_end();
@@ -127,8 +131,7 @@ if ($board->singleusermode == board::SINGLEUSER_PUBLIC ||
         echo $OUTPUT->notification(get_string('nousers', 'mod_board'));
         echo $OUTPUT->box_end();
     } else {
-        $url = new moodle_url('/mod/board/view.php', ['id' => $cm->id]);
-        $select = new single_select($url, 'ownerid', $users, $ownerid);
+        $select = new single_select($baseurl, 'ownerid', $users, $ownerid);
         $select->label = get_string('selectuser', 'mod_board');
         echo html_writer::tag('div', $OUTPUT->render($select));
     }
