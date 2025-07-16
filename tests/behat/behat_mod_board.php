@@ -99,7 +99,7 @@ class behat_mod_board extends behat_base {
                 "//div[contains(@class,'board_column ') and position()=%locator%]",
             ]),
             new behat_component_named_selector('button', [
-                "//div[@role='button' and @title=%locator%]",
+                "//div[@role='button' and (@title=%locator% or @aria-label=%locator%)]",
             ]),
             new behat_component_named_selector('note', [
                 "//div[contains(@class,'board_note ') and div/div[contains(@class,'mod_board_note_heading')]=%locator%]",

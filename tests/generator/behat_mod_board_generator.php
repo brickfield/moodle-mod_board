@@ -60,4 +60,17 @@ class behat_mod_board_generator extends behat_generator_base {
     protected function get_owner_id(string $username): int {
         return parent::get_user_id($username);
     }
+
+    /**
+     * Look up the id of a board owner from its username.
+     *
+     * @param string $idnumber
+     * @return int corresponding id or 0
+     */
+    protected function get_group_id($idnumber): int {
+        if (!$idnumber) {
+            return 0;
+        }
+        return parent::get_group_id($idnumber);
+    }
 }
