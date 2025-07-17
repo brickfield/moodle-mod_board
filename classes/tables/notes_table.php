@@ -30,6 +30,7 @@ require_once($CFG->libdir . '/tablelib.php');
 
 use table_sql;
 use moodle_url;
+use mod_board\board;
 
 /**
  * Define notes table class.
@@ -49,6 +50,8 @@ class notes_table extends table_sql {
      */
     public function __construct($cmid, $boardid, $groupid, $ownerid, $includedeleted) {
         parent::__construct('mod_board_notes_table');
+
+        $board = board::get_board($boardid, MUST_EXIST);
 
         // Set the showemail variable based on if the user has either capabilities.
         $cm = get_coursemodule_from_id('board', $cmid);
@@ -87,13 +90,17 @@ class notes_table extends table_sql {
         JOIN {board_notes} bn ON bn.columnid = bc.id JOIN {user} u ON u.id = bn.ownerid';
         $this->sql->where = 'bc.boardid = :boardid';
         $this->sql->params = ['boardid' => $boardid];
-        if ($groupid > 0) {
+        if ($groupid > 0 && $board->singleusermode == board::SINGLEUSER_DISABLED) {
             $this->sql->where .= ' AND bn.groupid = :groupid';
             $this->sql->params['groupid'] = $groupid;
         }
         if ($ownerid > 0) {
             $this->sql->where .= ' AND bn.ownerid = :ownerid';
             $this->sql->params['ownerid'] = $ownerid;
+        } else if ($groupid > 0 && $board->singleusermode != board::SINGLEUSER_DISABLED) {
+            // phpcs:ignore moodle.Files.LineLength.TooLong
+            $this->sql->where .= " AND EXISTS (SELECT 'x' FROM {groups_members} gm WHERE gm.userid = bn.ownerid AND gm.groupid = :groupid)";
+            $this->sql->params['groupid'] = $groupid;
         }
         if (!$includedeleted) {
             $this->sql->where .= ' AND bn.deleted = 0';

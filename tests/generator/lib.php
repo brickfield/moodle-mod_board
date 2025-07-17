@@ -29,6 +29,10 @@ class mod_board_generator extends testing_module_generator {
      * @var int keep track of how many columns have been created.
      */
     protected $columncount = 3;
+    /**
+     * @var int keep track of how many comments have been created.
+     */
+    protected $commentcount = 0;
 
     /**
      * To be called from data reset code only,
@@ -37,6 +41,7 @@ class mod_board_generator extends testing_module_generator {
      */
     public function reset() {
         $this->columncount = 3;
+        $this->commentcount = 0;
         parent::reset();
     }
 
@@ -121,7 +126,7 @@ class mod_board_generator extends testing_module_generator {
             if (empty($record->column) || empty($record->boardid)) {
                 throw new coding_exception('Note generator requires $record->columnid');
             } else {
-                $board = $DB->get_record('board', ['id' => $record->boardid], '*', MUST_EXIST);
+                $board = board::get_board($record->boardid, MUST_EXIST);
                 $column = $DB->get_record('board_columns',
                     ['boardid' => $board->id, 'sortorder' => $record->column], '*', MUST_EXIST);
                 $record->columnid = $column->id;
@@ -143,8 +148,41 @@ class mod_board_generator extends testing_module_generator {
         $note = \mod_board\local\note::create(
             $record->columnid, $ownerid, $groupid, $heading, $content, $attachment, $userid
         );
-        unset($note->historyid);
 
-        return $note;
+        if (!empty($record->deleted)) {
+            \mod_board\local\note::delete($note->id);
+        }
+
+        return $DB->get_record('board_notes', ['id' => $note->id], '*', MUST_EXIST);
+    }
+
+    /**
+     * Create new a comment.
+     *
+     * @param array|stdClass|null $record
+     * @return stdClass comment record
+     */
+    public function create_comment($record = null): stdClass {
+        global $USER, $DB;
+
+        $record = (object)(array)$record;
+        if (empty($record->noteid)) {
+            throw new coding_exception('Comment generator requires $record->noteid');
+        }
+        $note = board::get_note($record->noteid, MUST_EXIST);
+
+        $this->commentcount++;
+
+        if (empty($record->content)) {
+            $record->content = "Comment {$this->commentcount}";
+        }
+
+        $comment = \mod_board\local\comment::create($note->id, $record->content, $record->userid ?? $USER->id);
+
+        if (!empty($record->deleted)) {
+            \mod_board\local\comment::delete($comment->id);
+        }
+
+        return $DB->get_record('board_comments', ['id' => $comment->id], '*', MUST_EXIST);
     }
 }

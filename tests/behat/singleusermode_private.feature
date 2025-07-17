@@ -21,10 +21,6 @@ Feature: Usage of mod_board in private single user mode
       | student2 | C1     | student        |
       | student3 | C1     | student        |
       | teacher1 | C1     | editingteacher |
-    And the following "group members" exist:
-      | user     | group |
-      | student1 | GA    |
-      | student2 | GB    |
 
   Scenario: Teachers and owners may post and read mod_board posts in private single user mode and no group mode
     Given the following "activity" exists:
@@ -33,6 +29,10 @@ Feature: Usage of mod_board in private single user mode
       | name           | Sample board           |
       | groupmode      | 0                      |
       | singleusermode | 1                      |
+    And the following "group members" exist:
+      | user     | group |
+      | student1 | GA    |
+      | student2 | GB    |
     And I am on the "Sample board" "board activity" page logged in as "teacher1"
     And I change mod_board "1" column name to "First Column"
     And I change mod_board "2" column name to "Second Column"
@@ -76,6 +76,10 @@ Feature: Usage of mod_board in private single user mode
       | name           | Sample board           |
       | groupmode      | 2                      |
       | singleusermode | 1                      |
+    And the following "group members" exist:
+      | user     | group |
+      | student1 | GA    |
+      | student2 | GB    |
     And I am on the "Sample board" "board activity" page logged in as "teacher1"
     And I change mod_board "1" column name to "First Column"
     And I change mod_board "2" column name to "Second Column"
@@ -146,3 +150,34 @@ Feature: Usage of mod_board in private single user mode
     And I should see "Title Own Student 2" in the "1" "mod_board > column"
 
     And I am on homepage
+
+  Scenario: Teachers do not see activity restricted users in mod_board in private single user mode
+    Given the following "activity" exists:
+      | activity       | board                                            |
+      | course         | C1                                               |
+      | name           | Sample board 1                                   |
+      | groupmode      | 0                                                |
+      | singleusermode | 1                                                |
+    And the following "activity" exists:
+      | activity       | board                                            |
+      | course         | C1                                               |
+      | name           | Sample board 2                                   |
+      | groupmode      | 0                                                |
+      | singleusermode | 1                                                |
+      | availability   | {"op":"&","c":[{"type":"group"}],"showc":[true]} |
+    And the following "group members" exist:
+      | user     | group |
+      | student1 | GA    |
+      | student2 | GB    |
+
+    When I am on the "Sample board 1" "board activity" page logged in as "teacher1"
+    Then the "Select user" select box should contain "First Student"
+    And the "Select user" select box should contain "Second Student"
+    And the "Select user" select box should contain "Third Student"
+    And the "Select user" select box should contain "First Teacher"
+
+    When I am on the "Sample board 2" "board activity" page logged in as "teacher1"
+    Then the "Select user" select box should contain "First Student"
+    And the "Select user" select box should contain "Second Student"
+    And the "Select user" select box should not contain "Third Student"
+    And the "Select user" select box should contain "First Teacher"

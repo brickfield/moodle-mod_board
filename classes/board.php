@@ -498,27 +498,92 @@ class board {
     }
 
     /**
-     * Get the users you can view if the board is set to single user with public posts.
+     * Get the users you can view if the board is set to single user with public or private mode.
+     *
+     * NOTE: this is meant for the mod/board/view.php page only
      *
      * @param stdClass $board the board id.
      * @param int|null $groupid the group id.
      * @return array the users.
      */
     public static function get_users_for_board(stdClass $board, ?int $groupid = 0): array {
+        global $DB;
+
         if ($groupid) {
             $groups[] = $groupid;
         } else {
             $groups = 0;
         }
         $context = self::context_for_board($board);
-        $onlyactive = !has_capability('mod/board:manageboard', $context);
-        $userlist = get_enrolled_users($context, 'mod/board:view', $groups, 'u.id,
-            u.lastname, u.firstname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename',
-            onlyactive: $onlyactive);
+        $userlist = get_enrolled_users($context, 'mod/board:view', $groups,
+            // phpcs:ignore moodle.Files.LineLength.TooLong
+            'u.id, u.lastname, u.firstname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename, u.suspended, u.confirmed',
+            onlyactive: true);
+        foreach ($userlist as $k => $user) {
+            if ($user->suspended || !$user->confirmed) {
+                unset($userlist[$k]);
+            }
+        }
+
+        $course = $DB->get_record('course', ['id' => $board->course], '*', MUST_EXIST);
+        $modinfo = get_fast_modinfo($course);
+        $cm = $modinfo->get_cm($board->cmid);
+        $info = new \core_availability\info_module($cm);
+        $userlist = $info->filter_user_list($userlist);
+
         $users = [];
         foreach ($userlist as $user) {
             $users[$user->id] = fullname($user);
         }
+
+        return $users;
+    }
+
+    /**
+     * Get the owners with posts in single user with public or private mode.
+     *
+     * NOTE: this is meant for the mod/board/export.php page only
+     * NOTE: deleted users are visible here
+     *
+     * @param stdClass $board the board id.
+     * @param int $groupid the group id, 0 means all participants.
+     * @param bool $onlycomments
+     * @return array the users.
+     */
+    public static function get_existing_owners_for_board(stdClass $board, int $groupid, bool $onlycomments): array {
+        global $DB;
+
+        if ($board->singleusermode != self::SINGLEUSER_PUBLIC && $board->singleusermode != self::SINGLEUSER_PRIVATE) {
+            throw new \core\exception\coding_exception('get_existing_owners_for_board can be used only in singleusemode');
+        }
+
+        $params = [
+            'boardid' => $board->id,
+        ];
+        // phpcs:ignore moodle.Files.LineLength.TooLong
+        $sql = "SELECT DISTINCT u.id, u.lastname, u.firstname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename
+                  FROM {user} u
+                  JOIN {board_notes} bn ON bn.ownerid = u.id
+                  JOIN {board_columns} bc ON bc.id = bn.columnid
+                 WHERE bc.boardid = :boardid";
+        if ($groupid) {
+            $sql .= " AND EXISTS (SELECT 'x' FROM {groups_members} gm WHERE gm.userid = u.id AND gm.groupid = :groupid)";
+            $params['groupid'] = $groupid;
+        }
+        if ($onlycomments) {
+            $sql .= " AND EXISTS (SELECT 'x' FROM {board_comments} bc WHERE bc.noteid = bn.id)";
+        }
+        list($sort, $sortparams) = users_order_by_sql('u');
+        $sql .= " ORDER BY $sort";
+        $params = array_merge($params, $sortparams);
+
+        $userlist = $DB->get_records_sql($sql, $params);
+
+        $users = [];
+        foreach ($userlist as $user) {
+            $users[$user->id] = fullname($user);
+        }
+
         return $users;
     }
 
@@ -538,6 +603,10 @@ class board {
         }
         if (!is_enrolled($context, $ownerid, 'mod/board:view', true)) {
             // Non-managers can only view boards of enrolled users.
+            return false;
+        }
+        $cm = self::coursemodule_for_board($board);
+        if (!\core_availability\info_module::is_user_visible($cm, $ownerid, true)) {
             return false;
         }
         if ($board->singleusermode == self::SINGLEUSER_PUBLIC) {

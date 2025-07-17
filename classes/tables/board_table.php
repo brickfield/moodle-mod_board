@@ -69,10 +69,10 @@ class board_table extends flexible_table {
         global $DB;
         parent::__construct('mod_board_table');
 
-        $this->board = board::get_board($boardid);
-        $this->groupid = $groupid;
+        $this->board = board::get_board($boardid, MUST_EXIST);
         $this->includedeleted = $includedeleted;
         $this->ownerid = $ownerid;
+        $this->groupid = $groupid;
         $this->hasrating = board::board_rating_enabled($this->board);
 
         // Get the construct paramaters and add them to the export url.
@@ -134,17 +134,24 @@ class board_table extends flexible_table {
         $columns = $DB->get_records('board_columns', ['boardid' => $this->board->id], 'sortorder', 'id, name, sortorder');
         // Get the notes for each column.
         foreach ($columns as $column) {
+            $where = "columnid = :columnid";
             $params = ['columnid' => $column->id];
             if (!$this->includedeleted) {
                 $params['deleted'] = 0;
+                $where .= " AND deleted = 0";
+            }
+            if ($this->groupid > 0 && $this->board->singleusermode == board::SINGLEUSER_DISABLED) {
+                $params['groupid'] = $this->groupid;
+                $where .= " AND groupid = :groupid";
             }
             if ($this->ownerid > 0) {
                 $params['ownerid'] = $this->ownerid;
-            }
-            if ($this->groupid > 0) {
+                $where .= " AND ownerid = :ownerid";
+            } else if ($this->groupid > 0 && $this->board->singleusermode != board::SINGLEUSER_DISABLED) {
+                $where .= " AND EXISTS (SELECT 'x' FROM {groups_members} gm WHERE gm.userid = ownerid AND gm.groupid = :groupid)";
                 $params['groupid'] = $this->groupid;
             }
-            $column->notes = $DB->get_records('board_notes', $params,
+            $column->notes = $DB->get_records_select('board_notes', $where, $params,
                 'sortorder', 'id, heading, content, info, url, type');
         }
 

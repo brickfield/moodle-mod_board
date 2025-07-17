@@ -49,6 +49,8 @@ class comments_table extends table_sql {
         global $DB;
         parent::__construct('mod_board_comments_table');
 
+        $board = board::get_board($boardid, MUST_EXIST);
+
         // Get the construct parameters and add them to the export url.
         $exportparams = [
             'id' => $cmid,
@@ -85,13 +87,17 @@ class comments_table extends table_sql {
             JOIN {board_columns} bc ON bc.id = bn.columnid';
         $this->sql->where = 'bc.boardid = :boardid';
         $this->sql->params = ['boardid' => $boardid];
-        if ($groupid > 0) {
+        if ($groupid > 0 && $board->singleusermode == board::SINGLEUSER_DISABLED) {
             $this->sql->where .= ' AND bn.groupid = :groupid';
             $this->sql->params['groupid'] = $groupid;
         }
         if ($ownerid > 0) {
             $this->sql->where .= ' AND bn.ownerid = :ownerid';
             $this->sql->params['ownerid'] = $ownerid;
+        } else if ($groupid > 0 && $board->singleusermode != board::SINGLEUSER_DISABLED) {
+            // phpcs:ignore moodle.Files.LineLength.TooLong
+            $this->sql->where .= " AND EXISTS (SELECT 'x' FROM {groups_members} gm WHERE gm.userid = bn.ownerid AND gm.groupid = :groupid)";
+            $this->sql->params['groupid'] = $groupid;
         }
         if (!$includedeleted) {
             $this->sql->where .= ' AND bn.deleted = 0 AND c.deleted = 0';

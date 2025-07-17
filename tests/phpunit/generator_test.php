@@ -225,5 +225,62 @@ final class generator_test extends \advanced_testcase {
         $this->assertTimeCurrent($note->timecreated);
         $this->assertSame('2', $note->sortorder);
         $this->assertSame('0', $note->deleted);
+
+        $note = $generator->create_note(['column' => 1, 'boardid' => $board2->id, 'userid' => $user1->id, 'deleted' => 1]);
+        $this->assertSame($column1->id, $note->columnid);
+        $this->assertSame($user1->id, $note->ownerid);
+        $this->assertSame($user1->id, $note->userid);
+        $this->assertSame(null, $note->groupid);
+        $this->assertSame('', $note->content);
+        $this->assertSame('Some note', $note->heading);
+        $this->assertSame('0', $note->type);
+        $this->assertSame(null, $note->info);
+        $this->assertSame(null, $note->url);
+        $this->assertSame('3', $note->sortorder);
+        $this->assertSame('1', $note->deleted);
+    }
+
+    public function test_create_comment(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course([]);
+        $user1 = $this->getDataGenerator()->create_user();
+        $user2 = $this->getDataGenerator()->create_user();
+        $group = $this->getDataGenerator()->create_group(['courseid' => $course->id]);
+
+        /** @var \mod_board_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_board');
+
+        $board1 = $this->getDataGenerator()->create_module('board', [
+            'course' => $course->id,
+            'singleusermode' => board::SINGLEUSER_DISABLED,
+        ]);
+        list($column1, $column2, $column3)
+            = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
+
+        $this->setUser($user1);
+
+        $note1 = $generator->create_note(['columnid' => $column1->id, 'heading' => 'Head 1', 'content' => 'CCC']);
+
+        $this->setUser($user1);
+
+        $comment1 = $generator->create_comment(['noteid' => $note1->id]);
+        $this->assertSame($note1->id, $comment1->noteid);
+        $this->assertSame('Comment 1', $comment1->content);
+        $this->assertSame($user1->id, $comment1->userid);
+        $this->assertSame('0', $comment1->deleted);
+
+        $comment2 = $generator->create_comment(['noteid' => $note1->id, 'content' => 'Other comment', 'userid' => $user2->id]);
+        $this->assertSame($note1->id, $comment2->noteid);
+        $this->assertSame('Other comment', $comment2->content);
+        $this->assertSame($user2->id, $comment2->userid);
+        $this->assertSame('0', $comment2->deleted);
+
+        $comment3 = $generator->create_comment(['noteid' => $note1->id, 'deleted' => 1]);
+        $this->assertSame($note1->id, $comment3->noteid);
+        $this->assertSame('Comment 3', $comment3->content);
+        $this->assertSame($user1->id, $comment3->userid);
+        $this->assertSame('1', $comment3->deleted);
     }
 }

@@ -617,6 +617,13 @@ final class board_test extends \advanced_testcase {
             'singleusermode' => board::SINGLEUSER_DISABLED,
             'groupmode' => NOGROUPS,
         ]);
+        $board2 = $this->getDataGenerator()->create_module('board', [
+            'name' => 'Board 2',
+            'course' => $course->id,
+            'singleusermode' => board::SINGLEUSER_PUBLIC,
+            'groupmode' => VISIBLEGROUPS,
+            'availability' => '{"op":"&","c":[{"type":"group"}],"showc":[true]}',
+        ]);
 
         $group1 = $this->getDataGenerator()->create_group(['courseid' => $course->id]);
         $group2 = $this->getDataGenerator()->create_group(['courseid' => $course->id]);
@@ -626,12 +633,14 @@ final class board_test extends \advanced_testcase {
         $student2 = $this->getDataGenerator()->create_user();
         $student3 = $this->getDataGenerator()->create_user();
         $student4 = $this->getDataGenerator()->create_user();
+        $student5 = $this->getDataGenerator()->create_user();
 
         $this->getDataGenerator()->enrol_user($teacher0->id, $course->id, 'editingteacher');
         $this->getDataGenerator()->enrol_user($student1->id, $course->id, 'student');
         $this->getDataGenerator()->enrol_user($student2->id, $course->id, 'student');
         $this->getDataGenerator()->enrol_user($student3->id, $course->id, 'student', status:ENROL_USER_SUSPENDED);
         $this->getDataGenerator()->enrol_user($student4->id, $course->id, 'guest');
+        $this->getDataGenerator()->enrol_user($student5->id, $course->id, 'student');
 
         $this->getDataGenerator()->create_group_member(['userid' => $student1->id, 'groupid' => $group1->id]);
         $this->getDataGenerator()->create_group_member(['userid' => $student2->id, 'groupid' => $group2->id]);
@@ -644,24 +653,148 @@ final class board_test extends \advanced_testcase {
         $this->assertArrayHasKey($teacher0->id, $result);
         $this->assertArrayHasKey($student1->id, $result);
         $this->assertArrayHasKey($student2->id, $result);
-        $this->assertArrayHasKey($student3->id, $result);
+        $this->assertArrayHasKey($student5->id, $result);
 
         $result = board::get_users_for_board($board, $group1->id);
-        $this->assertCount(2, $result);
+        $this->assertCount(1, $result);
         $this->assertArrayHasKey($student1->id, $result);
-        $this->assertArrayHasKey($student3->id, $result);
 
         $this->setUser($student1);
 
         $result = board::get_users_for_board($board, 0);
+        $this->assertCount(4, $result);
+        $this->assertArrayHasKey($teacher0->id, $result);
+        $this->assertArrayHasKey($student1->id, $result);
+        $this->assertArrayHasKey($student2->id, $result);
+        $this->assertArrayHasKey($student5->id, $result);
+
+        $result = board::get_users_for_board($board, $group1->id);
+        $this->assertCount(1, $result);
+        $this->assertArrayHasKey($student1->id, $result);
+
+        $this->setUser($teacher0);
+
+        $result = board::get_users_for_board($board2, 0);
         $this->assertCount(3, $result);
         $this->assertArrayHasKey($teacher0->id, $result);
         $this->assertArrayHasKey($student1->id, $result);
         $this->assertArrayHasKey($student2->id, $result);
 
-        $result = board::get_users_for_board($board, $group1->id);
-        $this->assertCount(1, $result);
+        $this->setUser($student1);
+
+        $result = board::get_users_for_board($board2, 0);
+        $this->assertCount(3, $result);
+        $this->assertArrayHasKey($teacher0->id, $result);
         $this->assertArrayHasKey($student1->id, $result);
+        $this->assertArrayHasKey($student2->id, $result);
+    }
+
+    public function test_get_existing_owners_for_board(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        /** @var \mod_board_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_board');
+
+        $course = $this->getDataGenerator()->create_course([]);
+        $board0 = $this->getDataGenerator()->create_module('board', [
+            'name' => 'Board 0',
+            'course' => $course->id,
+            'singleusermode' => board::SINGLEUSER_DISABLED,
+            'groupmode' => SEPARATEGROUPS,
+        ]);
+        $columns0 = array_values($DB->get_records('board_columns', ['boardid' => $board0->id], 'id ASC'));
+        $board1 = $this->getDataGenerator()->create_module('board', [
+            'name' => 'Board 1',
+            'course' => $course->id,
+            'singleusermode' => board::SINGLEUSER_PRIVATE,
+            'groupmode' => NOGROUPS,
+        ]);
+        $columns1 = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
+        $board2 = $this->getDataGenerator()->create_module('board', [
+            'name' => 'Board 2',
+            'course' => $course->id,
+            'singleusermode' => board::SINGLEUSER_PUBLIC,
+            'groupmode' => VISIBLEGROUPS,
+            'availability' => '{"op":"&","c":[{"type":"group"}],"showc":[true]}',
+        ]);
+        $columns2 = array_values($DB->get_records('board_columns', ['boardid' => $board2->id], 'id ASC'));
+
+        $group1 = $this->getDataGenerator()->create_group(['courseid' => $course->id]);
+        $group2 = $this->getDataGenerator()->create_group(['courseid' => $course->id]);
+        $group3 = $this->getDataGenerator()->create_group(['courseid' => $course->id]);
+
+        $teacher0 = $this->getDataGenerator()->create_user();
+        $student1 = $this->getDataGenerator()->create_user();
+        $student2 = $this->getDataGenerator()->create_user();
+        $student3 = $this->getDataGenerator()->create_user();
+        $student4 = $this->getDataGenerator()->create_user();
+        $student5 = $this->getDataGenerator()->create_user();
+        $student6 = $this->getDataGenerator()->create_user();
+
+        $this->getDataGenerator()->enrol_user($teacher0->id, $course->id, 'editingteacher');
+        $this->getDataGenerator()->enrol_user($student1->id, $course->id, 'student');
+        $this->getDataGenerator()->enrol_user($student2->id, $course->id, 'student');
+        $this->getDataGenerator()->enrol_user($student3->id, $course->id, 'student', status:ENROL_USER_SUSPENDED);
+        $this->getDataGenerator()->enrol_user($student4->id, $course->id, 'guest');
+        $this->getDataGenerator()->enrol_user($student5->id, $course->id, 'student');
+
+        $this->getDataGenerator()->create_group_member(['userid' => $student1->id, 'groupid' => $group1->id]);
+        $this->getDataGenerator()->create_group_member(['userid' => $student2->id, 'groupid' => $group2->id]);
+        $this->getDataGenerator()->create_group_member(['userid' => $student3->id, 'groupid' => $group1->id]);
+
+        $this->setUser($teacher0);
+
+        $result = board::get_existing_owners_for_board($board1, 0, false);
+        $this->assertCount(0, $result);
+        $result = board::get_existing_owners_for_board($board2, 0, false);
+        $this->assertCount(0, $result);
+
+        $note1x1 = $generator->create_note(['columnid' => $columns1[0]->id, 'userid' => $teacher0->id]);
+        $note1x2 = $generator->create_note(['columnid' => $columns1[0]->id, 'userid' => $student1->id]);
+        $note1x3 = $generator->create_note(['columnid' => $columns1[0]->id, 'userid' => $student2->id]);
+        $note1x4 = $generator->create_note(['columnid' => $columns1[0]->id, 'userid' => $student6->id]);
+        $note2x1 = $generator->create_note(['columnid' => $columns2[0]->id, 'userid' => $student1->id]);
+        $note2x2 = $generator->create_note(['columnid' => $columns2[0]->id, 'userid' => $student6->id]);
+
+        \mod_board\local\comment::create($note1x1->id, 'c1');
+        \mod_board\local\comment::create($note1x2->id, 'c2');
+
+        $result = board::get_existing_owners_for_board($board1, 0, false);
+        $this->assertCount(4, $result);
+        $this->assertSame(fullname($teacher0), $result[$teacher0->id]);
+        $this->assertSame(fullname($student1), $result[$student1->id]);
+        $this->assertSame(fullname($student2), $result[$student2->id]);
+        $this->assertSame(fullname($student6), $result[$student6->id]);
+
+        $result = board::get_existing_owners_for_board($board1, 0, true);
+        $this->assertCount(2, $result);
+        $this->assertSame(fullname($teacher0), $result[$teacher0->id]);
+        $this->assertSame(fullname($student1), $result[$student1->id]);
+
+        $result = board::get_existing_owners_for_board($board1, $group1->id, false);
+        $this->assertCount(1, $result);
+        $this->assertSame(fullname($student1), $result[$student1->id]);
+
+        $result = board::get_existing_owners_for_board($board1, $group1->id, true);
+        $this->assertCount(1, $result);
+        $this->assertSame(fullname($student1), $result[$student1->id]);
+
+        $result = board::get_existing_owners_for_board($board2, 0, false);
+        $this->assertCount(2, $result);
+        $this->assertSame(fullname($student1), $result[$student1->id]);
+        $this->assertSame(fullname($student6), $result[$student6->id]);
+
+        try {
+            board::get_existing_owners_for_board($board0, 0, false);
+            $this->fail('Exception expected');
+        } catch (\core\exception\moodle_exception $ex) {
+            $this->assertInstanceOf(\core\exception\coding_exception::class, $ex);
+            $this->assertSame(
+                // phpcs:ignore moodle.Files.LineLength.TooLong
+                'Coding error detected, it must be fixed by a programmer: get_existing_owners_for_board can be used only in singleusemode',
+                $ex->getMessage());
+        }
     }
 
     public function test_can_view_owner(): void {

@@ -32,9 +32,10 @@ final class comment {
      *
      * @param int $noteid
      * @param string $content
+     * @param int|null $userid
      * @return stdClass
      */
-    public static function create(int $noteid, string $content): stdClass {
+    public static function create(int $noteid, string $content, ?int $userid = null): stdClass {
         global $DB, $USER;
 
         $note = board::get_note($noteid, MUST_EXIST);
@@ -47,7 +48,7 @@ final class comment {
         $comment = (object)[
             'noteid' => $note->id,
             'content' => $content,
-            'userid' => $USER->id,
+            'userid' => $userid ?? $USER->id,
             'timecreated' => time(),
             'deleted' => 0,
         ];

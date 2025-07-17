@@ -140,3 +140,22 @@ Feature: Use mod_board generator to create test data
     And I am on the "Sample board" "board activity" page logged in as "student1"
     Then I should see "Heading AAA" in the "1" "mod_board > column"
     And I should not see "Heading BBB" in the "1" "mod_board > column"
+
+  Scenario: Use generator to create post comments in mod_board
+    Given the following "activity" exists:
+      | activity       | board                  |
+      | course         | C1                     |
+      | name           | Sample board           |
+    And the following "mod_board > notes" exist:
+      | board        | column      | heading    | content    | user     |
+      | Sample board | 1           | Heading T1 | Content T1 | student1 |
+    When the following "mod_board > comments" exist:
+      | note       | content      | user     |
+      | Heading T1 | Comment T1x1 | teacher1 |
+    And I am on the "Sample board" "board activity" page logged in as "teacher1"
+    And I click on ".mod_board_note_content" "css_element" in the "Heading T1" "mod_board > note"
+    And I should see "1 Comments" in the "Heading T1" "dialogue"
+    And I should see "Comment T1x1"
+
+    And I click on "Close" "button" in the "Heading T1" "dialogue"
+    And I am on homepage

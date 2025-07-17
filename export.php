@@ -36,7 +36,7 @@ $group = optional_param('group', 0, PARAM_INT);
 if (!$cm = get_coursemodule_from_id('board', $id)) {
     throw new \moodle_exception('invalidcoursemodule');
 }
-$board = $DB->get_record('board', ['id' => $cm->instance], '*', MUST_EXIST);
+$board = board::get_board($cm->instance, MUST_EXIST);
 $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
 
 require_course_login($course, true, $cm);
@@ -52,6 +52,8 @@ $table->is_downloading($download, $filename);
 
 $pageurl = new moodle_url('/mod/board/export.php', ['id' => $id, 'ownerid' => $ownerid, 'tabletype' => $tabletype,
     'group' => $group, 'includedeleted' => $includedeleted]);
+$baseurl = new moodle_url('/mod/board/export.php',
+    ['id' => $id, 'tabletype' => $tabletype, 'includedeleted' => $includedeleted]);
 
 // Create tabs for the 3 table types.
 $tabs = [];
@@ -74,20 +76,16 @@ if (!$table->is_downloading()) {
     echo $OUTPUT->tabtree($tabs, $tabletype);
 
     // Print the activity menu.
-    echo groups_print_activity_menu($cm, $pageurl, true);
+    echo html_writer::tag('div', groups_print_activity_menu($cm, $baseurl, true));
 
     // Print the user selector.
     if ($board->singleusermode == board::SINGLEUSER_PUBLIC || $board->singleusermode == board::SINGLEUSER_PRIVATE) {
-        $users = board::get_users_for_board($board, $group);
+        $users = board::get_existing_owners_for_board($board, $group, ($tabletype === 'comments'));
         // Include board download user selection to have default all users option if required.
         $users = [0 => get_string('all')] + $users;
-        if (count($users) == 0) {
-            echo $OUTPUT->notification(get_string('nousers', 'mod_board'));
-        } else {
-            $select = new single_select($pageurl, 'ownerid', $users, $ownerid);
-            $select->label = get_string('selectuser', 'mod_board');
-            echo html_writer::tag('div', $OUTPUT->render($select), ['class' => 'userselector mb-1']);
-        }
+        $select = new single_select($pageurl, 'ownerid', $users, $ownerid, null);
+        $select->label = get_string('selectuser', 'mod_board');
+        echo html_writer::tag('div', $OUTPUT->render($select));
     }
 
     // Print the include deleted checkbox.

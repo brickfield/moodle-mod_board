@@ -48,6 +48,7 @@ class add_comment extends \core\event\base {
                 'noteid' => $note->id,
                 'content' => get_config('mod_board', 'addcommenttolog') ? $comment->content : null,
             ],
+            'userid' => $comment->userid,
         ]);
 
         $event->add_record_snapshot('board', $board);

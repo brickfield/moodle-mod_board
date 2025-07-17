@@ -37,6 +37,12 @@ class behat_mod_board_generator extends behat_generator_base {
                 'required' => ['board', 'column', 'heading', 'content', 'user'],
                 'switchids' => ['board' => 'boardid', 'user' => 'userid', 'owner' => 'ownerid', 'group' => 'groupid'],
             ],
+            'comments' => [
+                'singular' => 'comment',
+                'datagenerator' => 'comment',
+                'required' => ['note', 'content', 'user'],
+                'switchids' => ['note' => 'noteid', 'user' => 'userid'],
+            ],
         ];
     }
 
@@ -62,7 +68,7 @@ class behat_mod_board_generator extends behat_generator_base {
     }
 
     /**
-     * Look up the id of a board owner from its username.
+     * Look up the id of a group from its idnumber.
      *
      * @param string $idnumber
      * @return int corresponding id or 0
@@ -72,5 +78,17 @@ class behat_mod_board_generator extends behat_generator_base {
             return 0;
         }
         return parent::get_group_id($idnumber);
+    }
+
+    /**
+     * Look up the id of a note from its heading.
+     *
+     * @param string $heading
+     * @return int corresponding id
+     */
+    protected function get_note_id(string $heading): int {
+        global $DB;
+        $note = $DB->get_record('board_notes', ['heading' => $heading], '*', MUST_EXIST);
+        return $note->id;
     }
 }
