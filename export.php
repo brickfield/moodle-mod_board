@@ -93,9 +93,9 @@ if (!$table->is_downloading()) {
     $onchangelocation = "window.location.href = '" . $includedeletedurl->out(false) . "';";
     $includedeletedlabel = get_string('include_deleted', 'mod_board');
     $includedeletedcheckbox = html_writer::checkbox('includedeleted', 1, $includedeleted, $includedeletedlabel,
-        ['id' => 'includedeleted', 'class' => 'custom-control-input', 'onChange' => $onchangelocation],
-        ['class' => 'custom-control-label']);
-    echo html_writer::div($includedeletedcheckbox, 'custom-control custom-checkbox mb-1');
+        ['id' => 'includedeleted', 'class' => 'form-check-input', 'onChange' => $onchangelocation],
+        ['class' => 'form-check-label']);
+    echo html_writer::div($includedeletedcheckbox, 'form-check mb-1');
 }
 
 $table->display();
