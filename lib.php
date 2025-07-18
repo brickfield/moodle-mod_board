@@ -133,15 +133,13 @@ function board_add_instance($data, $mform = null) {
     $cmid = $data->coursemodule;
     $context = context_module::instance($cmid);
     if (!empty($data->background_image)) {
-        $fs = get_file_storage();
-        $fs->delete_area_files($context->id, 'mod_board', 'background');
         file_save_draft_area_files(
             $data->background_image,
             $context->id,
             'mod_board',
             'background',
             0,
-            ['subdirs' => 0, 'maxfiles' => 1]
+            board::get_background_picker_options()
         );
     }
 
@@ -172,15 +170,13 @@ function board_update_instance($data, $mform) {
     $cmid = $data->coursemodule;
     $context = context_module::instance($cmid);
     if (!empty($data->background_image)) {
-        $fs = get_file_storage();
-        $fs->delete_area_files($context->id, 'mod_board', 'background');
         file_save_draft_area_files(
             $data->background_image,
             $context->id,
             'mod_board',
             'background',
             0,
-            ['subdirs' => 0, 'maxfiles' => 1]
+            board::get_background_picker_options()
         );
     }
 
@@ -195,17 +191,22 @@ function board_update_instance($data, $mform) {
 function board_delete_instance($id) {
     global $DB;
 
-    if (!$board = $DB->get_record('board', ['id' => $id])) {
+    $board = board::get_board($id);
+    if (!$board) {
         return false;
     }
+    $context = board::context_for_board($board);
 
     // Remove notes.
     $columns = $DB->get_records('board_columns', ['boardid' => $board->id], '', 'id');
     foreach ($columns as $columnid => $column) {
-        $notes = $DB->get_records('board_notes', ['columnid' => $columnid]);
-        foreach ($notes as $noteid => $note) {
-            $DB->delete_records('board_note_ratings', ['noteid' => $noteid]);
+        $rs = $DB->get_recordset('board_notes', ['columnid' => $columnid]);
+        foreach ($rs as $note) {
+            $DB->delete_records('board_note_ratings', ['noteid' => $note->id]);
+            $DB->delete_records('board_comments', ['noteid' => $note->id]);
+            note::delete_files($note, $context);
         }
+        $rs->close();
         $DB->delete_records('board_notes', ['columnid' => $columnid]);
     }
 
@@ -276,6 +277,21 @@ function mod_board_pluginfile($course, $cm, $context, $filearea, $args, $forcedo
         }
 
         send_stored_file($file, 0, 0, $forcedownload);
+    } else if ($filearea === 'files') {
+        $note = board::get_note($args[0]);
+        if (!$note || !board::can_view_note($note)) {
+            return false;
+        }
+
+        $relativepath = implode('/', $args);
+        $fullpath = '/' . $context->id . '/mod_board/files/' . $relativepath;
+
+        $fs = get_file_storage();
+        if ((!$file = $fs->get_file_by_hash(sha1($fullpath))) || $file->is_directory()) {
+            return false;
+        }
+
+        send_stored_file($file, 0, 0, true);
     } else if ($filearea === 'background') {
         require_capability('mod/board:view', $context);
         $relativepath = implode('/', $args);
@@ -299,8 +315,6 @@ function mod_board_pluginfile($course, $cm, $context, $filearea, $args, $forcedo
  * @return string
  */
 function mod_board_output_fragment_note_form($args) {
-    global $DB;
-
     // Get the arguments and decode them.
     $args = (object)$args;
     $noteid = clean_param(($args->noteid ?? 0), PARAM_INT);
@@ -308,12 +322,29 @@ function mod_board_output_fragment_note_form($args) {
     $ownerid = clean_param(($args->ownerid ?? 0), PARAM_INT);
     $groupid = clean_param(($args->groupid ?? 0), PARAM_INT);
 
-    if (empty($columnid)) {
-        throw new \coding_exception('invalidformrequest');
-    }
+    $column = board::get_column($columnid, MUST_EXIST);
+    $board = board::get_board($column->boardid, MUST_EXIST);
+    $context = board::context_for_board($board);
 
-    $column = board::get_column($columnid);
-    $context = board::context_for_board($column->boardid);
+    if ($context->id != $args->context->id) {
+        throw new \core\exception\invalid_parameter_exception('form context mismatch');
+    }
+    require_capability('mod/board:view', $context);
+    require_capability('mod/board:post', $context);
+
+    if (!empty($args->jsonformdata)) {
+        $serialiseddata = json_decode($args->jsonformdata);
+        $ajaxdata = [];
+        parse_str($serialiseddata, $ajaxdata);
+        if ($columnid != $ajaxdata['columnid']) {
+            throw new \core\exception\invalid_parameter_exception('invalid form data');
+        }
+        if ($noteid && $noteid != $ajaxdata['noteid']) {
+            throw new \core\exception\invalid_parameter_exception('invalid form data');
+        }
+    } else {
+        $ajaxdata = null;
+    }
 
     $formdata = [
         'columnid' => $columnid,
@@ -323,11 +354,9 @@ function mod_board_output_fragment_note_form($args) {
 
     if ($noteid) {
         // Load data for an existing note.
-        $note = $DB->get_record('board_notes', ['id' => $noteid, 'deleted' => 0]);
-        $itemid = $noteid;
-
-        if (!$note) {
-            throw new \coding_exception('notenotfound');
+        $note = board::get_note($noteid, MUST_EXIST);
+        if (!board::can_view_note($note)) {
+            throw new \core\exception\invalid_parameter_exception('cannot access note');
         }
 
         $formdata['noteid'] = $note->id;
@@ -336,58 +365,46 @@ function mod_board_output_fragment_note_form($args) {
         $formdata['mediatype'] = $note->type;
 
         switch ($note->type) {
-            case 1:
+            case board::MEDIATYPE_YOUTUBE:
                 $formdata['youtubetitle'] = $note->info;
                 $formdata['youtubeurl'] = $note->url;
                 break;
-            case 2:
+            case board::MEDIATYPE_IMAGE:
                 $formdata['imagetitle'] = $note->info;
                 break;
-            case 3:
+            case board::MEDIATYPE_URL:
                 $formdata['linktitle'] = $note->info;
                 $formdata['linkurl'] = $note->url;
                 break;
         }
     } else {
-        $itemid = 0;
+        $noteid = 0;
     }
 
-    // Set up the filearea.
-    $pickerparams = note::get_image_picker_options();
-    $draftareaid = null;
-    file_prepare_draft_area($draftareaid, $context->id, 'mod_board', 'images', $itemid, $pickerparams);
-    $formdata['imagefile'] = $draftareaid;
+    // Set up the images filearea.
+    $pickeroptions = note::get_image_picker_options();
+    $draftitemid = clean_param($ajaxdata['imagefile'] ?? 0, PARAM_INT);
+    file_prepare_draft_area($draftitemid, $context->id, 'mod_board', 'images', $noteid, $pickeroptions);
+    $formdata['imagefile'] = $draftitemid;
+
+    // Set up the files filearea.
+    $pickeroptions = note::get_general_picker_options();
+    if ($pickeroptions) {
+        $draftitemid = clean_param($ajaxdata['generalfile'] ?? 0, PARAM_INT);
+        file_prepare_draft_area($draftitemid, $context->id, 'mod_board', 'files', $noteid, $pickeroptions);
+        $formdata['generalfile'] = $draftitemid;
+    }
 
     // Make the form and setup the data.
-    $form = new \mod_board\note_form(null, null, 'post', '', null, true);
+    $form = new \mod_board\note_form(null, null, 'post', '', null, true, $ajaxdata);
     $form->set_data($formdata);
+
+    if ($ajaxdata) {
+        $form->is_validated();
+    }
 
     return $form->render();
 }
-
-/**
- * Deletes board note ratings database records where ratings are not
- * attached to any existing notes.
- *
- * @return void
- */
-function mod_board_remove_unattached_ratings() {
-    global $DB;
-    // Getting the ratings.
-    $sql = "SELECT r.id, n.id AS noteid
-              FROM {board_note_ratings} r
-         LEFT JOIN {board_notes} n ON r.noteid = n.id";
-    $recordset = $DB->get_recordset_sql($sql);
-    // Iterating.
-    foreach ($recordset as $record) {
-        if (!isset($record->noteid)) {
-            // If the noteid wasn't set, delete the record.
-            $DB->delete_records('board_note_ratings', ['id' => $record->id]);
-        }
-    }
-    $recordset->close();
-}
-
 
 /**
  * Add a get_coursemodule_info function in case any forum type wants to add 'extra' information

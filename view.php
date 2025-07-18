@@ -29,7 +29,7 @@ use mod_board\board;
 $id      = optional_param('id', 0, PARAM_INT); // Course Module ID.
 $b       = optional_param('b', 0, PARAM_INT);  // Board instance ID.
 $ownerid = optional_param('ownerid', 0, PARAM_INT);  // Board owner ID.
-$embed   = optional_param('embed', 0, PARAM_INT);
+$embed   = optional_param('embed', 0, PARAM_INT); // Value 1 means page is embedded into the course page.
 
 if ($b) {
     if (!$board = board::get_board($b)) {
@@ -57,7 +57,7 @@ $groupid = groups_get_activity_group($cm, true) ?: 0;
 if ($board->singleusermode == board::SINGLEUSER_DISABLED) {
     $ownerid = 0;
 } else if (!$ownerid) {
-    if (is_enrolled(context_course::instance($course->id), $USER->id, 'mod/board:view', false)) {
+    if (is_enrolled(context_course::instance($course->id), $USER->id, 'mod/board:view', true)) {
         $ownerid = $USER->id;
     } else {
         $ownerid = 0;

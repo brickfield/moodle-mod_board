@@ -64,7 +64,7 @@ final class add_note_test extends \advanced_testcase {
         $this->assertSame(null, $event->other['groupid']);
         $this->assertSame($note->content, $event->other['content']);
         $this->assertSame($note->heading, $event->other['heading']);
-        $this->assertSame(['type' => 0, 'info' => null, 'url' => null], $event->other['attachment']);
+        $this->assertSame(['type' => '0', 'info' => null, 'url' => null, 'filename' => null], $event->other['attachment']);
         $this->assertIsString($event->get_description());
         $this->assertSame('/mod/board/view.php?id=' . $board->cmid, $event->get_url()->out_as_local_url(false));
 

@@ -33,12 +33,13 @@ use moodle_url;
 use html_writer;
 use mod_board\board;
 use mod_board\local\note;
+use stdClass;
 
 /**
  * Define board table class.
  */
-class board_table extends flexible_table {
-    /** @var int The board. */
+final class board_table extends flexible_table {
+    /** @var stdClass The board. */
     protected $board;
 
     /** @var int The group id. */
@@ -53,7 +54,7 @@ class board_table extends flexible_table {
     /** @var bool Is board rating enabled. */
     protected $hasrating;
 
-    /** @var array Holds additional prefernces of the board. */
+    /** @var array Holds additional preferences of the board. */
     protected $prefs;
 
     /**
@@ -74,7 +75,7 @@ class board_table extends flexible_table {
         $this->groupid = $groupid;
         $this->hasrating = board::board_rating_enabled($this->board);
 
-        // Get the construct paramaters and add them to the export url.
+        // Get the construct parameters and add them to the export url.
         $exportparams = [
             'id' => $cmid,
             'group' => $groupid,
@@ -126,11 +127,13 @@ class board_table extends flexible_table {
     /**
      * Displays the table.
      */
-    public function display() {
+    public function display(): void {
         global $DB;
 
+        $context = board::context_for_board($this->board);
+
         // Get the columns from the database.
-        $columns = $DB->get_records('board_columns', ['boardid' => $this->board->id], 'sortorder', 'id, name, sortorder');
+        $columns = $DB->get_records('board_columns', ['boardid' => $this->board->id], 'sortorder', '*');
         // Get the notes for each column.
         foreach ($columns as $column) {
             $where = "columnid = :columnid";
@@ -155,7 +158,7 @@ class board_table extends flexible_table {
                 $where,
                 $params,
                 'sortorder',
-                'id, heading, content, info, url, type'
+                '*'
             );
         }
 
@@ -164,28 +167,25 @@ class board_table extends flexible_table {
             return count($column->notes);
         }, $columns));
 
-        // Add the notes to the columnnames.
+        // Add the notes to the column names.
         for ($i = 0; $i < $maxnotes; $i++) {
             $row = [];
             foreach ($columns as $column) {
-                // Get the current note for this column.
-                $note = array_shift($column->notes);
-                if ($note) {
-                    $notetext = board::get_export_note($note);
-                    if (!empty($notetext)) {
-                        $row[] = $notetext;
-                    } else {
-                        $row[] = ' video ';
-                    }
-                } else {
+                if (!$column->notes) {
                     $row[] = ' - ';
-                }
-                if ($this->hasrating) {
-                    if ($note) {
-                        $row[] = note::get_rating($note->id);
-                    } else {
+                    if ($this->hasrating) {
                         $row[] = '';
                     }
+                    continue;
+                }
+                // Get the current note for this column.
+                $note = array_shift($column->notes);
+                $note = note::format_for_display($note, $column, $this->board, $context);
+
+                $row[] = note::get_export_info($note);
+
+                if ($this->hasrating) {
+                    $row[] = $note->rating;
                 }
             }
             $this->add_data($row);
@@ -201,7 +201,7 @@ class board_table extends flexible_table {
      *
      * @return string $html html code for the row passed.
      */
-    public function get_row_html($row, $classname = '') {
+    public function get_row_html($row, $classname = ''): string {
         static $suppresslastrow = null;
         $rowclasses = [];
 

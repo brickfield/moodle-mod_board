@@ -31,7 +31,6 @@ class add_note extends \core\event\base {
      * Create new event.
      *
      * @param stdClass $note
-     * @param array|null $attachment
      * @param stdClass $column
      * @param stdClass $board
      * @param \context_module $context
@@ -39,7 +38,6 @@ class add_note extends \core\event\base {
      */
     public static function create_from_note(
         stdClass $note,
-        ?array $attachment,
         stdClass $column,
         stdClass $board,
         \context_module $context
@@ -54,7 +52,8 @@ class add_note extends \core\event\base {
                 'groupid' => $note->groupid,
                 'content' => get_config('mod_board', 'addnotetolog') ? $note->content : null,
                 'heading' => get_config('mod_board', 'addheadingtolog') ? $note->heading : null,
-                'attachment' => get_config('mod_board', 'addattachmenttolog') ? $attachment : null,
+                'attachment' => get_config('mod_board', 'addattachmenttolog') ?
+                    ['type' => $note->type, 'info' => $note->info, 'url' => $note->url, 'filename' => $note->filename] : null,
             ],
         ]);
 

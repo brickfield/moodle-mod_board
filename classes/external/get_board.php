@@ -116,17 +116,19 @@ final class get_board extends external_api {
 
         $hideheaders = board::board_hide_headers($board);
 
-        $columns = $DB->get_records('board_columns', ['boardid' => $board->id], 'sortorder, id', 'id, name, locked');
+        $columns = $DB->get_records('board_columns', ['boardid' => $board->id], 'sortorder, id', '*');
         $columnindex = 0;
 
-        foreach ($columns as $columnid => $column) {
+        foreach ($columns as $column) {
             if ($column->locked === null) {
                 $column->locked = false;
             }
             if ($hideheaders) {
                 $column->name = ++$columnindex;
+            } else {
+                $column->name = note::format_plain_text($column->name);
             }
-            $params = ['columnid' => $columnid, 'deleted' => 0];
+            $params = ['columnid' => $column->id, 'deleted' => 0];
             if (!empty($groupid)) {
                 $params['groupid'] = $groupid;
             }
@@ -135,15 +137,16 @@ final class get_board extends external_api {
                 $params['ownerid'] = $ownerid;
             }
 
-            $column->notes = $DB->get_records(
-                'board_notes',
-                $params,
-                'sortorder',
-                'id, userid, heading, content, type, info, url, timecreated, sortorder'
-            );
-            foreach ($column->notes as $colid => $note) {
-                $note->rating = note::get_rating($note->id);
+            $notes = $DB->get_records('board_notes', $params);
+            $column->notes = [];
+            foreach ($notes as $note) {
+                $note = note::format_for_display($note, $column, $board, $context);
+                unset($note->deleted);
+                unset($note->ownerid);
+                unset($note->filename);
+                $column->notes[$note->id] = $note;
             }
+            unset($column->boardid);
         }
 
         board::clear_history();

@@ -33,11 +33,9 @@ class mod_board_mod_form extends moodleform_mod {
      * The definition function.
      */
     public function definition() {
-        global $CFG, $DB;
+        global $CFG;
 
         $mform = $this->_form;
-
-        require_once('classes/board.php');
 
         $mform->addElement('header', 'general', get_string('general', 'form'));
         $mform->addElement('text', 'name', get_string('name'), ['size' => '50']);
@@ -57,23 +55,12 @@ class mod_board_mod_form extends moodleform_mod {
         $mform->addRule('background_color', get_string('maximumchars', '', 9), 'maxlength', 9, 'client');
         $mform->addHelpButton('background_color', 'background_color', 'mod_board');
 
-        $extensions = note::get_accepted_file_extensions();
-
-        $extensions = array_map(function ($extension) {
-            return '.' . $extension;
-        }, $extensions);
-
-        $filemanageroptions = [];
-        $filemanageroptions['accepted_types'] = $extensions;
-        $filemanageroptions['maxbytes'] = 0;
-        $filemanageroptions['maxfiles'] = 1;
-        $filemanageroptions['subdirs'] = 0;
         $mform->addElement(
             'filemanager',
             'background_image',
             get_string('background_image', 'mod_board'),
             null,
-            $filemanageroptions
+            board::get_background_picker_options()
         );
 
         $mform->addElement(
@@ -169,7 +156,7 @@ class mod_board_mod_form extends moodleform_mod {
             'mod_board',
             'background',
             0,
-            ['subdirs' => 0, 'maxfiles' => 1]
+            board::get_background_picker_options()
         );
         $defaultvalues['background_image'] = $draftitemid;
 

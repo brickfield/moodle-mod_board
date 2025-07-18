@@ -147,7 +147,19 @@ class mod_board_generator extends testing_module_generator {
         $userid = $record->userid ?? $USER->id;
         $ownerid = $record->ownerid ?? $userid;
         $groupid = $record->groupid ?? 0;
-        $attachment = []; // Not supported here for now.
+        $attachment = ['type' => board::MEDIATYPE_NONE];
+        if (isset($record->type)) {
+            $attachment['type'] = $record->type;
+            if (isset($record->info)) {
+                $attachment['info'] = $record->info;
+            }
+            if (isset($record->url)) {
+                $attachment['url'] = $record->url;
+            }
+            if (isset($record->draftitemid)) {
+                $attachment['draftitemid'] = $record->draftitemid;
+            }
+        }
 
         $note = \mod_board\local\note::create(
             $record->columnid,

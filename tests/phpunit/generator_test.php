@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace mod_board;
+namespace mod_board\phpunit;
+
+use mod_board\board;
 
 /**
  * Board generator tests.
@@ -240,6 +242,22 @@ final class generator_test extends \advanced_testcase {
         $this->assertSame(null, $note->url);
         $this->assertSame('3', $note->sortorder);
         $this->assertSame('1', $note->deleted);
+
+        $this->setCurrentTimeStart();
+        $note = $generator->create_note(['column' => 1, 'boardid' => $board2->id, 'userid' => $user1->id,
+            'type' => board::MEDIATYPE_URL, 'info' => 'Some URL', 'url' => 'https://www.example.com/']);
+        $this->assertSame($column1->id, $note->columnid);
+        $this->assertSame($user1->id, $note->ownerid);
+        $this->assertSame($user1->id, $note->userid);
+        $this->assertSame(null, $note->groupid);
+        $this->assertSame('', $note->content);
+        $this->assertSame('Some note', $note->heading);
+        $this->assertSame('3', $note->type);
+        $this->assertSame('Some URL', $note->info);
+        $this->assertSame('https://www.example.com/', $note->url);
+        $this->assertTimeCurrent($note->timecreated);
+        $this->assertSame('3', $note->sortorder);
+        $this->assertSame('0', $note->deleted);
     }
 
     public function test_create_comment(): void {

@@ -24,6 +24,10 @@
 
 use mod_board\board;
 
+defined('MOODLE_INTERNAL') || die;
+
+require_once(__DIR__ . '/upgradelib.php');
+
 /**
  * The main upgrade function.
  * @param int $oldversion
@@ -350,6 +354,29 @@ function xmldb_board_upgrade(int $oldversion) {
 
         // Board savepoint reached.
         upgrade_mod_savepoint(true, 2025070707, 'board');
+    }
+
+    if ($oldversion < 2025070708) {
+        // Changing precision of field url on table board_notes to (1333).
+        $table = new xmldb_table('board_notes');
+        $field = new xmldb_field('url', XMLDB_TYPE_CHAR, '1333', null, null, null, null, 'info');
+
+        // Launch change of precision for field url.
+        $dbman->change_field_precision($table, $field);
+
+        // Define field filename to be added to board_notes.
+        $table = new xmldb_table('board_notes');
+        $field = new xmldb_field('filename', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'url');
+
+        // Conditionally launch add field filename.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        mod_board_migrate_image_url_to_filename();
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2025070708, 'board');
     }
 
     return true;

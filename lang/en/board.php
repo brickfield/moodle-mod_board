@@ -30,6 +30,8 @@ $string['acceptedfiletypeforbackground'] = 'Accepted filetypes for background im
 $string['acceptedfiletypeforbackground_desc'] = 'Select the filetypes for background images to be supported.';
 $string['acceptedfiletypeforcontent'] = 'Accepted filetypes for content images.';
 $string['acceptedfiletypeforcontent_desc'] = 'Select the filetypes for content to be supported.';
+$string['acceptedfiletypeforgeneral'] = 'Accepted filetypes for general content files.';
+$string['acceptedfiletypeforgeneral_desc'] = 'Type list of allowed file extensions for general content files separated by commas, for example "txt,pdf,docx".';
 $string['addcomment'] = 'Add comment';
 $string['addrating'] = 'Rating posts';
 $string['addrating_all'] = 'by All';
@@ -38,8 +40,8 @@ $string['addrating_students'] = 'by Students';
 $string['addrating_teachers'] = 'by Teachers';
 $string['allowed_singleuser_modes'] = 'Enabled single user modes';
 $string['allowed_singleuser_modes_desc'] = 'Allow/Disallow usage of certain single user modes. Does not affect already created boards';
-$string['allowyoutube'] = 'Allow youtube';
-$string['allowyoutube_desc'] = 'If activated a button to add an embeded Youtube Video is supported.';
+$string['allowyoutube'] = 'Allow YouTube';
+$string['allowyoutube_desc'] = 'If activated a button to add an embedded YouTube Video is supported.';
 $string['aria_addmedia'] = 'Add {type} for post {post} from column {column}';
 $string['aria_addmedianew'] = 'Add {type} for new post from column {column}';
 $string['aria_canceledit'] = 'Cancel post edit for post {post} from column {column}';
@@ -134,6 +136,7 @@ $string['export_submissions'] = 'Export Submissions';
 $string['export_timecreated'] = 'Date created';
 $string['export_url'] = 'Media URL';
 $string['form_body'] = 'Content';
+$string['form_general_file'] = 'File';
 $string['form_image_file'] = 'Image file';
 $string['form_mediatype'] = 'Media';
 $string['form_title'] = 'Post title';
@@ -148,6 +151,20 @@ $string['invalid_file_extension'] = 'File extension not accepted for upload.';
 $string['invalid_file_size_max'] = 'File size too big to be accepted.';
 $string['invalid_file_size_min'] = 'File size too small to be accepted.';
 $string['invalid_youtube_url'] = 'Invalid YouTube URL';
+$string['limited_markdown_checkbox'] = 'Show content formatting examples';
+$string['limited_markdown_examples'] = '<pre>
+# This is a heading
+
+This is a regular paragraph spanning several
+lines. Paragraphs are separated by an empty line.
+
+- list item with *italic* text
+- list item with **bold** text
+- list item with ***bold and italic*** text
+
+1. first numbered list item
+2. second numbered list item
+</pre>';
 $string['media_selection'] = 'Media selection';
 $string['media_selection_buttons'] = 'Buttons';
 $string['media_selection_desc'] = 'Configure how the media selection for posts will be displayed as.';
@@ -189,6 +206,7 @@ $string['note_deleted_text'] = 'The post you were editing was deleted.';
 $string['nousers'] = 'This Board activity has no users enrolled';
 $string['opensinnewwindow'] = 'Opens in new window';
 $string['option_empty'] = 'None';
+$string['option_file'] = 'File';
 $string['option_image'] = 'Image';
 $string['option_image_info'] = 'Image title';
 $string['option_image_url'] = 'Image URL';

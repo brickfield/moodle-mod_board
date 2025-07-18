@@ -571,27 +571,6 @@ final class board_test extends \advanced_testcase {
         $this->assertFalse($result);
     }
 
-    public function test_get_export_note(): void {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        /** @var \mod_board_generator $generator */
-        $generator = $this->getDataGenerator()->get_plugin_generator('mod_board');
-
-        $course = $this->getDataGenerator()->create_course();
-        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
-        $user = $this->getDataGenerator()->create_user();
-
-        $columns = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
-
-        $note = $generator->create_note(
-            ['columnid' => $columns[0]->id, 'userid' => $user->id, 'content' => 'abc <div>xx</div><br>xyz']
-        );
-
-        $this->assertSame("abc <div>xx</div>\nxyz", board::get_export_note($note));
-    }
-
     public function test_get_column_colours(): void {
         $this->resetAfterTest();
 
@@ -953,5 +932,27 @@ final class board_test extends \advanced_testcase {
         $this->assertDebuggingNotCalled();
         $this->assertFalse(board::can_post($board0, $student1->id));
         $this->assertDebuggingCalled('ownerid should not be used when single user mode disabled');
+    }
+
+    public function test_get_accepted_background_file_extensions(): void {
+        $this->resetAfterTest();
+
+        $result = board::get_accepted_background_file_extensions();
+        $this->assertSame(['jpg', 'jpeg', 'png', 'gif'], $result);
+
+        set_config('acceptedfiletypeforbackground', 'svg,jpg', 'mod_board');
+        $result = board::get_accepted_background_file_extensions();
+        $this->assertSame(['svg', 'jpg'], $result);
+    }
+
+    public function test_get_background_picker_options(): void {
+        $result = board::get_background_picker_options();
+        $expected = [
+            'accepted_types' => ['.jpg', '.jpeg', '.png', '.gif'],
+            'maxfiles' => 1,
+            'subdirs' => 0,
+            'maxbytes' => 0,
+        ];
+        $this->assertSame($expected, $result);
     }
 }

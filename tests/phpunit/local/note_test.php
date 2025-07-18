@@ -85,7 +85,15 @@ final class note_test extends \advanced_testcase {
         [$column1, $column2, $column3]
             = array_values($DB->get_records('board_columns', ['boardid' => $board2->id], 'id ASC'));
 
-        $note3 = note::create($column1->id, $user1->id, null, '', 'NC 3', ['type' => 0, 'info' => '', 'url' => ''], $user2->id);
+        $note3 = note::create(
+            $column1->id,
+            $user1->id,
+            null,
+            '',
+            'NC 3',
+            ['type' => board::MEDIATYPE_NONE, 'info' => '', 'url' => ''],
+            $user2->id
+        );
         $this->assertNotEmpty($note3->historyid);
         $this->assertSame($column1->id, $note3->columnid);
         $this->assertSame($user1->id, $note3->ownerid);
@@ -99,6 +107,29 @@ final class note_test extends \advanced_testcase {
         $this->assertTimeCurrent($note3->timecreated);
         $this->assertSame('0', $note3->sortorder);
         $this->assertSame('0', $note3->deleted);
+
+        $note4 = note::create(
+            $column1->id,
+            $user1->id,
+            null,
+            '',
+            'NC 4',
+            ['type' => board::MEDIATYPE_URL, 'info' => 'Some info', 'url' => 'https::/www.example.com/'],
+            $user2->id
+        );
+        $this->assertNotEmpty($note4->historyid);
+        $this->assertSame($column1->id, $note4->columnid);
+        $this->assertSame($user1->id, $note4->ownerid);
+        $this->assertSame($user2->id, $note4->userid);
+        $this->assertSame(null, $note4->groupid);
+        $this->assertSame('NC 4', $note4->content);
+        $this->assertSame(null, $note4->heading);
+        $this->assertSame('3', $note4->type);
+        $this->assertSame('Some info', $note4->info);
+        $this->assertSame('https::/www.example.com/', $note4->url);
+        $this->assertTimeCurrent($note4->timecreated);
+        $this->assertSame('1', $note4->sortorder);
+        $this->assertSame('0', $note4->deleted);
 
         $this->setUser($user1);
 
@@ -204,11 +235,9 @@ final class note_test extends \advanced_testcase {
         $this->assertSame('0', $note1->deleted);
 
         $attachment = [
-            'type' => 2,
+            'type' => board::MEDIATYPE_URL,
             'info' => 'test info',
-            'url' => 'test url',
-            'filename' => 'testimage.png',
-            'filecontents' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABpAAAAQaCAIAhEUgAABpAAAAQaCAIAAADL9awBAAAACXBIWXMAASAS', // phpcs:ignore
+            'url' => 'https://www.example.com/',
         ];
 
         $note1 = note::update($note1->id, '', 'NC Z', $attachment);
@@ -219,9 +248,10 @@ final class note_test extends \advanced_testcase {
         $this->assertSame(null, $note1->groupid);
         $this->assertSame('NC Z', $note1->content);
         $this->assertSame(null, $note1->heading);
-        $this->assertSame('2', $note1->type);
-        $this->assertSame('test info', $note1->info);
-        $this->assertSame('test url', $note1->url);
+        $this->assertSame('3', $note1->type);
+        $this->assertSame($attachment['info'], $note1->info);
+        $this->assertSame($attachment['url'], $note1->url);
+        $this->assertSame(null, $note1->filename);
         $this->assertSame('0', $note1->sortorder);
         $this->assertSame('0', $note1->deleted);
     }
@@ -653,16 +683,643 @@ final class note_test extends \advanced_testcase {
         $this->assertSame(2, note::get_rating($note1->id));
     }
 
-    public function test_get_accepted_file_extensions(): void {
-        $extensions = note::get_accepted_file_extensions();
-        foreach ($extensions as $k => $v) {
-            $this->assertIsInt($k);
-            $this->assertMatchesRegularExpression('/^[a-z]+$/', $v);
-        }
+    public function test_update_attachment(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $fs = get_file_storage();
+        $course = $this->getDataGenerator()->create_course([]);
+        $user = $this->getDataGenerator()->create_user();
+        $usercontext = \context_user::instance($user->id);
+
+        $board = $this->getDataGenerator()->create_module('board', [
+            'course' => $course->id,
+            'singleusermode' => board::SINGLEUSER_DISABLED,
+        ]);
+        $context = board::context_for_board($board);
+
+        [$column1, $column2, $column3]
+            = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
+
+        $this->setUser($user);
+
+        $note1 = note::create(
+            $column1->id,
+            $user->id,
+            null,
+            'NH 1',
+            'NC 1',
+            ['type' => board::MEDIATYPE_NONE, 'info' => '', 'url' => '']
+        );
+
+        $note1 = note::update_attachment(
+            $note1->id,
+            ['type' => board::MEDIATYPE_YOUTUBE, 'info' => 'Some Video', 'url' => 'https://youtube.com/watch?v=1234567890A'],
+            $context
+        );
+        $this->assertSame('1', $note1->type);
+        $this->assertSame('Some Video', $note1->info);
+        $this->assertSame('https://youtube.com/watch?v=1234567890A', $note1->url);
+        $this->assertSame(null, $note1->filename);
+
+        $note1 = note::update_attachment(
+            $note1->id,
+            ['type' => board::MEDIATYPE_URL, 'info' => 'Some URL', 'url' => 'https://example.com/1'],
+            $context
+        );
+        $this->assertSame('3', $note1->type);
+        $this->assertSame('Some URL', $note1->info);
+        $this->assertSame('https://example.com/1', $note1->url);
+        $this->assertSame(null, $note1->filename);
+
+        $note1 = note::update_attachment(
+            $note1->id,
+            ['type' => board::MEDIATYPE_URL, 'info' => '', 'url' => 'https://example.com/1'],
+            $context
+        );
+        $this->assertSame('3', $note1->type);
+        $this->assertSame('', $note1->info);
+        $this->assertSame('https://example.com/1', $note1->url);
+        $this->assertSame(null, $note1->filename);
+
+        $note1 = note::update_attachment(
+            $note1->id,
+            ['type' => board::MEDIATYPE_URL, 'info' => '', 'url' => 'https://example.com/1'],
+            $context
+        );
+        $this->assertSame('3', $note1->type);
+        $this->assertSame('', $note1->info);
+        $this->assertSame('https://example.com/1', $note1->url);
+        $this->assertSame(null, $note1->filename);
+
+        $draftfile = $fs->create_file_from_string([
+            'contextid' => $usercontext->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => 6661,
+            'filepath' => '/',
+            'filename' => 'image.png',
+        ], 'xx');
+        $note1 = note::update_attachment(
+            $note1->id,
+            ['type' => board::MEDIATYPE_IMAGE, 'info' => 'Some image', 'draftitemid' => 6661],
+            $context
+        );
+        $this->assertSame('2', $note1->type);
+        $this->assertSame('Some image', $note1->info);
+        $this->assertSame(null, $note1->url);
+        $this->assertSame('image.png', $note1->filename);
+        $this->assertTrue($fs->file_exists($context->id, 'mod_board', 'images', $note1->id, '/', 'image.png'));
+
+        $draftfile = $fs->create_file_from_string([
+            'contextid' => $usercontext->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => 6662,
+            'filepath' => '/',
+            'filename' => 'image.jpg',
+        ], 'xx');
+        $note1 = note::update_attachment(
+            $note1->id,
+            ['type' => board::MEDIATYPE_IMAGE, 'info' => 'Some image 2', 'draftitemid' => 6662],
+            $context
+        );
+        $this->assertSame('2', $note1->type);
+        $this->assertSame('Some image 2', $note1->info);
+        $this->assertSame(null, $note1->url);
+        $this->assertSame('image.jpg', $note1->filename);
+        $this->assertTrue($fs->file_exists($context->id, 'mod_board', 'images', $note1->id, '/', 'image.jpg'));
+        $this->assertFalse($fs->file_exists($context->id, 'mod_board', 'images', $note1->id, '/', 'image.png'));
+
+        set_config('acceptedfiletypeforgeneral', 'txt', 'mod_board');
+        $draftfile = $fs->create_file_from_string([
+            'contextid' => $usercontext->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => 6663,
+            'filepath' => '/',
+            'filename' => 'text.txt',
+        ], 'xx');
+        $note1 = note::update_attachment(
+            $note1->id,
+            ['type' => board::MEDIATYPE_FILE, 'info' => 'Some text', 'draftitemid' => 6663],
+            $context
+        );
+        $this->assertSame('4', $note1->type);
+        $this->assertSame('Some text', $note1->info);
+        $this->assertSame(null, $note1->url);
+        $this->assertSame('text.txt', $note1->filename);
+        $this->assertTrue($fs->file_exists($context->id, 'mod_board', 'files', $note1->id, '/', 'text.txt'));
+        $this->assertFalse($fs->file_exists($context->id, 'mod_board', 'images', $note1->id, '/', 'image.jpg'));
+        $this->assertFalse($fs->file_exists($context->id, 'mod_board', 'images', $note1->id, '/', 'image.png'));
+
+        $draftfile = $fs->create_file_from_string([
+            'contextid' => $usercontext->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => 6664,
+            'filepath' => '/',
+            'filename' => 'text2.txt',
+        ], 'xx');
+        $note1 = note::update_attachment(
+            $note1->id,
+            ['type' => board::MEDIATYPE_FILE, 'info' => '', 'draftitemid' => 6664],
+            $context
+        );
+        $this->assertSame('4', $note1->type);
+        $this->assertSame('', $note1->info);
+        $this->assertSame(null, $note1->url);
+        $this->assertSame('text2.txt', $note1->filename);
+        $this->assertTrue($fs->file_exists($context->id, 'mod_board', 'files', $note1->id, '/', 'text2.txt'));
+        $this->assertFalse($fs->file_exists($context->id, 'mod_board', 'files', $note1->id, '/', 'text.txt'));
+
+        $note1 = note::update_attachment(
+            $note1->id,
+            ['type' => board::MEDIATYPE_NONE],
+            $context
+        );
+        $this->assertSame('0', $note1->type);
+        $this->assertSame(null, $note1->info);
+        $this->assertSame(null, $note1->url);
+        $this->assertSame(null, $note1->filename);
+        $this->assertFalse($fs->file_exists($context->id, 'mod_board', 'files', $note1->id, '/', 'text2.txt'));
+        $this->assertFalse($fs->file_exists($context->id, 'mod_board', 'files', $note1->id, '/', 'text.txt'));
+        $this->assertFalse($fs->file_exists($context->id, 'mod_board', 'images', $note1->id, '/', 'image.jpg'));
+        $this->assertFalse($fs->file_exists($context->id, 'mod_board', 'images', $note1->id, '/', 'image.png'));
+    }
+
+    public function test_delete_files(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $fs = get_file_storage();
+        $course = $this->getDataGenerator()->create_course([]);
+        $user = $this->getDataGenerator()->create_user();
+        $usercontext = \context_user::instance($user->id);
+
+        $board = $this->getDataGenerator()->create_module('board', [
+            'course' => $course->id,
+            'singleusermode' => board::SINGLEUSER_DISABLED,
+        ]);
+        $context = board::context_for_board($board);
+
+        [$column1, $column2, $column3]
+            = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
+
+        $this->setUser($user);
+
+        $note1 = note::create(
+            $column1->id,
+            $user->id,
+            null,
+            'NH 1',
+            'NC 1',
+            ['type' => board::MEDIATYPE_NONE, 'info' => '', 'url' => '']
+        );
+        $note2 = note::create(
+            $column1->id,
+            $user->id,
+            null,
+            'NH 2',
+            'NC 2',
+            ['type' => board::MEDIATYPE_NONE, 'info' => '', 'url' => '']
+        );
+        $note3 = note::create(
+            $column1->id,
+            $user->id,
+            null,
+            'NH 2',
+            'NC 2',
+            ['type' => board::MEDIATYPE_NONE, 'info' => '', 'url' => '']
+        );
+
+        $draftfile = $fs->create_file_from_string([
+            'contextid' => $usercontext->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => 6661,
+            'filepath' => '/',
+            'filename' => 'image.png',
+        ], 'xx');
+        $note1 = note::update_attachment(
+            $note1->id,
+            ['type' => board::MEDIATYPE_IMAGE, 'info' => 'Some image', 'draftitemid' => 6661],
+            $context
+        );
+
+        $draftfile = $fs->create_file_from_string([
+            'contextid' => $usercontext->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => 6662,
+            'filepath' => '/',
+            'filename' => 'image.png',
+        ], 'xx');
+        $note2 = note::update_attachment(
+            $note2->id,
+            ['type' => board::MEDIATYPE_IMAGE, 'info' => 'Some image', 'draftitemid' => 6662],
+            $context
+        );
+
+        set_config('acceptedfiletypeforgeneral', 'txt', 'mod_board');
+        $draftfile = $fs->create_file_from_string([
+            'contextid' => $usercontext->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => 6663,
+            'filepath' => '/',
+            'filename' => 'text.txt',
+        ], 'xx');
+        $note3 = note::update_attachment(
+            $note3->id,
+            ['type' => board::MEDIATYPE_FILE, 'info' => 'Some text', 'draftitemid' => 6663],
+            $context
+        );
+
+        $this->assertTrue($fs->file_exists($context->id, 'mod_board', 'images', $note1->id, '/', 'image.png'));
+        $this->assertTrue($fs->file_exists($context->id, 'mod_board', 'images', $note2->id, '/', 'image.png'));
+        $this->assertTrue($fs->file_exists($context->id, 'mod_board', 'files', $note3->id, '/', 'text.txt'));
+
+        note::delete_files($note1, $context);
+        $this->assertFalse($fs->file_exists($context->id, 'mod_board', 'images', $note1->id, '/', 'image.png'));
+        $this->assertTrue($fs->file_exists($context->id, 'mod_board', 'images', $note2->id, '/', 'image.png'));
+        $this->assertTrue($fs->file_exists($context->id, 'mod_board', 'files', $note3->id, '/', 'text.txt'));
+
+        note::delete_files($note3, $context);
+        $this->assertFalse($fs->file_exists($context->id, 'mod_board', 'images', $note1->id, '/', 'image.png'));
+        $this->assertTrue($fs->file_exists($context->id, 'mod_board', 'images', $note2->id, '/', 'image.png'));
+        $this->assertFalse($fs->file_exists($context->id, 'mod_board', 'files', $note3->id, '/', 'text.txt'));
+    }
+
+    public function test_get_accepted_image_file_extensions(): void {
+        $this->resetAfterTest();
+
+        $result = note::get_accepted_image_file_extensions();
+        $this->assertSame(['jpg', 'jpeg', 'png', 'gif'], $result);
+
+        set_config('acceptedfiletypeforcontent', 'jpg', 'mod_board');
+        $result = note::get_accepted_image_file_extensions();
+        $this->assertSame(['jpg'], $result);
     }
 
     public function test_get_image_picker_options(): void {
-        $options = note::get_image_picker_options();
-        $this->assertNotEmpty($options);
+        $result = note::get_image_picker_options();
+        $expected = [
+            'accepted_types' => ['.jpg', '.jpeg', '.png', '.gif'],
+            'maxfiles' => 1,
+            'subdirs' => 0,
+            'maxbytes' => board::ACCEPTED_FILE_MAX_SIZE,
+        ];
+        $this->assertSame($expected, $result);
+    }
+
+    public function test_get_accepted_general_file_extensions(): void {
+        $this->resetAfterTest();
+
+        $result = note::get_accepted_general_file_extensions();
+        $this->assertSame([], $result);
+
+        set_config('acceptedfiletypeforgeneral', 'jpg, jpeg,,gif', 'mod_board');
+        $result = note::get_accepted_general_file_extensions();
+        $this->assertSame(['jpg', 'jpeg', 'gif'], $result);
+    }
+
+    public function test_get_general_picker_options(): void {
+        $this->resetAfterTest();
+
+        $result = note::get_general_picker_options();
+        $this->assertSame([], $result);
+
+        set_config('acceptedfiletypeforgeneral', 'jpg, jpeg,,gif', 'mod_board');
+        $result = note::get_general_picker_options();
+        $expected = [
+            'accepted_types' => ['.jpg', '.jpeg', '.gif'],
+            'maxfiles' => 1,
+            'subdirs' => 0,
+            'maxbytes' => board::ACCEPTED_FILE_MAX_SIZE,
+        ];
+        $this->assertSame($expected, $result);
+    }
+
+    public function test_is_draft_file_present(): void {
+        $this->resetAfterTest();
+
+        $fs = get_file_storage();
+
+        $user1 = $this->getDataGenerator()->create_user();
+        $usercontext1 = \context_user::instance($user1->id);
+
+        $user2 = $this->getDataGenerator()->create_user();
+        $usercontext2 = \context_user::instance($user2->id);
+
+        $draftfile1 = $fs->create_file_from_string([
+            'contextid' => $usercontext1->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => 6661,
+            'filepath' => '/',
+            'filename' => 'image.png',
+        ], 'xx');
+        $draftfile2 = $fs->create_file_from_string([
+            'contextid' => $usercontext2->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => 6662,
+            'filepath' => '/',
+            'filename' => 'image.jpg',
+        ], 'xxx');
+
+        $this->setUser($user1);
+
+        $this->assertTrue(note::is_draft_file_present(6661));
+        $this->assertFalse(note::is_draft_file_present(6662));
+        $this->assertFalse(note::is_draft_file_present(6663));
+
+        $draftfile1->delete();
+        $this->assertFalse(note::is_draft_file_present(6661));
+        $this->assertFalse(note::is_draft_file_present(6662));
+        $this->assertFalse(note::is_draft_file_present(6663));
+
+        $this->setUser($user2);
+        $this->assertTrue(note::is_draft_file_present(6662));
+    }
+
+    public function test_format_plain_text(): void {
+        $this->assertSame(null, note::format_plain_text(null));
+        $this->assertSame('', note::format_plain_text(''));
+        $this->assertSame('', note::format_plain_text('   '));
+        $this->assertSame('abc', note::format_plain_text('abc'));
+        $this->assertSame("&lt; abc &gt; &apos; def ghi &amp; \r\n", note::format_plain_text("< abc > ' def ghi & \r\n"));
+        $this->assertSame('&lt; abc &gt; &apos; def ghi &amp;', note::format_plain_text('&lt; abc &gt; &apos; def ghi &amp;'));
+    }
+
+    public function test_format_limited_markdown(): void {
+        $content = 'Hello';
+        $expected = '<p>Hello</p>
+';
+        $this->assertSame($expected, note::format_limited_markdown($content));
+
+        // phpcs:disable moodle.WhiteSpace.WhiteSpaceInStrings.EndLine
+        $content = '# heading 1  
+
+# Heading 2
+
+#not a heading
+#still not a heading 
+
+';
+        // phpcs:enabled moodle.WhiteSpace.WhiteSpaceInStrings.EndLine
+        $expected = '<h4 class="h5">heading 1  </h4>
+<h4 class="h5">Heading 2</h4>
+<p>#not a heading #still not a heading </p>
+';
+        $this->assertSame($expected, note::format_limited_markdown($content));
+
+        $content = '
+paragraph
+- list
+- another list
+1. numbered
+4. numbered
+';
+        $expected = '<p>paragraph</p>
+<ul><li>list</li>
+<li>another list</li></ul>
+<ol><li>numbered</li>
+<li>numbered</li></ol>
+';
+        $this->assertSame($expected, note::format_limited_markdown($content));
+
+        $content = '# Heading
+long *1*
+
+Some *very* **nice** ***paragraph***
+on two lines.
+
+- *list*
+- another
+**list**
+
+1. ***numbered***
+4. numbered
+list
+';
+        $expected = '<h4 class="h5">Heading long <em>1</em></h4>
+<p>Some <em>very</em> <strong>nice</strong> <em><strong>paragraph</strong></em> on two lines.</p>
+<ul><li><em>list</em></li>
+<li>another <strong>list</strong></li></ul>
+<ol><li><em><strong>numbered</strong></em></li>
+<li>numbered list</li></ol>
+';
+        $this->assertSame($expected, note::format_limited_markdown($content));
+    }
+
+    public function test_format_for_display(): void {
+        global $DB, $CFG;
+        $this->resetAfterTest();
+
+        /** @var \mod_board_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_board');
+        $fs = get_file_storage();
+
+        $course = $this->getDataGenerator()->create_course();
+        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
+        $context = board::context_for_board($board);
+        $user = $this->getDataGenerator()->create_user();
+        $usercontext = \context_user::instance($user->id);
+
+        [$column1, $column2, $column3] =
+            array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
+
+        $this->setUser($user);
+
+        $note = $generator->create_note(
+            ['columnid' => $column1->id, 'userid' => $user->id, 'content' => "# My heading\n\nAnd some text"]
+        );
+        $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame("<h4 class=\"h5\">My heading</h4>\n<p>And some text</p>\n", $result->content);
+        $this->assertSame(null, $result->heading);
+        $this->assertSame('0', $result->type);
+        $this->assertSame(null, $result->info);
+        $this->assertSame(null, $result->url);
+        $this->assertSame(null, $result->filename);
+        $this->assertSame(null, $result->rating);
+
+        $note = $generator->create_note(
+            ['columnid' => $column1->id, 'userid' => $user->id, 'heading' => 'My heading only']
+        );
+        $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame('', $result->content);
+        $this->assertSame('My heading only', $result->heading);
+        $this->assertSame('0', $result->type);
+        $this->assertSame(null, $result->info);
+        $this->assertSame(null, $result->url);
+        $this->assertSame(null, $result->filename);
+        $this->assertSame(null, $result->rating);
+
+        $note = note::update_attachment(
+            $note->id,
+            ['type' => board::MEDIATYPE_YOUTUBE, 'info' => 'Some Video', 'url' => 'https://youtube.com/watch?v=1234567890A'],
+            $context
+        );
+        $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame('', $result->content);
+        $this->assertSame('My heading only', $result->heading);
+        $this->assertSame('1', $result->type);
+        $this->assertSame('Some Video', $result->info);
+        $this->assertSame('https://youtube.com/watch?v=1234567890A', $result->url);
+        $this->assertSame(null, $result->filename);
+        $this->assertSame(null, $result->rating);
+
+        $note = note::update_attachment(
+            $note->id,
+            ['type' => board::MEDIATYPE_YOUTUBE, 'info' => '', 'url' => 'https://youtube.com/watch?v=1234567890A'],
+            $context
+        );
+        $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame('', $result->content);
+        $this->assertSame('My heading only', $result->heading);
+        $this->assertSame('1', $result->type);
+        $this->assertSame('https://youtube.com/watch?v=1234567890A', $result->info);
+        $this->assertSame('https://youtube.com/watch?v=1234567890A', $result->url);
+        $this->assertSame(null, $result->filename);
+        $this->assertSame(null, $result->rating);
+
+        $note = note::update_attachment(
+            $note->id,
+            ['type' => board::MEDIATYPE_URL, 'info' => 'Some URL', 'url' => 'https://example.com/1'],
+            $context
+        );
+        $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame('', $result->content);
+        $this->assertSame('My heading only', $result->heading);
+        $this->assertSame('3', $result->type);
+        $this->assertSame('Some URL', $result->info);
+        $this->assertSame('https://example.com/1', $result->url);
+        $this->assertSame(null, $result->filename);
+        $this->assertSame(null, $result->rating);
+
+        $note = note::update_attachment(
+            $note->id,
+            ['type' => board::MEDIATYPE_URL, 'info' => '', 'url' => 'https://example.com/1'],
+            $context
+        );
+        $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame('', $result->content);
+        $this->assertSame('My heading only', $result->heading);
+        $this->assertSame('3', $result->type);
+        $this->assertSame('https://example.com/1', $result->info);
+        $this->assertSame('https://example.com/1', $result->url);
+        $this->assertSame(null, $result->filename);
+        $this->assertSame(null, $result->rating);
+
+        $draftfile = $fs->create_file_from_string([
+            'contextid' => $usercontext->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => 6661,
+            'filepath' => '/',
+            'filename' => 'image.png',
+        ], 'xx');
+        $note = note::update_attachment(
+            $note->id,
+            ['type' => board::MEDIATYPE_IMAGE, 'info' => 'Some image', 'draftitemid' => 6661],
+            $context
+        );
+        $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame('', $result->content);
+        $this->assertSame('My heading only', $result->heading);
+        $this->assertSame('2', $result->type);
+        $this->assertSame('Some image', $result->info);
+        $this->assertSame("$CFG->wwwroot/pluginfile.php/$context->id/mod_board/images/$note->id/image.png", $result->url);
+        $this->assertSame('image.png', $result->filename);
+        $this->assertSame(null, $result->rating);
+
+        $draftfile = $fs->create_file_from_string([
+            'contextid' => $usercontext->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => 6662,
+            'filepath' => '/',
+            'filename' => 'image.png',
+        ], 'xx');
+        $note = note::update_attachment(
+            $note->id,
+            ['type' => board::MEDIATYPE_IMAGE, 'info' => '', 'draftitemid' => 6662],
+            $context
+        );
+        $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame('', $result->content);
+        $this->assertSame('My heading only', $result->heading);
+        $this->assertSame('2', $result->type);
+        $this->assertSame('image.png', $result->info);
+        $this->assertSame("$CFG->wwwroot/pluginfile.php/$context->id/mod_board/images/$note->id/image.png", $result->url);
+        $this->assertSame('image.png', $result->filename);
+        $this->assertSame(null, $result->rating);
+
+        set_config('acceptedfiletypeforgeneral', 'txt', 'mod_board');
+        $draftfile = $fs->create_file_from_string([
+            'contextid' => $usercontext->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => 6663,
+            'filepath' => '/',
+            'filename' => 'text.txt',
+        ], 'xx');
+        $note = note::update_attachment(
+            $note->id,
+            ['type' => board::MEDIATYPE_FILE, 'draftitemid' => 6663],
+            $context
+        );
+        $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame('', $result->content);
+        $this->assertSame('My heading only', $result->heading);
+        $this->assertSame('4', $result->type);
+        $this->assertSame('text.txt', $result->info);
+        $this->assertSame("$CFG->wwwroot/pluginfile.php/$context->id/mod_board/files/$note->id/text.txt", $result->url);
+        $this->assertSame('text.txt', $result->filename);
+        $this->assertSame(null, $result->rating);
+
+        $DB->set_field('board', 'addrating', board::RATINGBYALL, ['id' => $board->id]);
+        $board = board::get_board($board->id);
+        $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame(0, $result->rating);
+
+        note::rate($note->id);
+        $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame(1, $result->rating);
+    }
+
+    public function test_get_export_info(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        /** @var \mod_board_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_board');
+
+        $course = $this->getDataGenerator()->create_course();
+        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
+        $user = $this->getDataGenerator()->create_user();
+
+        $context = board::context_for_board($board);
+        $columns = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
+
+        $note = $generator->create_note(
+            ['columnid' => $columns[0]->id, 'userid' => $user->id, 'content' => 'abc <div>xx</div><br>xyz']
+        );
+
+        $formatted = note::format_for_display($note, $columns[0], $board, $context);
+        $expected = '<p>abc &lt;div&gt;xx&lt;/div&gt;&lt;br&gt;xyz</p>
+';
+        $this->assertSame($expected, note::get_export_info($formatted));
+
+        $note = $generator->create_note(['columnid' => $columns[0]->id, 'userid' => $user->id,
+            'heading' => 'Some header', 'content' => 'Some content',
+            'type' => board::MEDIATYPE_URL, 'info' => 'Some URL', 'url' => 'https://www.example.com/']);
+
+        $formatted = note::format_for_display($note, $columns[0], $board, $context);
+        $expected = 'Some header<p>Some content</p>
+Some URL (https://www.example.com/)';
+        $this->assertSame($expected, note::get_export_info($formatted));
     }
 }

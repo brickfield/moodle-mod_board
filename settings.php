@@ -142,7 +142,7 @@ if ($ADMIN->fulltree) {
         ]
     ));
 
-    // Accepted filetypes for content.
+    // Accepted filetypes for content images.
     $settings->add(new admin_setting_configmulticheckbox(
         'mod_board/acceptedfiletypeforcontent',
         get_string('acceptedfiletypeforcontent', 'mod_board'),
@@ -156,6 +156,15 @@ if ($ADMIN->fulltree) {
             'bmp'  => 'bmp',
             'svg'  => 'svg',
         ]
+    ));
+
+    // Accepted filetypes for general content files.
+    $settings->add(new admin_setting_configtext(
+        'mod_board/acceptedfiletypeforgeneral',
+        get_string('acceptedfiletypeforgeneral', 'mod_board'),
+        get_string('acceptedfiletypeforgeneral_desc', 'mod_board'),
+        '',
+        PARAM_RAW
     ));
 
     $settings->add(new admin_setting_configmulticheckbox2(

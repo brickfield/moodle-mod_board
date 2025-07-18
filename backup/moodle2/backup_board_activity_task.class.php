@@ -65,6 +65,6 @@ class backup_board_activity_task extends backup_activity_task {
      * @return string[]
      */
     public function get_fileareas() {
-        return ['images', 'background'];
+        return ['images', 'files', 'background'];
     }
 }

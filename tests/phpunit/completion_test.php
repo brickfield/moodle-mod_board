@@ -21,7 +21,7 @@ use cm_info;
 use mod_board\completion\custom_completion;
 
 /**
- * Board class test.
+ * Board completion tests.
  *
  * @package    mod_board
  * @copyright  2020 onward: Brickfield Education Labs <https://www.brickfield.ie/>

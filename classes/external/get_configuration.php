@@ -122,11 +122,6 @@ final class get_configuration extends external_api {
             'mediaselection' => $config->media_selection,
             'post_max_length' => $config->post_max_length,
             'history_refresh' => $config->history_refresh,
-            'file' => [
-                'extensions' => note::get_accepted_file_extensions(),
-                'size_min' => board::ACCEPTED_FILE_MIN_SIZE,
-                'size_max' => board::ACCEPTED_FILE_MAX_SIZE,
-            ],
             'ratingenabled' => board::board_rating_enabled($board),
             'hideheaders' => board::board_hide_headers($board),
             'sortby' => $board->sortby,

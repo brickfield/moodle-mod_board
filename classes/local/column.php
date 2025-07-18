@@ -52,9 +52,14 @@ final class column {
         ]);
         $column = board::get_column($columnid, MUST_EXIST);
 
-        $historyid = $DB->insert_record('board_history', ['boardid' => $board->id, 'action' => 'add_column',
-            'ownerid' => 0, 'userid' => $USER->id, 'content' => json_encode(['id' => $column->id, 'name' => $name]),
-            'timecreated' => time()]);
+        $historyid = $DB->insert_record('board_history', [
+            'boardid' => $board->id,
+            'action' => 'add_column',
+            'ownerid' => 0,
+            'userid' => $USER->id,
+            'content' => json_encode(['id' => $column->id, 'name' => note::format_plain_text($name)]),
+            'timecreated' => time(),
+        ]);
         $DB->set_field('board', 'historyid', $historyid, ['id' => $board->id]);
         $board->historyid = (string)$historyid;
 
@@ -90,9 +95,14 @@ final class column {
         $DB->set_field('board_columns', 'name', $name, ['id' => $column->id]);
         $column->name = $name;
 
-        $historyid = $DB->insert_record('board_history', ['boardid' => $column->boardid, 'action' => 'update_column',
-            'ownerid' => 0, 'userid' => $USER->id, 'content' => json_encode(['id' => $id, 'name' => $name]),
-            'timecreated' => time()]);
+        $historyid = $DB->insert_record('board_history', [
+            'boardid' => $column->boardid,
+            'action' => 'update_column',
+            'ownerid' => 0,
+            'userid' => $USER->id,
+            'content' => json_encode(['id' => $id, 'name' => note::format_plain_text($name)]),
+            'timecreated' => time(),
+        ]);
         $DB->set_field('board', 'historyid', $historyid, ['id' => $board->id]);
         $board->historyid = (string)$historyid;
 
@@ -122,16 +132,26 @@ final class column {
 
         $transaction = $DB->start_delegated_transaction();
 
-        $notes = $DB->get_records('board_notes', ['columnid' => $id]);
-        foreach ($notes as $note) {
+        // There is no point in leaving records referencing non-existent columnid in database,
+        // so delete all column notes and related data.
+        $rs = $DB->get_recordset('board_notes', ['columnid' => $id]);
+        foreach ($rs as $note) {
             $DB->delete_records('board_note_ratings', ['noteid' => $note->id]);
-            $DB->set_field('board_notes', 'deleted', 1, ['id' => $note->id]);
-            note::delete_note_file($note->id);
+            $DB->delete_records('board_comments', ['noteid' => $note->id]);
+            note::delete_files($note, $context);
         }
+        $rs->close();
+        $DB->delete_records('board_notes', ['columnid' => $id]);
+
         $DB->delete_records('board_columns', ['id' => $id]);
-        $historyid = $DB->insert_record('board_history', ['boardid' => $board->id, 'action' => 'delete_column',
-            'ownerid' => 0, 'content' => json_encode(['id' => $id]),
-            'userid' => $USER->id, 'timecreated' => time()]);
+        $historyid = $DB->insert_record('board_history', [
+            'boardid' => $board->id,
+            'action' => 'delete_column',
+            'ownerid' => 0,
+            'content' => json_encode(['id' => $id]),
+            'userid' => $USER->id,
+            'timecreated' => time(),
+        ]);
         $DB->set_field('board', 'historyid', $historyid, ['id' => $board->id]);
         $board->historyid = (string)$historyid;
 

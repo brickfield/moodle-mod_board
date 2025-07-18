@@ -55,7 +55,7 @@ final class submit_note_form extends external_api {
      * @return array
      */
     public static function execute(int $contextid, string $jsonformdata): array {
-        global $USER, $DB;
+        global $USER;
 
         [
             'contextid' => $contextid,
@@ -73,157 +73,169 @@ final class submit_note_form extends external_api {
 
         // Extract data out of the form content.
         $serialiseddata = json_decode($jsonformdata);
-        $data = [];
-        parse_str($serialiseddata, $data);
-        $data = str_replace(["\r", "\n"], '', $data);
+        $ajaxdata = [];
+        parse_str($serialiseddata, $ajaxdata);
 
         // Make the form with the ajax data to validate.
-        $form = new note_form(null, null, 'post', '', null, true, $data);
+        $form = new note_form(null, null, 'post', '', null, true, $ajaxdata);
         $data = $form->get_data();
-        if ($data) {
-            // Check that the passed context, and the context with this note/column match.
-            $column = board::get_column($data->columnid, MUST_EXIST);
-            $board = board::get_board($column->boardid, MUST_EXIST);
-            $colcontext = board::context_for_board($board);
-            if ($context->id !== $colcontext->id) {
-                throw new moodle_exception('formcontextmismatch');
-            }
-
-            // Extract the attachment data.
-            $attachment = [
-                'type' => $data->mediatype,
-                'info' => '',
-                'url' => '',
+        if (!$data) {
+            return [
+                'status' => false,
+                'action' => 'validationerrors',
+                'historyid' => 0,
             ];
-            switch ($data->mediatype) {
-                case 1:
-                    $attachment['info'] = $data->youtubetitle ?? '';
-                    $attachment['url'] = $data->youtubeurl ?? '';
-                    break;
-                case 2:
-                    if (!empty($data->imagefile)) {
-                        $attachment['info'] = $data->imagetitle ?? '';
-                        $attachment['url'] = $data->filepicker ?? '';
-                        $attachment['draftitemid'] = $data->imagefile;
+        }
+
+        // Check that the passed context, and the context with this note/column match.
+        $column = board::get_column($data->columnid, MUST_EXIST);
+        $board = board::get_board($column->boardid, MUST_EXIST);
+        $colcontext = board::context_for_board($board);
+        if ($context->id !== $colcontext->id) {
+            throw new \core\exception\invalid_parameter_exception('form context mismatch');
+        }
+
+        // Extract the attachment data.
+        $attachment = ['type' => board::MEDIATYPE_NONE];
+
+        switch ($data->mediatype) {
+            case board::MEDIATYPE_YOUTUBE:
+                if (!empty($data->youtubeurl)) {
+                    $attachment = [
+                        'type' => board::MEDIATYPE_YOUTUBE,
+                        'info' => $data->youtubetitle ?? '',
+                        'url' => $data->youtubeurl,
+                    ];
+                }
+                break;
+            case board::MEDIATYPE_IMAGE:
+                if (!empty($data->imagefile) && note::is_draft_file_present($data->imagefile)) {
+                    $attachment = [
+                        'type' => board::MEDIATYPE_IMAGE,
+                        'info' => $data->imagetitle ?? '',
+                        'draftitemid' => $data->imagefile,
+                    ];
+                }
+                break;
+            case board::MEDIATYPE_FILE:
+                if (!empty($data->generalfile) & note::is_draft_file_present($data->generalfile)) {
+                    if (note::get_accepted_general_file_extensions()) {
+                        $attachment = [
+                            'type' => board::MEDIATYPE_FILE,
+                            'draftitemid' => $data->generalfile,
+                        ];
                     }
-                    break;
-                case 3:
-                    $attachment['info'] = $data->linktitle ?? '';
-                    $attachment['url'] = $data->linkurl ?? '';
-                    break;
-            }
-            // Check if heading and content and attachment are empty.
-            if (empty($data->heading) && empty($data->content) && empty($data->imagefile) && empty($attachment['url'])) {
-                $result = [
-                    'status' => false,
-                    'action' => 'none',
-                    'note' => [
-                        'id' => 0,
-                        'userid' => 0,
-                        'heading' => '',
-                        'content' => '',
-                        'type' => 0,
-                        'info' => '',
-                        'url' => '',
-                        'timecreated' => 0,
-                        'rating' => 0,
-                    ],
-                    'historyid' => 0,
-                ];
-                return $result;
-            }
+                }
+                break;
+            case board::MEDIATYPE_URL:
+                if (!empty($data->linkurl)) {
+                    $attachment = [
+                        'type' => board::MEDIATYPE_URL,
+                        'info' => $data->linktitle ?? '',
+                        'url' => $data->linkurl,
+                    ];
+                }
+                break;
+        }
 
-            // Process either as an update or insert.
-            if ($data->noteid) {
-                $note = board::get_note($data->noteid, MUST_EXIST);
-                if (!$note || $note->columnid != $column->id) {
-                    throw new moodle_exception('formsubmissioninvalid');
-                }
-                if ($USER->id != $note->userid) {
-                    require_capability('mod/board:manageboard', $context);
-                }
-                if (!empty($note->groupid)) {
-                    board::require_access_for_group($board, $note->groupid);
-                }
-                if (board::board_readonly($board, $note->groupid)) {
-                    throw new \Exception('board_update_note not available');
-                }
-                $note = note::update($data->noteid, $data->heading, $data->content, $attachment);
-                $historyid = $note->historyid;
-                unset($note->historyid);
+        // Check if heading and content and attachment are empty.
+        if (trim($data->heading) === '' && trim($data->content) === '' && $attachment['type'] == board::MEDIATYPE_NONE) {
+            return [
+                'status' => false,
+                'action' => 'validationerrors',
+                'historyid' => 0,
+            ];
+        }
 
-                $result = [
-                    'status' => true,
-                    'action' => 'update',
-                    'note' => $note,
-                    'historyid' => $historyid,
-                ];
+        // Process either as an update or insert.
+        if ($data->noteid) {
+            $note = board::get_note($data->noteid, MUST_EXIST);
+            if (!$note || $note->columnid != $column->id) {
+                throw new moodle_exception('formsubmissioninvalid');
+            }
+            if ($USER->id != $note->userid) {
+                require_capability('mod/board:manageboard', $context);
+            }
+            if (!empty($note->groupid)) {
+                board::require_access_for_group($board, $note->groupid);
+            }
+            if (board::board_readonly($board, $note->groupid)) {
+                throw new \Exception('board_update_note not available');
+            }
+            $note = note::update($data->noteid, $data->heading, $data->content, $attachment);
+            $historyid = $note->historyid;
+
+            $formatted = note::format_for_display($note, $column, $board, $context);
+
+            $result = [
+                'status' => true,
+                'action' => 'update',
+                'note' => $formatted,
+                'historyid' => $historyid,
+            ];
+        } else {
+            if ($board->singleusermode != board::SINGLEUSER_DISABLED) {
+                // Groups are not used in single-user-mode apart from user selection.
+                $data->groupid = null;
             } else {
-                if ($board->singleusermode != board::SINGLEUSER_DISABLED) {
-                    // Groups are not used in single-user-mode apart from user selection.
+                $cm = board::coursemodule_for_board($board);
+                $groupmode = groups_get_activity_groupmode($cm);
+                if ($groupmode == NOGROUPS) {
                     $data->groupid = null;
                 } else {
-                    $cm = board::coursemodule_for_board($board);
-                    $groupmode = groups_get_activity_groupmode($cm);
-                    if ($groupmode == NOGROUPS) {
-                        $data->groupid = null;
+                    if ($data->groupid) {
+                        board::require_access_for_group($board, $data->groupid);
                     } else {
-                        if ($data->groupid) {
-                            board::require_access_for_group($board, $data->groupid);
-                        } else {
-                            // Only managers can post in "All groups".
-                            require_capability('mod/board:manageboard', $context);
-                        }
+                        // Only managers can post in "All groups".
+                        require_capability('mod/board:manageboard', $context);
                     }
                 }
-
-                if (board::board_readonly($board, $data->groupid)) {
-                    throw new \Exception('board_add_note not available');
-                }
-
-                if ($board->singleusermode == board::SINGLEUSER_DISABLED) {
-                    if ($data->ownerid) {
-                        debugging('ownerid should be used only in single-user modes', DEBUG_DEVELOPER);
-                        if ($data->ownerid != $USER->id) {
-                            throw new \Exception('board_add_note not available');
-                        }
-                    }
-                    $data->ownerid = $USER->id;
-                } else {
-                    if (!$data->ownerid) {
-                        debugging('ownerid is required in single-user modes', DEBUG_DEVELOPER);
-                        $data->ownerid = $USER->id;
-                    }
-                }
-
-                if (!board::can_post($board, $data->ownerid)) {
-                    throw new \Exception('board_add_note not available');
-                }
-
-                $note = note::create(
-                    $data->columnid,
-                    $data->ownerid,
-                    $data->groupid,
-                    $data->heading,
-                    $data->content,
-                    $attachment
-                );
-                $historyid = $note->historyid;
-                unset($note->historyid);
-                $note->rating = 0;
-
-                $result = [
-                    'status' => true,
-                    'action' => 'insert',
-                    'note' => $note,
-                    'historyid' => $historyid,
-                ];
             }
 
-            return $result;
-        } else {
-            throw new moodle_exception('formsubmissioninvalid');
+            if (board::board_readonly($board, $data->groupid)) {
+                throw new \Exception('board_add_note not available');
+            }
+
+            if ($board->singleusermode == board::SINGLEUSER_DISABLED) {
+                if ($data->ownerid) {
+                    debugging('ownerid should be used only in single-user modes', DEBUG_DEVELOPER);
+                    if ($data->ownerid != $USER->id) {
+                        throw new \Exception('board_add_note not available');
+                    }
+                }
+                $data->ownerid = $USER->id;
+            } else {
+                if (!$data->ownerid) {
+                    debugging('ownerid is required in single-user modes', DEBUG_DEVELOPER);
+                    $data->ownerid = $USER->id;
+                }
+            }
+
+            if (!board::can_post($board, $data->ownerid)) {
+                throw new \Exception('board_add_note not available');
+            }
+
+            $note = note::create(
+                $data->columnid,
+                $data->ownerid,
+                $data->groupid,
+                $data->heading,
+                $data->content,
+                $attachment
+            );
+            $historyid = $note->historyid;
+
+            $formatted = note::format_for_display($note, $column, $board, $context);
+
+            $result = [
+                'status' => true,
+                'action' => 'insert',
+                'note' => $formatted,
+                'historyid' => $historyid,
+            ];
         }
+
+        return $result;
     }
 
     /**
@@ -234,19 +246,24 @@ final class submit_note_form extends external_api {
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'status' => new external_value(PARAM_BOOL, 'The status'),
-            'action' => new external_value(PARAM_TEXT, 'The action that was performed'),
+            'action' => new external_value(PARAM_ALPHANUMEXT, 'The action that was performed or error code'),
             'note' => new external_single_structure(
                 [
                     'id' => new external_value(PARAM_INT, 'post id'),
-                    'userid' => new external_value(PARAM_INT, 'user id'),
-                    'heading' => new external_value(PARAM_RAW, 'post heading'),
-                    'content' => new external_value(PARAM_RAW, 'post content'),
-                    'type' => new external_value(PARAM_INT, 'type'),
-                    'info' => new external_value(PARAM_TEXT, 'info'),
-                    'url' => new external_value(PARAM_TEXT, 'url'),
-                    'timecreated' => new external_value(PARAM_INT, 'timecreated'),
-                    'rating' => new external_value(PARAM_INT, 'rating', VALUE_OPTIONAL),
-                ]
+                    'userid' => new external_value(PARAM_INT, 'Original author user id'),
+                    'heading' => new external_value(PARAM_TEXT, 'Post heading - plain text with html entities, no tags allowed'),
+                    'content' => new external_value(PARAM_RAW, 'Post content - html formatted using simplified markdown'),
+                    'type' => new external_value(PARAM_INT, 'Type of attachment'),
+                    'info' => new external_value(
+                        PARAM_TEXT,
+                        'Description or name of attachment - plain text with html entities, no tags allowed'
+                    ),
+                    'url' => new external_value(PARAM_RAW, 'Attachment URL'),
+                    'timecreated' => new external_value(PARAM_INT, 'Timestamp of post creation'),
+                    'rating' => new external_value(PARAM_INT, 'Number of received ratings, null if disabled', VALUE_OPTIONAL),
+                ],
+                'Note data formatted for display, null if error',
+                VALUE_OPTIONAL
             ),
             'historyid' => new external_value(PARAM_INT, 'The last history id'),
         ]);

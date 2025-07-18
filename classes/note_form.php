@@ -34,7 +34,6 @@ class note_form extends \moodleform {
      * Definition of the form elements.
      */
     public function definition() {
-        // TODO media select style - media_selection.
         $config = get_config('mod_board');
 
         $mform = $this->_form;
@@ -65,32 +64,45 @@ class note_form extends \moodleform {
         );
 
         $maxlen = $config->post_max_length;
-        $options = ['maxlength' => $maxlen, 'cols' => 30, 'rows' => 3];
+        $options = ['maxlength' => $maxlen, 'cols' => 30, 'rows' => 4];
         $mform->addElement('textarea', 'content', get_string('form_body', 'mod_board'), $options);
-        $mform->setType('content', PARAM_TEXT);
-        $mform->addRule('content', get_string('maximumchars', '', $maxlen), 'maxlength', $maxlen, 'client');
+        $mform->setType('content', PARAM_RAW);
+        // Unfortunately Moodle forms validation may count new-line characters
+        // differently from text area maxlength attribute, for now let's allow some more characters
+        // to prevent surprises/data loss caused by missing client and server side validation
+        // in current JS dialog code for this form.
+        $mform->addRule('content', get_string('maximumchars', '', $maxlen), 'maxlength', $maxlen + 30, 'client');
 
-        if ($config->allowyoutube) {
-            $options = [
-                0 => get_string('option_empty', 'mod_board'),
-                1 => get_string('option_youtube', 'mod_board'),
-                2 => get_string('option_image', 'mod_board'),
-                3 => get_string('option_link', 'mod_board'),
-            ];
-        } else {
-            $options = [
-                0 => get_string('option_empty', 'mod_board'),
-                2 => get_string('option_image', 'mod_board'),
-                3 => get_string('option_link', 'mod_board'),
-            ];
+        $mform->addElement('checkbox', 'mardownhelpcheckbox', get_string('limited_markdown_checkbox', 'mod_board'));
+        $markdown = '<div class="alert alert-info limited_markdown_examples">'
+            . get_string('limited_markdown_examples', 'mod_board') . '</div>';
+        $mform->addElement('static', 'mardownhelpstatic', '', $markdown);
+        $mform->hideIf('mardownhelpstatic', 'mardownhelpcheckbox', 'notchecked');
+
+        $generalpickeroptions = note::get_general_picker_options();
+
+        $options = [
+            board::MEDIATYPE_NONE => get_string('option_empty', 'mod_board'),
+            board::MEDIATYPE_URL => get_string('option_link', 'mod_board'),
+            board::MEDIATYPE_IMAGE => get_string('option_image', 'mod_board'),
+            board::MEDIATYPE_FILE => get_string('option_file', 'mod_board'),
+            board::MEDIATYPE_YOUTUBE => get_string('option_youtube', 'mod_board'),
+        ];
+        if (!$generalpickeroptions) {
+            unset($options[board::MEDIATYPE_FILE]);
         }
-
+        if (!$config->allowyoutube) {
+            unset($options[board::MEDIATYPE_YOUTUBE]);
+        }
         $attr = ['class' => 'mod_board_type'];
         $mform->addElement('select', 'mediatype', get_string('form_mediatype', 'mod_board'), $options, $attr);
 
         $html = '<div class="mod_board_note_buttons">
                     <div class="mod_board_attachment_button link_button fa fa-link" role="button" tabindex="0"></div>
                     <div class="mod_board_attachment_button image_button fa fa-picture-o" role="button" tabindex="0"></div>';
+        if ($generalpickeroptions) {
+            $html .= '<div class="mod_board_attachment_button file_button fa fa-file-text" role="button" tabindex="0"></div>';
+        }
         if ($config->allowyoutube) {
             $html .= '<div class="mod_board_attachment_button youtube_button fa fa-youtube" role="button" tabindex="0"></div>';
         }
@@ -103,41 +115,70 @@ class note_form extends \moodleform {
         $options = ['maxlength' => $maxleninfo, 'placeholder' => get_string('option_link_info', 'mod_board')];
         $mform->addElement('text', 'linktitle', get_string('option_link_info', 'mod_board'), $options);
         $mform->setType('linktitle', PARAM_TEXT);
-        $mform->hideIf('linktitle', 'mediatype', 'neq', 3);
+        $mform->hideIf('linktitle', 'mediatype', 'neq', board::MEDIATYPE_URL);
         $mform->addRule('linktitle', get_string('maximumchars', '', $maxleninfo), 'maxlength', $maxleninfo, 'client');
 
         // URL.
         $maxlenurl = board::LENGTH_URL;
-        $attr = ['maxlength' => $maxlenurl, 'placeholder' => get_string('option_link_url', 'mod_board')];
+        $attr = ['maxlength' => $maxlenurl, 'placeholder' => get_string('option_link_url', 'mod_board'), 'size' => 80];
         $mform->addElement('url', 'linkurl', get_string('option_link_url', 'mod_board'), $attr, ['usefilepicker' => false]);
         $mform->setType('linkurl', PARAM_URL);
-        $mform->hideIf('linkurl', 'mediatype', 'neq', 3);
+        $mform->hideIf('linkurl', 'mediatype', 'neq', board::MEDIATYPE_URL);
         $mform->addRule('linkurl', get_string('maximumchars', '', $maxlenurl), 'maxlength', $maxlenurl, 'client');
+
+        // Image file.
+        $options = ['maxlength' => $maxleninfo, 'placeholder' => get_string('option_image_info', 'mod_board')];
+        $mform->addElement('text', 'imagetitle', get_string('option_image_info', 'mod_board'), $options);
+        $mform->setType('imagetitle', PARAM_TEXT);
+        $mform->hideIf('imagetitle', 'mediatype', 'neq', board::MEDIATYPE_IMAGE);
+        $mform->addRule('imagetitle', get_string('maximumchars', '', $maxleninfo), 'maxlength', $maxleninfo, 'client');
+
+        $imagepickeroptions = note::get_image_picker_options();
+        $mform->addElement('filemanager', 'imagefile', get_string('form_image_file', 'mod_board'), null, $imagepickeroptions);
+        $mform->hideIf('imagefile', 'mediatype', 'neq', board::MEDIATYPE_IMAGE);
+
+        // General file.
+        if ($generalpickeroptions) {
+            $mform->addElement(
+                'filemanager',
+                'generalfile',
+                get_string('form_general_file', 'mod_board'),
+                null,
+                $generalpickeroptions
+            );
+            $mform->hideIf('generalfile', 'mediatype', 'neq', board::MEDIATYPE_FILE);
+        }
 
         if ($config->allowyoutube) {
             // YouTube video.
             $options = ['maxlength' => $maxleninfo, 'placeholder' => get_string('option_youtube_info', 'mod_board')];
             $mform->addElement('text', 'youtubetitle', get_string('option_youtube_info', 'mod_board'), $options);
             $mform->setType('youtubetitle', PARAM_TEXT);
-            $mform->hideIf('youtubetitle', 'mediatype', 'neq', 1);
+            $mform->hideIf('youtubetitle', 'mediatype', 'neq', board::MEDIATYPE_YOUTUBE);
             $mform->addRule('youtubetitle', get_string('maximumchars', '', $maxleninfo), 'maxlength', $maxleninfo, 'client');
 
-            $options = ['maxlength' => $maxlenurl, 'placeholder' => get_string('option_youtube_url', 'mod_board')];
+            $options = ['maxlength' => $maxlenurl, 'placeholder' => get_string('option_youtube_url', 'mod_board'), 'size' => 80];
             $mform->addElement('text', 'youtubeurl', get_string('option_youtube_url', 'mod_board'), $options);
             $mform->setType('youtubeurl', PARAM_URL);
-            $mform->hideIf('youtubeurl', 'mediatype', 'neq', 1);
+            $mform->hideIf('youtubeurl', 'mediatype', 'neq', board::MEDIATYPE_YOUTUBE);
             $mform->addRule('youtubeurl', get_string('maximumchars', '', $maxlenurl), 'maxlength', $maxlenurl, 'client');
         }
+    }
 
-        // Image file.
-        $options = ['maxlength' => $maxleninfo, 'placeholder' => get_string('option_image_info', 'mod_board')];
-        $mform->addElement('text', 'imagetitle', get_string('option_image_info', 'mod_board'), $options);
-        $mform->setType('imagetitle', PARAM_TEXT);
-        $mform->hideIf('imagetitle', 'mediatype', 'neq', 2);
-        $mform->addRule('imagetitle', get_string('maximumchars', '', $maxleninfo), 'maxlength', $maxleninfo, 'client');
+    #[\Override]
+    public function validation($data, $files) {
+        $errors = parent::validation($data, $files);
 
-        $pickerparams = note::get_image_picker_options();
-        $mform->addElement('filemanager', 'imagefile', get_string('form_image_file', 'mod_board'), null, $pickerparams);
-        $mform->hideIf('imagefile', 'mediatype', 'neq', 2);
+        // NOTE: do not add validation here until board.js can reload the form.
+        // phpcs:disable Squiz.PHP.CommentedOutCode.Found
+        /*
+        if ($data['mediatype'] == board::MEDIATYPE_NONE) {
+            if (trim($data['heading']) === '' && trim($data['content']) === '') {
+                $errors['heading'] = get_string('required');
+            }
+        }
+        */
+
+        return $errors;
     }
 }

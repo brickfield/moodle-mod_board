@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use mod_board\board;
+
 /**
  * Restore steps.
  * @package     mod_board
@@ -121,6 +123,16 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
             }
         }
 
+        if ($data->type == board::MEDIATYPE_IMAGE) {
+            if (!isset($data->filename) && $data->url) {
+                // Migrate legacy full image URL to filename field.
+                if (preg_match('|/([^/]+\.[a-zA-Z0-9]+$)|', $data->url, $matches)) {
+                    $data->filename = $matches[1];
+                    $data->url = null;
+                }
+            }
+        }
+
         // Do not apply offset to note creation date.
 
         $newitemid = $DB->insert_record('board_notes', $data);
@@ -181,30 +193,9 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
      * After execution steps.
      */
     protected function after_execute() {
-        global $DB;
-        $this->add_related_files('mod_board', 'intro', null);
-        $this->add_related_files('mod_board', 'images', null);
         $this->add_related_files('mod_board', 'background', null);
-
-        // UPDATE note url to new context.
-        $boardid = $this->get_new_parentid('board');
-        $board = $DB->get_record('board', ['id' => $boardid]);
-        $cm = get_coursemodule_from_instance('board', $board->id, $board->course, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
-
-        $columns = $DB->get_records('board_columns', ['boardid' => $boardid]);
-        foreach ($columns as $columnid => $column) {
-            $notes = $DB->get_records('board_notes', ['columnid' => $columnid]);
-            foreach ($notes as $noteid => $note) {
-                if ($note->url === null) {
-                    continue;
-                }
-                $pattern = '/pluginfile.php\/(\d+)\//i';
-                $replacement = 'pluginfile.php/' . $context->id . '/';
-                $url = preg_replace($pattern, $replacement, $note->url);
-
-                $DB->update_record('board_notes', ['id' => $noteid, 'url' => $url]);
-            }
-        }
+        $this->add_related_files('mod_board', 'intro', null);
+        $this->add_related_files('mod_board', 'images', 'board_note');
+        $this->add_related_files('mod_board', 'files', 'board_note');
     }
 }

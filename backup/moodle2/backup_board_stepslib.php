@@ -40,7 +40,7 @@ class backup_board_activity_structure_step extends backup_activity_structure_ste
 
         $notes = new backup_nested_element('notes');
         $note = new backup_nested_element('note', ['id'], [
-            'columnid', 'ownerid', 'userid', 'groupid', 'content', 'heading', 'type', 'info', 'url', 'timecreated',
+            'columnid', 'ownerid', 'userid', 'groupid', 'content', 'heading', 'type', 'info', 'url', 'filename', 'timecreated',
             'sortorder', 'deleted']);
 
         $ratings = new backup_nested_element('ratings');
@@ -77,9 +77,11 @@ class backup_board_activity_structure_step extends backup_activity_structure_ste
         $note->annotate_ids('group', 'groupid');
         $rating->annotate_ids('user', 'userid');
 
-        $note->annotate_files('mod_board', 'images', null);
         $board->annotate_files('mod_board', 'background', null);
         $board->annotate_files('mod_board', 'intro', null);
+        $note->annotate_files('mod_board', 'images', 'id');
+        $note->annotate_files('mod_board', 'files', 'id');
+
         return $this->prepare_activity_structure($board);
     }
 }

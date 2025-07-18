@@ -33,7 +33,7 @@ final class note {
      * @param int $columnid
      * @param int $ownerid
      * @param int|null $groupid
-     * @param string $heading
+     * @param string|null $heading
      * @param string $content
      * @param array $attachment
      * @param int|null $userid NULL means current user
@@ -43,7 +43,7 @@ final class note {
         int $columnid,
         int $ownerid,
         ?int $groupid,
-        string $heading,
+        ?string $heading,
         string $content,
         array $attachment,
         ?int $userid = null
@@ -61,9 +61,17 @@ final class note {
         $board = board::get_board($column->boardid, MUST_EXIST);
         $context = board::context_for_board($board);
 
-        $heading = empty($heading) ? null : \core_text::substr($heading, 0, board::LENGTH_HEADING);
-        $content = empty($content) ? "" : \core_text::substr($content, 0, get_config('mod_board', 'post_max_length'));
-        $content = clean_text($content, FORMAT_HTML);
+        $heading = \core_text::substr($heading ?? '', 0, board::LENGTH_HEADING);
+        if (trim($heading) === '') {
+            $heading = null;
+        }
+        // There is no technical reason to shorten the content before storage, let WS/frontend deal with restrictions.
+        if (trim($content) === '') {
+            $content = '';
+        } else {
+            // Normalise new-line characters to prevent problems with maxlength attribute later.
+            $content = str_replace("\r\n", "\n", $content);
+        }
 
         if (!$groupid) {
             $groupid = null;
@@ -88,38 +96,30 @@ final class note {
         // Get the count of notes in the column to add to bottom of sort order.
         $countnotes = $DB->count_records('board_notes', ['columnid' => $columnid, 'deleted' => 0]);
 
-        $type = !empty($attachment['type']) ? $attachment['type'] : 0;
-        $info = !empty($type) ? \core_text::substr(s($attachment['info']), 0, board::LENGTH_INFO) : null;
-        $url = !empty($type) ? \core_text::substr($attachment['url'], 0, board::LENGTH_URL) : null;
-
-        $notecreated = time();
         $noteid = $DB->insert_record('board_notes', [
             'groupid' => $groupid,
             'columnid' => $columnid,
             'ownerid' => $ownerid,
             'heading' => $heading,
             'content' => $content,
-            'type' => $type,
-            'info' => $info,
-            'url' => $url,
+            'type' => board::MEDIATYPE_NONE,
+            'info' => null,
+            'url' => null,
             'userid' => $userid,
-            'timecreated' => $notecreated,
+            'timecreated' => time(),
             'sortorder' => $countnotes,
             'deleted' => 0,
         ]);
 
-        $attachment = self::update_note_attachment($noteid, $attachment);
-        $url = $attachment['url'];
-        $DB->update_record('board_notes', ['id' => $noteid, 'url' => $url]);
-
-        $note = board::get_note($noteid, MUST_EXIST);
+        $note = self::update_attachment($noteid, $attachment, $context);
+        $formatted = self::format_for_display($note, $column, $board, $context);
 
         $historyid = $DB->insert_record('board_history', ['boardid' => $board->id, 'groupid' => $groupid,
             'action' => 'add_note', 'ownerid' => $ownerid, 'userid' => $userid,
             'content' => json_encode(['id' => $note->id, 'columnid' => $columnid,
-                'heading' => $heading, 'content' => $content,
-                'attachment' => ['type' => $type, 'info' => $info, 'url' => $url], 'rating' => 0,
-                'timecreated' => $notecreated, 'sortorder' => $countnotes]),
+                'heading' => $formatted->heading, 'content' => $formatted->content,
+                'attachment' => ['type' => $formatted->type, 'info' => $formatted->info, 'url' => $formatted->url],
+                'rating' => $formatted->rating, 'timecreated' => $note->timecreated, 'sortorder' => $countnotes]),
             'timecreated' => time()]);
 
         $DB->set_field('board', 'historyid', $historyid, ['id' => $board->id]);
@@ -136,9 +136,8 @@ final class note {
             }
         }
 
-        $event = \mod_board\event\add_note::create_from_note($note, $attachment, $column, $board, $context);
+        $event = \mod_board\event\add_note::create_from_note($note, $column, $board, $context);
         $event->trigger();
-        ;
 
         $note->historyid = $historyid;
 
@@ -150,17 +149,25 @@ final class note {
      * Update a note.
      *
      * @param int $id
-     * @param string $heading
+     * @param string|null $heading
      * @param string $content
      * @param array $attachment
      * @return stdClass note record with extra historyid property
      */
-    public static function update(int $id, string $heading, string $content, array $attachment): stdClass {
+    public static function update(int $id, ?string $heading, string $content, array $attachment): stdClass {
         global $DB, $USER;
 
-        $heading = empty($heading) ? null : \core_text::substr($heading, 0, board::LENGTH_HEADING);
-        $content = empty($content) ? "" : \core_text::substr($content, 0, get_config('mod_board', 'post_max_length'));
-        $content = clean_text($content, FORMAT_HTML);
+        $heading = \core_text::substr($heading ?? '', 0, board::LENGTH_HEADING);
+        if (trim($heading) === '') {
+            $heading = null;
+        }
+        // There is no technical reason to shorten the content before storage, let WS/frontend deal with restrictions.
+        if (trim($content) === '') {
+            $content = '';
+        } else {
+            // Normalise new-line characters to prevent problems with maxlength attribute later.
+            $content = str_replace("\r\n", "\n", $content);
+        }
 
         $note = board::get_note($id, MUST_EXIST);
         $column = board::get_column($note->columnid, MUST_EXIST);
@@ -169,27 +176,18 @@ final class note {
 
         $transaction = $DB->start_delegated_transaction();
 
-        $previoustype = $note->type;
-        $attachment = self::update_note_attachment($id, $attachment, $previoustype);
-
-        $type = !empty($attachment['type']) ? $attachment['type'] : 0;
-        $info = !empty($type) ? \core_text::substr(s($attachment['info']), 0, board::LENGTH_INFO) : null;
-        $url = !empty($type) ? \core_text::substr($attachment['url'], 0, board::LENGTH_URL) : null;
-
         $DB->update_record('board_notes', [
             'id' => $note->id,
             'heading' => $heading,
             'content' => $content,
-            'type' => $type,
-            'info' => $info,
-            'url' => $url,
         ]);
-        $note = board::get_note($note->id, MUST_EXIST);
+        $note = self::update_attachment($note->id, $attachment, $context);
+        $formatted = self::format_for_display($note, $column, $board, $context);
 
         $historyid = $DB->insert_record('board_history', ['boardid' => $board->id, 'action' => 'update_note',
             'ownerid' => $note->ownerid, 'userid' => $USER->id, 'content' => json_encode(['id' => $id,
-                'columnid' => $column->id, 'heading' => $heading, 'content' => $content,
-                'attachment' => ['type' => $type, 'info' => $info, 'url' => $url]]),
+                'columnid' => $column->id, 'heading' => $formatted->heading, 'content' => $formatted->content,
+                'attachment' => ['type' => $formatted->type, 'info' => $formatted->info, 'url' => $formatted->url]]),
             'timecreated' => time()]);
 
         $DB->set_field('board', 'historyid', $historyid, ['id' => $board->id]);
@@ -197,9 +195,8 @@ final class note {
 
         $transaction->allow_commit();
 
-        $event = \mod_board\event\update_note::create_from_note($note, $attachment, $column, $board, $context);
+        $event = \mod_board\event\update_note::create_from_note($note, $column, $board, $context);
         $event->trigger();
-        ;
 
         board::clear_history();
 
@@ -227,7 +224,7 @@ final class note {
         $transaction = $DB->start_delegated_transaction();
 
         $DB->delete_records('board_note_ratings', ['noteid' => $note->id]);
-        self::delete_note_file($note->id);
+        self::delete_files($note, $context);
 
         // Delete all note comments.
         $commentrecords = $DB->get_records('board_comments', ['noteid' => $note->id]);
@@ -281,16 +278,17 @@ final class note {
 
         $transaction = $DB->start_delegated_transaction();
 
+        $formatted = self::format_for_display($note, $column, $board, $context);
+
         $DB->insert_record('board_history', ['boardid' => $board->id, 'action' => 'delete_note',
             'content' => json_encode(['id' => $note->id, 'columnid' => $note->columnid]),
             'ownerid' => $note->ownerid, 'userid' => $USER->id, 'timecreated' => time()]);
         $historyid = $DB->insert_record('board_history', ['boardid' => $board->id, 'groupid' => $note->groupid,
             'action' => 'add_note', 'userid' => $note->userid, 'ownerid' => $note->ownerid,
             'content' => json_encode(['id' => $note->id, 'columnid' => $columnid,
-                'heading' => $note->heading, 'content' => $note->content,
-                'attachment' => ['type' => $note->type, 'info' => $note->info,
-                    'url' => $note->url], 'timecreated' => $note->timecreated,
-                'rating' => self::get_rating($note->id), 'sortorder' => $sortorder]),
+                'heading' => $formatted->heading, 'content' => $formatted->content,
+                'attachment' => ['type' => $formatted->type, 'info' => $formatted->info, 'url' => $formatted->url],
+                'timecreated' => $note->timecreated, 'rating' => $formatted->rating, 'sortorder' => $sortorder]),
             'timecreated' => time()]);
         // Checking if we move the note up or down.
         $ismovingup = $note->sortorder < $sortorder;
@@ -456,129 +454,268 @@ final class note {
     }
 
     /**
-     * Retrieve the file added to a note.
-     *
-     * @param int $noteid
-     * @return \stored_file|bool
-     */
-    public static function get_note_file(int $noteid): ?\stored_file {
-        $note = board::get_note($noteid);
-        if (!$note || empty($note->url)) {
-            return null;
-        }
-        $file = self::get_file_storage_settings($noteid);
-        $fs = get_file_storage();
-        $f = $fs->get_file(
-            $file->contextid,
-            $file->component,
-            $file->filearea,
-            $file->itemid,
-            $file->filepath,
-            basename($note->url)
-        );
-        if ($f === false) {
-            $f = null;
-        }
-        return $f;
-    }
-
-    /**
-     * Delete the stored file.
-     *
-     * @param int $noteid
-     * @return void
-     */
-    public static function delete_note_file(int $noteid): void {
-        $storedfile = self::get_note_file($noteid);
-        if ($storedfile) {
-            $storedfile->delete();
-        }
-    }
-
-    /**
-     * Store the added file.
+     * Store the added image file.
      *
      * @param int $noteid
      * @param int $draftitemid
-     * @return string|null
+     * @param \context $context
+     * @return string|null file name
      */
-    protected static function store_note_file(int $noteid, int $draftitemid) {
-        $settings = self::get_file_storage_settings($noteid);
+    protected static function store_image_file(int $noteid, int $draftitemid, \context $context): ?string {
+        $options = self::get_image_picker_options();
 
         file_save_draft_area_files(
             $draftitemid,
-            $settings->contextid,
-            $settings->component,
-            $settings->filearea,
-            $settings->itemid
+            $context->id,
+            'mod_board',
+            'images',
+            $noteid,
+            $options
         );
 
         $fs = get_file_storage();
-        $files = $fs->get_area_files(
-            $settings->contextid,
-            $settings->component,
-            $settings->filearea,
-            $settings->itemid,
-            'itemid, filepath, filename',
-            false
+        /** @var \stored_file[] $files */
+        $files = $fs->get_directory_files(
+            $context->id,
+            'mod_board',
+            'images',
+            $noteid,
+            '/',
+            false,
+            false,
+            'id DESC'
         );
 
-        $storedfile = reset($files);
+        $storedfile = null;
+        foreach ($files as $file) {
+            if (!$storedfile) {
+                $storedfile = $file;
+                continue;
+            }
+            $file->delete();
+        }
+
         if (!$storedfile) {
             // This means there is no file here.
             return null;
         }
 
-        return \moodle_url::make_pluginfile_url(
-            $storedfile->get_contextid(),
-            $storedfile->get_component(),
-            $storedfile->get_filearea(),
-            $storedfile->get_itemid(),
-            $storedfile->get_filepath(),
-            $storedfile->get_filename()
-        )->get_path();
+        return $storedfile->get_filename();
+    }
+
+    /**
+     * Store the added general file.
+     *
+     * @param int $noteid
+     * @param int $draftitemid
+     * @param \context $context
+     * @return string|null file name
+     */
+    protected static function store_general_file(int $noteid, int $draftitemid, \context $context): ?string {
+        $options = self::get_general_picker_options();
+        if (!$options) {
+            return null;
+        }
+
+        file_save_draft_area_files(
+            $draftitemid,
+            $context->id,
+            'mod_board',
+            'files',
+            $noteid,
+            $options
+        );
+
+        $fs = get_file_storage();
+        /** @var \stored_file[] $files */
+        $files = $fs->get_directory_files(
+            $context->id,
+            'mod_board',
+            'files',
+            $noteid,
+            '/',
+            false,
+            false,
+            'id DESC'
+        );
+
+        $storedfile = null;
+        foreach ($files as $file) {
+            if (!$storedfile) {
+                $storedfile = $file;
+                continue;
+            }
+            $file->delete();
+        }
+
+        if (!$storedfile) {
+            // This means there is no file here.
+            return null;
+        }
+
+        return $storedfile->get_filename();
+    }
+
+    /**
+     * Delete the image file for to a note.
+     *
+     * @param int $noteid
+     * @param \context $context
+     */
+    protected static function delete_image_file(int $noteid, \context $context): void {
+        $fs = get_file_storage();
+        $fs->delete_area_files($context->id, 'mod_board', 'images', $noteid);
+    }
+
+    /**
+     * Delete the general file for to a note.
+     *
+     * @param int $noteid
+     * @param \context $context
+     */
+    protected static function delete_general_file(int $noteid, \context $context): void {
+        $fs = get_file_storage();
+        $fs->delete_area_files($context->id, 'mod_board', 'files', $noteid);
     }
 
     /**
      * Update the attachment.
      *
+     * NOTE: This must be used only from create and update methods, it is public to allow testing only!
+     *
      * @param int $noteid
      * @param array $attachment
-     * @param int|null $previoustype
-     * @return array
+     * @param \context $context
+     * @return stdClass
      */
-    protected static function update_note_attachment(int $noteid, $attachment, $previoustype = null): array {
-        if (!empty($attachment['draftitemid'])) {
-            $attachment['url'] = self::store_note_file($noteid, $attachment['draftitemid']);
-            unset($attachment['draftitemid']);
+    public static function update_attachment(int $noteid, array $attachment, \context $context): stdClass {
+        global $DB;
+
+        $note = board::get_note($noteid, MUST_EXIST);
+        $update = [];
+
+        if (!isset($attachment['type'])) {
+            $attachment['type'] = board::MEDIATYPE_NONE;
+        }
+        if (isset($attachment['info'])) {
+            $attachment['info'] = \core_text::substr($attachment['info'], 0, board::LENGTH_INFO);
+        } else {
+            $attachment['info'] = '';
         }
 
-        if (empty($attachment['info']) && empty($attachment['url'])) {
-            // In this case, we want to reset the media type to none.
-            $attachment['type'] = 0;
-            $attachment['info'] = null;
-            $attachment['url'] = null;
-        }
-
-        if ($previoustype) {
-            if (isset($attachment['type']) && $attachment['type'] != 2 && $previoustype == 2) {
-                // This case is if we are changing from a picture type to a non-picture type. We should remove files.
-                $fs = get_file_storage();
-                $settings = self::get_file_storage_settings($noteid);
-
-                $fs->delete_area_files($settings->contextid, $settings->component, $settings->filearea, $settings->itemid);
+        if ($attachment['type'] == board::MEDIATYPE_IMAGE) {
+            if (empty($attachment['draftitemid'])) {
+                throw new \core\exception\invalid_parameter_exception('missing image filemanager draftitemid');
             }
+
+            self::delete_general_file($noteid, $context);
+
+            $filename = self::store_image_file($noteid, $attachment['draftitemid'], $context);
+            if ($filename) {
+                $update = [
+                    'type' => board::MEDIATYPE_IMAGE,
+                    'info' => $attachment['info'],
+                    'url' => null,
+                    'filename' => $filename,
+                ];
+            } else {
+                self::delete_image_file($noteid, $context);
+                $update = [
+                    'type' => board::MEDIATYPE_NONE,
+                    'info' => null,
+                    'url' => null,
+                    'filename' => null,
+                ];
+            }
+        } else if ($attachment['type'] == board::MEDIATYPE_FILE) {
+            if (empty($attachment['draftitemid'])) {
+                throw new \core\exception\invalid_parameter_exception('missing general filemanager draftitemid');
+            }
+
+            self::delete_image_file($noteid, $context);
+
+            if (self::get_accepted_general_file_extensions()) {
+                $filename = self::store_general_file($noteid, $attachment['draftitemid'], $context);
+            } else {
+                $filename = null;
+            }
+            if ($filename) {
+                $update = [
+                    'type' => board::MEDIATYPE_FILE,
+                    'info' => $attachment['info'],
+                    'url' => null,
+                    'filename' => $filename,
+                ];
+            } else {
+                self::delete_general_file($noteid, $context);
+                $update = [
+                    'type' => board::MEDIATYPE_NONE,
+                    'info' => null,
+                    'url' => null,
+                    'filename' => null,
+                ];
+            }
+        } else if ($attachment['type'] == board::MEDIATYPE_YOUTUBE || $attachment['type'] == board::MEDIATYPE_URL) {
+            self::delete_general_file($noteid, $context);
+            self::delete_image_file($noteid, $context);
+
+            if ($attachment['url']) {
+                $update = [
+                    'type' => $attachment['type'],
+                    'info' => $attachment['info'],
+                    'url' => \core_text::substr($attachment['url'], 0, board::LENGTH_URL),
+                    'filename' => null,
+                ];
+            } else {
+                $update = [
+                    'type' => board::MEDIATYPE_NONE,
+                    'info' => null,
+                    'url' => null,
+                    'filename' => null,
+                ];
+            }
+        } else {
+            self::delete_general_file($noteid, $context);
+            self::delete_image_file($noteid, $context);
+
+            $update = [
+                'type' => board::MEDIATYPE_NONE,
+                'info' => null,
+                'url' => null,
+                'filename' => null,
+            ];
         }
 
-        return $attachment;
+        if ($update) {
+            $update['id'] = $note->id;
+            $DB->update_record('board_notes', $update);
+            $note = board::get_note($note->id, MUST_EXIST);
+        }
+
+        return $note;
     }
 
     /**
-     * Get the supported filetype extensions
+     * Delete the stored images and general files related to the note.
+     *
+     * @param stdClass $note
+     * @param \context $context
+     */
+    public static function delete_files(stdClass $note, \context $context): void {
+        if ($note->type == board::MEDIATYPE_IMAGE) {
+            self::delete_image_file($note->id, $context);
+        }
+        if ($note->type == board::MEDIATYPE_FILE) {
+            self::delete_general_file($note->id, $context);
+        }
+    }
+
+    /**
+     * Get the supported filetype extensions for note images.
      *
      * @return array of strings of supported file extensions.
      */
-    public static function get_accepted_file_extensions(): array {
+    public static function get_accepted_image_file_extensions(): array {
         $config = get_config('mod_board');
         if (isset($config->acceptedfiletypeforcontent)) {
             $extensions = explode(',', $config->acceptedfiletypeforcontent);
@@ -589,12 +726,30 @@ final class note {
     }
 
     /**
+     * Get the supported filetype extensions for note general files.
+     *
+     * @return array of strings of supported file extensions.
+     */
+    public static function get_accepted_general_file_extensions(): array {
+        $list = get_config('mod_board', 'acceptedfiletypeforgeneral');
+        if (!$list) {
+            return [];
+        }
+
+        $extensions = explode(',', $list);
+        $extensions = array_map('trim', $extensions);
+        $extensions = array_filter($extensions);
+
+        return array_values($extensions);
+    }
+
+    /**
      * Returns basic options for the image file picker.
      *
      * @return array
      */
     public static function get_image_picker_options(): array {
-        $extensions = self::get_accepted_file_extensions();
+        $extensions = self::get_accepted_image_file_extensions();
 
         $extensions = array_map(function ($extension) {
             return '.' . $extension;
@@ -609,28 +764,246 @@ final class note {
     }
 
     /**
-     * Retrieves the file storage settings
+     * Returns basic options for the general file picker.
      *
-     * @param int $noteid
-     * @return stdClass|null
+     * @return array
      */
-    public static function get_file_storage_settings(int $noteid): ?stdClass {
-        $note = board::get_note($noteid);
-        if (!$note) {
-            return null;
+    public static function get_general_picker_options(): array {
+        $extensions = self::get_accepted_general_file_extensions();
+        if (!$extensions) {
+            return [];
         }
 
-        $column = board::get_column($note->columnid);
-        if (!$column) {
-            return null;
-        }
+        $extensions = array_map(function ($extension) {
+            return '.' . $extension;
+        }, $extensions);
 
-        return (object) [
-            'contextid' => board::context_for_board($column->boardid)->id,
-            'component' => 'mod_board',
-            'filearea'  => 'images',
-            'itemid'    => $noteid,
-            'filepath'  => '/',
+        return [
+            'accepted_types' => $extensions,
+            'maxfiles' => 1,
+            'subdirs' => 0,
+            'maxbytes' => board::ACCEPTED_FILE_MAX_SIZE,
         ];
+    }
+
+    /**
+     * Is there any file in draft area?
+     *
+     * @param int $draftitemid
+     * @return bool
+     */
+    public static function is_draft_file_present(int $draftitemid): bool {
+        global $USER;
+
+        $usercontext = \context_user::instance($USER->id);
+        $fs = get_file_storage();
+        $draftfiles = $fs->get_area_files($usercontext->id, 'user', 'draft', $draftitemid, 'id', false);
+
+        return !empty($draftfiles);
+    }
+
+    /**
+     * Similar to s(), but the entities are encoded only once.
+     *
+     * This is necessary because historically data was s()ed before saving
+     * into database, which is not the case anymore.
+     *
+     * @param string|null $var
+     * @return string|null
+     */
+    public static function format_plain_text(?string $var): ?string {
+        if ($var === null) {
+            return null;
+        }
+        if (trim($var) === '') {
+            return '';
+        }
+        return htmlspecialchars($var, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'utf-8', false);
+    }
+
+    /**
+     * Format note content using slimmed down markdown.
+     *
+     * @param string $content
+     * @return string
+     */
+    public static function format_limited_markdown(string $content): string {
+        if (trim($content) === '') {
+            return '';
+        }
+
+        // HTML tags are not allowed, encode all entities to show them, keep existing entities as-is.
+        $content = htmlspecialchars($content, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'utf-8', false);
+
+        // Normalise Windows newlines.
+        $content = str_replace("\r\n", "\n", $content);
+
+        // Concat wrapped lines to simplify regex.
+        $lines = explode("\n", $content);
+        $content = '';
+        while (true) {
+            while (true) {
+                $line = current($lines);
+                next($lines);
+                if ($line === false) {
+                    break 2;
+                }
+                if (trim($line) !== '') {
+                    break;
+                }
+            }
+            while (true) {
+                $nextline = current($lines);
+                if ($nextline === false || $nextline === '') {
+                    next($lines);
+                    break;
+                }
+                if (preg_match('/^(# |- |\d+\. )[^ ]/', $nextline)) {
+                    break;
+                }
+                next($lines);
+                $line .= ' ' . $nextline;
+            };
+
+            $content .= $line . "\n";
+        }
+
+        // Add headings - note that Moodle usually uses visuals of lower headings.
+        $content = preg_replace('/^# (.*)$/m', '<h4 class="h5">$1</h4>', $content);
+
+        // Add lists.
+        $content = preg_replace('/^- (.*)/m', '<ul><li>$1</li></ul>', $content);
+        $content = preg_replace('/^\d+\. (.*)/m', '<ol><li>$1</li></ol>', $content);
+        $content = str_replace("</ul>\n<ul>", "\n", $content);
+        $content = str_replace("</ol>\n<ol>", "\n", $content);
+
+        // Add paragraphs.
+        $content = preg_replace('/^([^<].*)$/m', '<p>$1</p>', $content);
+
+        // Finally add bold and italic.
+        $content = preg_replace("/\*\*\*([^<>]+)\*\*\*/U", "<em><strong>$1</strong></em>", $content);
+        $content = preg_replace("/\*\*([^<>]+)\*\*/U", "<strong>$1</strong>", $content);
+        $content = preg_replace("/\*([^<>]+)\*/U", "<em>$1</em>", $content);
+
+        return clean_text($content, FORMAT_HTML);
+    }
+
+    /**
+     * Format note object for display, this must be used always before returning note data via WS.
+     *
+     * WARNING: this must be as fast as possible because it is used a lot!
+     *
+     * @param stdClass $note
+     * @param stdClass $column
+     * @param stdClass $board
+     * @param \context $context
+     * @return stdClass
+     */
+    public static function format_for_display(stdClass $note, stdClass $column, stdClass $board, \context $context): stdClass {
+        $note = (object)(array)$note;
+        unset($note->historyid);
+        if ($note->columnid != $column->id || $column->boardid != $board->id) {
+            throw new \core\exception\coding_exception('Invalid parameter mix');
+        }
+
+        $note->heading = self::format_plain_text($note->heading);
+        $note->content = self::format_limited_markdown($note->content);
+
+        if ($note->type == board::MEDIATYPE_IMAGE) {
+            $note->url = \moodle_url::make_pluginfile_url(
+                $context->id,
+                'mod_board',
+                'images',
+                $note->id,
+                '/',
+                $note->filename
+            )->out(false);
+            if (trim($note->info ?? '') === '') {
+                // NOTE: ideally title should be required in form validation.
+                $note->info = $note->filename;
+            }
+        } else if ($note->type == board::MEDIATYPE_FILE) {
+            if (self::get_accepted_general_file_extensions()) {
+                $note->url = \moodle_url::make_pluginfile_url(
+                    $context->id,
+                    'mod_board',
+                    'files',
+                    $note->id,
+                    '/',
+                    $note->filename
+                )->out(false);
+                $note->info = $note->filename;
+            } else {
+                $note->type = (string)board::MEDIATYPE_NONE;
+                $note->url = null;
+                $note->info = null;
+            }
+        } else if ($note->type == board::MEDIATYPE_YOUTUBE) {
+            if (!get_config('mod_board', 'allowyoutube')) {
+                $note->type = (string)board::MEDIATYPE_NONE;
+                $note->url = null;
+                $note->info = null;
+            } else if (trim($note->info ?? '') === '') {
+                $note->info = $note->url;
+            }
+        } else if ($note->type == board::MEDIATYPE_URL) {
+            if (empty($note->url)) {
+                $note->type = (string)board::MEDIATYPE_NONE;
+                $note->url = null;
+                $note->info = null;
+            } else if (trim($note->info ?? '') === '') {
+                $note->info = $note->url;
+                if (\core_text::strlen($note->info) > 100) {
+                    // No point showing very long URLs here.
+                    $note->info = \core_text::substr($note->info, 0, 100) . '...';
+                }
+            }
+        }
+
+        if (isset($note->info)) {
+            $note->info = self::format_plain_text($note->info);
+        }
+
+        if (!$note->deleted && board::board_rating_enabled($board)) {
+            $note->rating = self::get_rating($note->id);
+        } else {
+            $note->rating = null;
+        }
+
+        return $note;
+    }
+
+    /**
+     * Returns note info for export purposes.
+     *
+     * @param stdClass $note formatted note object
+     * @return string
+     */
+    public static function get_export_info(stdClass $note): string {
+        $rowstring = '';
+        if (trim($note->heading ?? '') !== '') {
+            $rowstring .= $note->heading;
+        }
+        $hascontent = false;
+        if (trim($note->content ?? '') !== '') {
+            // Note that formatted content always has block style tags in it,
+            // there is no need to add line breaks around it.
+            $rowstring .= $note->content;
+            $hascontent = true;
+        }
+        if ($note->type) {
+            if ($rowstring !== '' && !$hascontent) {
+                $rowstring .= "<br />";
+            }
+            $spacer = '';
+            if (trim($note->info ?? '') !== '') {
+                $rowstring .= $note->info;
+                $spacer = ' ';
+            }
+            if ($note->info !== $note->url && $note->url) {
+                $rowstring .= $spacer . '(' . $note->url . ')';
+            }
+        }
+        return $rowstring;
     }
 }

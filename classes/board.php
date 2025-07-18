@@ -26,9 +26,6 @@ use stdClass;
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class board {
-    /** @var int Minimum file size of 100 bytes. */
-    const ACCEPTED_FILE_MIN_SIZE = 100;
-
     /** @var int Maximum file size of 10Mb. */
     const ACCEPTED_FILE_MAX_SIZE = 1024 * 1024 * 10;
 
@@ -42,7 +39,7 @@ class board {
     const LENGTH_INFO = 100;
 
     /** @var int Value for the max url length, consistent with db */
-    const LENGTH_URL = 200;
+    const LENGTH_URL = 1333;
 
     /** @var int Value for disabling rating. */
     const RATINGDISABLED = 0;
@@ -73,6 +70,21 @@ class board {
 
     /** @var int Value for the singleusermode setting in public mode*/
     const SINGLEUSER_PUBLIC = 2;
+
+    /** @var int no additional media */
+    const MEDIATYPE_NONE = 0;
+
+    /** @var int YouTube video */
+    const MEDIATYPE_YOUTUBE = 1;
+
+    /** @var int uploaded image */
+    const MEDIATYPE_IMAGE = 2;
+
+    /** @var int general URL */
+    const MEDIATYPE_URL = 3;
+
+    /** @var int general uploaded file */
+    const MEDIATYPE_FILE = 4;
 
     /**
      * Retrieves the course module for the board
@@ -257,6 +269,7 @@ class board {
      * Can current user view the note?
      *
      * NOTE: deleted notes are not visible
+     * NOTE: this has to be used after require_login() because access restriction is not checked
      *
      * @param stdClass $note
      * @return \context|null null means user cannot view the note
@@ -272,6 +285,10 @@ class board {
         }
 
         if (!has_capability('mod/board:manageboard', $context)) {
+            if ($note->deleted) {
+                return null;
+            }
+
             if ($board->singleusermode == self::SINGLEUSER_PRIVATE) {
                 if (!$USER->id) {
                     return null;
@@ -440,34 +457,6 @@ class board {
                             && !self::can_access_group((int)$groupid, $context)) || $postbyoverdue);
 
         return $readonlyboard;
-    }
-
-    /**
-     * Prepares board notes for export.
-     *
-     * @param stdClass $note
-     * @return string
-     */
-    public static function get_export_note(stdClass $note): string {
-        $breaks = ["<br />", "<br>", "<br/>"];
-
-        $rowstring = '';
-        if (!empty($note->heading)) {
-            $rowstring .= $note->heading;
-        }
-        if (!empty($note->content)) {
-            if (!empty($rowstring)) {
-                $rowstring .= "\n";
-            }
-            $rowstring .= str_ireplace($breaks, "\n", $note->content);
-        }
-        if (!empty($note->type)) {
-            if (!empty($rowstring)) {
-                $rowstring .= "\n";
-            }
-            $rowstring .= (!empty($note->info) ? ($note->info . ' ') : '') . $note->url;
-        }
-        return $rowstring;
     }
 
     /**
@@ -649,5 +638,40 @@ class board {
         }
 
         return has_capability('mod/board:manageboard', $context);
+    }
+
+    /**
+     * Get the supported filetype extensions for board backgound.
+     *
+     * @return array of strings of supported file extensions.
+     */
+    public static function get_accepted_background_file_extensions(): array {
+        $config = get_config('mod_board');
+        if (isset($config->acceptedfiletypeforbackground)) {
+            $extensions = explode(',', $config->acceptedfiletypeforbackground);
+        } else {
+            $extensions = [];
+        }
+        return $extensions;
+    }
+
+    /**
+     * Returns basic options for the background file picker.
+     *
+     * @return array
+     */
+    public static function get_background_picker_options(): array {
+        $extensions = self::get_accepted_background_file_extensions();
+
+        $extensions = array_map(function ($extension) {
+            return '.' . $extension;
+        }, $extensions);
+
+        return [
+            'accepted_types' => $extensions,
+            'maxfiles' => 1,
+            'subdirs' => 0,
+            'maxbytes' => 0,
+        ];
     }
 }

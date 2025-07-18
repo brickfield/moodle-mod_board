@@ -16,8 +16,9 @@
 
 namespace mod_board\phpunit\local;
 
-use mod_board\local\column;
 use mod_board\board;
+use mod_board\local\column;
+use mod_board\local\note;
 
 /**
  * Test column helper class.
@@ -107,21 +108,64 @@ final class column_test extends \advanced_testcase {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course([]);
         $user = $this->getDataGenerator()->create_user();
+        $usercontext = \context_user::instance($user->id);
 
         /** @var \mod_board_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_board');
+        $fs = get_file_storage();
 
-        $board = $this->getDataGenerator()->create_module('board', [
-            'course' => $course->id,
-        ]);
-        $column4 = $generator->create_column(['boardid' => $board->id, 'name' => 'Col X']);
-        $note = $generator->create_note(['columnid' => $column4->id, 'userid' => $user->id]);
+        $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
+        $context = board::context_for_board($board);
+        [$column1, $column2, $column3] = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
 
-        $historyid = column::delete($column4->id);
+        $note1 = $generator->create_note(['columnid' => $column1->id, 'userid' => $user->id]);
+        $note2 = $generator->create_note(['columnid' => $column2->id, 'userid' => $user->id]);
+        $comment1 = $generator->create_comment(['noteid' => $note1->id]);
+        $comment2 = $generator->create_comment(['noteid' => $note2->id]);
+        $this->setUser($user);
+        \mod_board\local\note::rate($note1->id);
+        \mod_board\local\note::rate($note2->id);
+        $draftfile = $fs->create_file_from_string([
+            'contextid' => $usercontext->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => 6661,
+            'filepath' => '/',
+            'filename' => 'image.png',
+        ], 'xx');
+        $note1 = note::update_attachment(
+            $note1->id,
+            ['type' => board::MEDIATYPE_IMAGE, 'info' => 'Some image', 'draftitemid' => 6661],
+            $context
+        );
+        $draftfile = $fs->create_file_from_string([
+            'contextid' => $usercontext->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => 6662,
+            'filepath' => '/',
+            'filename' => 'image.png',
+        ], 'xx');
+        $note2 = note::update_attachment(
+            $note2->id,
+            ['type' => board::MEDIATYPE_IMAGE, 'info' => 'Some image', 'draftitemid' => 6662],
+            $context
+        );
+
+        $historyid = column::delete($column1->id);
         $this->assertNotEmpty($historyid);
-        $this->assertFalse($DB->record_exists('board_columns', ['id' => $column4->id]));
-        $note = $DB->get_record('board_notes', ['id' => $note->id], '*', MUST_EXIST);
-        $this->assertSame('1', $note->deleted);
+
+        $this->assertFalse($DB->record_exists('board_columns', ['id' => $column1->id]));
+        $this->assertFalse($DB->record_exists('board_notes', ['columnid' => $column1->id]));
+        $this->assertFalse($DB->record_exists('board_note_ratings', ['noteid' => $note1->id]));
+        $this->assertFalse($DB->record_exists('board_comments', ['noteid' => $note1->id]));
+        $this->assertFalse($fs->file_exists($context->id, 'mod_board', 'images', $note1->id, '/', 'image.png'));
+
+        $this->assertTrue($DB->record_exists('board_columns', ['id' => $column2->id]));
+        $this->assertTrue($DB->record_exists('board_notes', ['columnid' => $column2->id]));
+        $this->assertTrue($DB->record_exists('board_note_ratings', ['noteid' => $note2->id]));
+        $this->assertTrue($DB->record_exists('board_comments', ['noteid' => $note2->id]));
+        $this->assertTrue($fs->file_exists($context->id, 'mod_board', 'images', $note2->id, '/', 'image.png'));
     }
 
     public function test_move(): void {

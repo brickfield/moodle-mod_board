@@ -25,6 +25,7 @@ import $ from "jquery";
 import {get_strings as getStrings, get_string as getString} from "core/str";
 import Ajax from "core/ajax";
 import ModalSaveCancel from "core/modal_save_cancel";
+import ModalCancel from "core/modal_cancel";
 import ModalEvents from "core/modal_events";
 import Notification from "core/notification";
 import "mod_board/jquery.editable.amd";
@@ -179,6 +180,7 @@ export default function(settings) {
         option_youtube: '',
         option_image: '',
         option_link: '',
+        option_file: '',
 
         aria_newcolumn: '',
         aria_newpost: '',
@@ -196,10 +198,6 @@ export default function(settings) {
         aria_cancelnew: '',
         aria_ratepost: '',
 
-        invalid_file_extension: '',
-        invalid_file_size_min: '',
-        invalid_file_size_max: '',
-
         invalid_youtube_url: '',
     };
 
@@ -212,6 +210,7 @@ export default function(settings) {
           ATTACHMENT_VIDEO = 1,
           ATTACHMENT_IMAGE = 2,
           ATTACHMENT_LINK = 3,
+          ATTACHMENT_FILE = 4,
           SORTBY_DATE = 1,
           SORTBY_RATING = 2,
           SORTBY_NONE = 3;
@@ -316,7 +315,7 @@ export default function(settings) {
      * @returns {*|jQuery}
      */
     var getNoteAttachmentsForNote = function(note) {
-        return $(note).find(".mod_board_note_attachment");
+        return $(note).find(".mod_board_preview");
     };
 
     /**
@@ -354,7 +353,7 @@ export default function(settings) {
             columnIdentifier = note.closest('.board_column').find('.mod_board_column_name').text();
 
         if (noteId) { // New post
-            var noteIdentifier = textIdentifierForNote(note),
+            var noteIdentifier = decodeText(textIdentifierForNote(note)),
                 deleteNoteString = strings.aria_deletepost.replace('{column}', columnIdentifier).replace('{post}', noteIdentifier);
 
             note.find('.delete_note').attr('aria-label', deleteNoteString).attr('title', deleteNoteString);
@@ -561,109 +560,23 @@ export default function(settings) {
     };
 
     /**
-     * Update the attachment information of a note.
-     *
-     * @method attachmentTypeChanged
-     * @param {object} note
-     */
-    var attachmentTypeChanged = function(note) {
-        var noteAttachment = getNoteAttachmentsForNote(note),
-            type = noteAttachment.find('.mod_board_type').val(),
-            attachmentInfo = noteAttachment.find('.info'),
-            attachmentUrl = noteAttachment.find('.url'),
-            attachmentFile = noteAttachment.find('.mod_board_file');
-
-        if (type > "0") {
-            attachmentInfo.prop('placeholder', strings['option_' + attachmentTypeToString(type) + '_info']);
-            attachmentUrl.prop('placeholder', strings['option_' + attachmentTypeToString(type) + '_url']);
-
-            attachmentInfo.show();
-            if (type == ATTACHMENT_IMAGE && FileReader) {
-                attachmentFile.show();
-                attachmentUrl.hide();
-            } else {
-                attachmentFile.hide();
-                attachmentUrl.show();
-            }
-        } else {
-            attachmentInfo.hide();
-            attachmentUrl.hide();
-            attachmentFile.hide();
-
-            attachmentInfo.val('');
-            attachmentUrl.val('');
-
-        }
-    };
-
-    /**
-     * Set the attachment of a note.
-     *
-     * @method setAttachment
-     * @param {object} note
-     * @param {object} attachment
-     */
-    var setAttachment = function(note, attachment) {
-        var noteAttachment = getNoteAttachmentsForNote(note);
-        if (noteAttachment) {
-            if (!attachment) {
-                attachment = {type: "0"};
-            } else {
-                attachment.type += "";// Just in case
-            }
-            var attType = noteAttachment.find('.mod_board_type');
-            attType.val(attachment.type ? attachment.type : "0");
-            if (attType.val() > "0") {
-                noteAttachment.find('.info').val(decodeText(attachment.info));
-                noteAttachment.find('.url').val(decodeText(attachment.url));
-            }
-            attachmentTypeChanged(note, attachment);
-        }
-        previewAttachment(note, attachment);
-    };
-
-    /**
      * Returns an object with various information about a note's attachment.
      *
      * @method attachmentDataForNote
      * @param {object} note
-     * @returns {{filename: null, filecontents: null, type: number, url: null, info: null}}
+     * @returns {{type: number, url: null, info: null}}
      */
     var attachmentDataForNote = function(note) {
-        var attachment = {type: 0, info: null, url: null, filename: null, filecontents: null},
-            noteAttachment = getNoteAttachmentsForNote(note);
+        let attachment = {type: 0, info: null, url: null};
+        let noteAttachment = getNoteAttachmentsForNote(note);
+
         if (noteAttachment.length) {
-            attachment.type = noteAttachment.find('.mod_board_type').val();
-            attachment.info = encodeText(noteAttachment.find('.info').val());
+            attachment.type = noteAttachment.data('type');
+            attachment.info = noteAttachment.data('info');
             attachment.url = encodeText(noteAttachment.find('.url').val());
-            var fileElem = noteAttachment.find('.mod_board_file>input');
-            if (fileElem.data('filename')) {
-                attachment.filename = fileElem.data('filename');
-                attachment.filecontents = fileElem.data('filecontents');
-            }
-        }
-        if ((!attachment.info || !attachment.info.length) && (!attachment.url || !attachment.url.length) &&
-            (!attachment.filename)) {
-            attachment.type = 0;
         }
 
         return attachment;
-    };
-
-    /**
-     * Get the string type of a attachment type number.
-     *
-     * @method attachmentTypeToString
-     * @param {number} type
-     * @returns {string|null}
-     */
-    var attachmentTypeToString = function(type) {
-        switch (type) {
-            case "1": return 'youtube';
-            case "2": return 'image';
-            case "3": return 'link';
-            default: return null;
-        }
     };
 
     /**
@@ -690,10 +603,7 @@ export default function(settings) {
      * @param {object} attachment
      */
     var previewAttachment = function(note, attachment) {
-        var elem = note.find('.mod_board_preview');
-        if (!attachment) {
-            attachment = attachmentDataForNote(note);
-        }
+        let elem = note.find('.mod_board_preview');
 
         if (!getNoteTextForNote(note).html().length) {
             elem.addClass('mod_board_notext');
@@ -704,13 +614,10 @@ export default function(settings) {
         elem.removeClass('wrapper_youtube');
         elem.removeClass('wrapper_image');
         elem.removeClass('wrapper_url');
-        if (attachment.filename && parseInt(attachment.type) == ATTACHMENT_IMAGE) { // Before uploading
-            elem.html(`<img src="${attachment.filecontents}" alt="${attachment.info}"
-                class="mod_board_preview_element"/>`);
-            elem.addClass('wrapper_image');
-            elem.show();
-        } else if (attachment.url) {
-            const blanktarget = enableblanktarget ? ' target="_blank"' : '';
+        elem.removeClass('wrapper_file');
+
+        if (attachment.url) {
+            let preview = null;
             switch (parseInt(attachment.type)) {
                 case ATTACHMENT_VIDEO: { // Youtube
                     let url = getEmbedUrl(attachment.url);
@@ -724,22 +631,54 @@ export default function(settings) {
                         elem.addClass('wrapper_youtube').addClass('position-relative');
                     }
                     elem.show();
+                    elem.addClass('wrapper_image');
+                    elem.data('type', 1);
+                    elem.data('info', attachment.info);
                 }
                 break;
-                case ATTACHMENT_IMAGE: // Image
-                    elem.html(`<img src="${attachment.url}" alt="${attachment.info}"
-                        class="mod_board_preview_element"/>`);
+                case ATTACHMENT_IMAGE: // Image file
+                    preview = document.createElement('img');
+                    preview.src = attachment.url;
+                    preview.alt = decodeText(attachment.info);
+                    preview.classList.add('mod_board_preview_element');
+                    elem.html('');
+                    elem.append(preview);
                     elem.addClass('wrapper_image');
+                    elem.data('type', 2);
+                    elem.data('info', attachment.info);
                     elem.show();
                 break;
                 case ATTACHMENT_LINK: // Url
-                    elem.html('<a href="' + attachment.url + '" class="mod_board_preview_element"' + blanktarget + '>' +
-                             (attachment.info || attachment.url) + '</a>');
+                    preview = document.createElement('a');
+                    preview.href = attachment.url;
+                    preview.text = decodeText(attachment.info);
+                    preview.classList.add('mod_board_preview_element');
+                    if (enableblanktarget) {
+                        preview.target = '_blank';
+                    }
+                    elem.html('');
+                    elem.append(preview);
                     elem.addClass('wrapper_url');
+                    elem.data('type', 3);
+                    elem.data('info', attachment.info);
                     elem.show();
                 break;
+                case ATTACHMENT_FILE: // General file
+                    preview = document.createElement('a');
+                    preview.href = attachment.url;
+                    preview.text = decodeText(attachment.info);
+                    preview.classList.add('mod_board_preview_element');
+                    elem.html('');
+                    elem.append(preview);
+                    elem.addClass('wrapper_file');
+                    elem.data('type', 4);
+                    elem.data('info', attachment.info);
+                    elem.show();
+                    break;
                 default:
                     elem.html('');
+                    elem.data('type', 0);
+                    elem.data('info', '');
                     elem.hide();
             }
         } else {
@@ -849,10 +788,8 @@ export default function(settings) {
                     beginEdit();
                 });
                 updateSortable();
-                setAttachment(note, attachment);
-            } else {
-                previewAttachment(note, attachment);
             }
+            previewAttachment(note, attachment);
 
             note.append(notecontrols);
 
@@ -922,7 +859,7 @@ export default function(settings) {
             const lockIcon = locked ? 'fa-lock' : 'fa-unlock';
             const lockElement = $(`<div class="icon fa ${lockIcon} lock_column" role="button" tabindex="0"></div>`);
             const lockstring = locked ? 'aria_column_locked' : 'aria_column_unlocked';
-            getString(lockstring, 'mod_board', name).done(function(str) {
+            getString(lockstring, 'mod_board', decodeText(name)).done(function(str) {
                 lockElement.attr('aria-label', str);
                 lockElement.attr('title', str);
             });
@@ -1118,7 +1055,7 @@ export default function(settings) {
 
         noteText.html(data.content);
         noteHeading.html(data.heading);
-        setAttachment(note, data.attachment);
+        previewAttachment(note, data.attachment);
         updateNoteAria(data.id);
 
         // Reset the visibility state.
@@ -1465,11 +1402,12 @@ export default function(settings) {
      * @param {number} columnid
      * @param {number} ownerId
      * @param {number} groupId
+     * @param {String} formData
      * @returns {Deferred|*}
      */
-    var getBody = function(noteid, columnid, ownerId, groupId) {
+    var getBody = function(noteid, columnid, ownerId, groupId, formData) {
         // Get the content of the modal.
-        var params = {noteid: noteid, columnid: columnid, ownerid: ownerId, groupid: groupId};
+        var params = {noteid: noteid, columnid: columnid, ownerid: ownerId, groupid: groupId, jsonformdata: formData};
         return Fragment.loadFragment('mod_board', 'note_form', contextid, params);
     };
 
@@ -1484,6 +1422,7 @@ export default function(settings) {
             addYoutube,
             addImage,
             addLink,
+            addFile,
             postButton,
             cancelButton,
             modalRoot = modal.getRoot();
@@ -1500,6 +1439,8 @@ export default function(settings) {
                 columnIdentifier).replace('{post}', noteIdentifier);
             addLink = strings.aria_addmedia.replace('{type}', strings.option_link).replace('{column}',
                 columnIdentifier).replace('{post}', noteIdentifier);
+            addFile = strings.aria_addmedia.replace('{type}', strings.option_file).replace('{column}',
+                columnIdentifier).replace('{post}', noteIdentifier);
         } else {
             // Note is new.
             postButton = strings.aria_postnew.replace('{column}', columnIdentifier);
@@ -1508,6 +1449,7 @@ export default function(settings) {
                 columnIdentifier);
             addImage = strings.aria_addmedianew.replace('{type}', strings.option_image).replace('{column}', columnIdentifier);
             addLink = strings.aria_addmedianew.replace('{type}', strings.option_link).replace('{column}', columnIdentifier);
+            addFile = strings.aria_addmedianew.replace('{type}', strings.option_file).replace('{column}', columnIdentifier);
         }
 
         if (mediaSelection == MEDIA_SELECTION_BUTTONS) {
@@ -1517,6 +1459,8 @@ export default function(settings) {
             modalRoot.find('.mod_board_attachment_button.image_button').attr('title', addImage);
             modalRoot.find('.mod_board_attachment_button.link_button').attr('aria-label', addLink);
             modalRoot.find('.mod_board_attachment_button.link_button').attr('title', addLink);
+            modalRoot.find('.mod_board_attachment_button.file_button').attr('aria-label', addFile);
+            modalRoot.find('.mod_board_attachment_button.file_button').attr('title', addFile);
         }
 
         let button = modalRoot.find(modal.getActionSelector('save'));
@@ -1552,7 +1496,7 @@ export default function(settings) {
 
         ModalSaveCancel.create({
             title: title,
-            body: getBody(noteId, columnId, ownerId, groupId),
+            body: getBody(noteId, columnId, ownerId, groupId, ''),
             large: true,
             removeOnClose: true
         }).then(function(modal) {
@@ -1635,7 +1579,7 @@ export default function(settings) {
                                 getNoteTextForNote(note).html(result.note.content);
                                 getNoteHeadingForNote(note).html(result.note.heading);
                                 updateNoteAria(result.note.id);
-                                setAttachment(note, {
+                                previewAttachment(note, {
                                     type: result.note.type,
                                     info: result.note.info, url: result.note.url
                                 });
@@ -1644,7 +1588,13 @@ export default function(settings) {
 
                             modal.destroy();
                         } else {
-                            modal.destroy();
+                            if (result.action === 'validationerrors') {
+                                // NOTE: we should somehow reload the form with the following here:
+                                //     getBody(noteId, columnId, ownerId, groupId, formData)
+                                modal.destroy();
+                            } else {
+                                modal.destroy();
+                            }
                         }
                     });
 
@@ -1658,10 +1608,12 @@ export default function(settings) {
                         ytButton = modal.getRoot().find('.mod_board_attachment_button.youtube_button'),
                         pictureButton = modal.getRoot().find('.mod_board_attachment_button.image_button'),
                         linkButton = modal.getRoot().find('.mod_board_attachment_button.link_button'),
+                        fileButton = modal.getRoot().find('.mod_board_attachment_button.file_button'),
                         updateMediaButtons = function() {
                             ytButton.removeClass('selected');
                             pictureButton.removeClass('selected');
                             linkButton.removeClass('selected');
+                            fileButton.removeClass('selected');
                             switch (mediaSelect.val()) {
                                 case ("1"):
                                     ytButton.addClass('selected');
@@ -1671,6 +1623,9 @@ export default function(settings) {
                                     break;
                                 case ("3"):
                                     linkButton.addClass('selected');
+                                    break;
+                                case ("4"):
+                                    fileButton.addClass('selected');
                                     break;
                             }
                         };
@@ -1699,6 +1654,15 @@ export default function(settings) {
                             mediaSelect.val(0);
                         } else {
                             mediaSelect.val(3);
+                        }
+                        updateMediaButtons();
+                        mediaSelect[0].dispatchEvent(changeEvent);
+                    });
+                    handleAction(fileButton, function() {
+                        if (mediaSelect.val() === "4") {
+                            mediaSelect.val(0);
+                        } else {
+                            mediaSelect.val(4);
                         }
                         updateMediaButtons();
                         mediaSelect[0].dispatchEvent(changeEvent);
@@ -1740,7 +1704,7 @@ export default function(settings) {
         modalBody.append(commentArea);
         Comments.fetchFor(ident, commentArea);
 
-        ModalSaveCancel.create({
+        ModalCancel.create({
             title: heading,
             body: modalBody,
         }).then(function(modal) {

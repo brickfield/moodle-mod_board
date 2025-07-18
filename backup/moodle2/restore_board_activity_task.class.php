@@ -48,7 +48,9 @@ class restore_board_activity_task extends restore_activity_task {
         $contents = [];
 
         $contents[] = new restore_decode_content('board', ['intro'], 'board');
-        $contents[] = new restore_decode_content('board_notes', ['content'], 'board_note');
+
+        // NOTE: url may contain links to internal pages, decode the field the same way as mod_url does externalurl.
+        $contents[] = new restore_decode_content('board_notes', ['content', 'url'], 'board_note');
 
         return $contents;
     }
@@ -70,6 +72,6 @@ class restore_board_activity_task extends restore_activity_task {
      * @return string[]
      */
     public function get_fileareas() {
-        return ['images', 'backgrond'];
+        return ['images', 'files', 'backgrond'];
     }
 }

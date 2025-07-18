@@ -13,7 +13,8 @@ On the board activity, students can:
   * Some text.
   * Add a link.
   * Upload an image.
-  * Embed a Youtube video.
+  * Upload a general file.
+  * Embed a YouTube video.
 * Edit or Delete one of their posts.
 * Add optional comments to posts.
 
