@@ -136,7 +136,7 @@ final class column_test extends \advanced_testcase {
             'course' => $course->id,
         ]);
         $generator->create_column(['boardid' => $board->id, 'name' => 'Col X']);
-        list($column1, $column2, $column3, $column4)
+        [$column1, $column2, $column3, $column4]
             = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
         $this->assertSame('1', $column1->sortorder);
         $this->assertSame('2', $column2->sortorder);
@@ -145,7 +145,7 @@ final class column_test extends \advanced_testcase {
 
         $historyid = column::move($column4->id, 2);
         $this->assertNotEmpty($historyid);
-        list($column1, $column2, $column3, $column4)
+        [$column1, $column2, $column3, $column4]
             = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
         $this->assertSame('1', $column1->sortorder);
         $this->assertSame('2', $column2->sortorder);
@@ -153,7 +153,7 @@ final class column_test extends \advanced_testcase {
         $this->assertSame('4', $column3->sortorder);
 
         $historyid = column::move($column4->id, 2);
-        $this->assertNotEmpty($historyid);        list($column1, $column2, $column3, $column4)
+        $this->assertNotEmpty($historyid);        [$column1, $column2, $column3, $column4]
             = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
         $this->assertSame('1', $column1->sortorder);
         $this->assertSame('2', $column2->sortorder);
@@ -162,7 +162,7 @@ final class column_test extends \advanced_testcase {
 
         $historyid = column::move($column4->id, 0);
         $this->assertNotEmpty($historyid);
-        list($column1, $column2, $column3, $column4)
+        [$column1, $column2, $column3, $column4]
             = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
         $this->assertSame('1', $column4->sortorder);
         $this->assertSame('2', $column1->sortorder);
@@ -171,7 +171,7 @@ final class column_test extends \advanced_testcase {
 
         $historyid = column::move($column4->id, 10);
         $this->assertNotEmpty($historyid);
-        list($column1, $column2, $column3, $column4)
+        [$column1, $column2, $column3, $column4]
             = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
         $this->assertSame('1', $column1->sortorder);
         $this->assertSame('2', $column2->sortorder);

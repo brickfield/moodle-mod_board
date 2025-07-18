@@ -26,7 +26,6 @@ use stdClass;
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class board {
-
     /** @var int Minimum file size of 100 bytes. */
     const ACCEPTED_FILE_MIN_SIZE = 100;
 
@@ -304,8 +303,11 @@ class board {
     public static function clear_history() {
         global $DB;
 
-        return $DB->delete_records_select('board_history', 'timecreated < :timecreated',
-                                        ['timecreated' => time() - 60]); // 1 minute history
+        return $DB->delete_records_select(
+            'board_history',
+            'timecreated < :timecreated',
+            ['timecreated' => time() - 60]
+        ); // 1 minute history
     }
 
     /**
@@ -446,7 +448,7 @@ class board {
      * @param stdClass $note
      * @return string
      */
-    public static function get_export_note(stdClass$note): string {
+    public static function get_export_note(stdClass $note): string {
         $breaks = ["<br />", "<br>", "<br/>"];
 
         $rowstring = '';
@@ -463,7 +465,7 @@ class board {
             if (!empty($rowstring)) {
                 $rowstring .= "\n";
             }
-            $rowstring .= (!empty($note->info) ? ($note->info.' ') : '') . $note->url;
+            $rowstring .= (!empty($note->info) ? ($note->info . ' ') : '') . $note->url;
         }
         return $rowstring;
     }
@@ -477,7 +479,7 @@ class board {
     public static function get_column_colours(): array {
         $colours = explode(PHP_EOL, get_config('mod_board', 'column_colours'));
         foreach ($colours as $index => $colour) {
-            $colours[$index] = trim($colour,  "\t\n\r\0\x0B#");
+            $colours[$index] = trim($colour, "\t\n\r\0\x0B#");
             $matched = preg_match('/\b[A-Fa-f0-9]{6}\b|\b[A-Fa-f0-9]{3}\b/', $colours[$index]);
             if ($matched != 1) {
                 // One hex was wrong, use the default.
@@ -515,10 +517,14 @@ class board {
             $groups = 0;
         }
         $context = self::context_for_board($board);
-        $userlist = get_enrolled_users($context, 'mod/board:view', $groups,
+        $userlist = get_enrolled_users(
+            $context,
+            'mod/board:view',
+            $groups,
             // phpcs:ignore moodle.Files.LineLength.TooLong
             'u.id, u.lastname, u.firstname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename, u.suspended, u.confirmed',
-            onlyactive: true);
+            onlyactive: true
+        );
         foreach ($userlist as $k => $user) {
             if ($user->suspended || !$user->confirmed) {
                 unset($userlist[$k]);
@@ -573,7 +579,7 @@ class board {
         if ($onlycomments) {
             $sql .= " AND EXISTS (SELECT 'x' FROM {board_comments} bc WHERE bc.noteid = bn.id)";
         }
-        list($sort, $sortparams) = users_order_by_sql('u');
+        [$sort, $sortparams] = users_order_by_sql('u');
         $sql .= " ORDER BY $sort";
         $params = array_merge($params, $sortparams);
 

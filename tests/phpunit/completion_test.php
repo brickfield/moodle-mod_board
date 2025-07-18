@@ -41,8 +41,10 @@ final class completion_test extends \advanced_testcase {
 
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course(['enablecompletion' => COMPLETION_ENABLED]);
-        $board = $this->getDataGenerator()->create_module('board',
-            ['course' => $course->id, 'completionnotes' => 2, 'completion' => COMPLETION_TRACKING_AUTOMATIC]);
+        $board = $this->getDataGenerator()->create_module(
+            'board',
+            ['course' => $course->id, 'completionnotes' => 2, 'completion' => COMPLETION_TRACKING_AUTOMATIC]
+        );
         $columns = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
         $column = $columns[0];
 

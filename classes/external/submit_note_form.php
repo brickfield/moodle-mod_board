@@ -158,7 +158,6 @@ final class submit_note_form extends external_api {
                     'note' => $note,
                     'historyid' => $historyid,
                 ];
-
             } else {
                 if ($board->singleusermode != board::SINGLEUSER_DISABLED) {
                     // Groups are not used in single-user-mode apart from user selection.
@@ -202,7 +201,13 @@ final class submit_note_form extends external_api {
                 }
 
                 $note = note::create(
-                    $data->columnid, $data->ownerid, $data->groupid, $data->heading, $data->content, $attachment);
+                    $data->columnid,
+                    $data->ownerid,
+                    $data->groupid,
+                    $data->heading,
+                    $data->content,
+                    $attachment
+                );
                 $historyid = $note->historyid;
                 unset($note->historyid);
                 $note->rating = 0;

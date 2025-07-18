@@ -56,7 +56,7 @@ final class move_column_test extends \advanced_testcase {
         $result = move_column::clean_returnvalue(move_column::execute_returns(), $result);
         $this->assertTrue($result['status']);
         $this->assertNotEmpty($result['historyid']);
-        list($column1, $column2, $column3, $column4)
+        [$column1, $column2, $column3, $column4]
             = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
         $this->assertSame('1', $column1->sortorder);
         $this->assertSame('2', $column4->sortorder);
@@ -72,7 +72,8 @@ final class move_column_test extends \advanced_testcase {
             $this->assertInstanceOf(\core\exception\required_capability_exception::class, $ex);
             $this->assertSame(
                 'Sorry, but you do not currently have permissions to do that (Manage columns and manage all posts.).',
-                $ex->getMessage());
+                $ex->getMessage()
+            );
         }
     }
 }

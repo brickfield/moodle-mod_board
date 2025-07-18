@@ -81,7 +81,8 @@ final class lock_column_test extends \advanced_testcase {
             $this->assertInstanceOf(\core\exception\required_capability_exception::class, $ex);
             $this->assertSame(
                 'Sorry, but you do not currently have permissions to do that (Manage columns and manage all posts.).',
-                $ex->getMessage());
+                $ex->getMessage()
+            );
         }
     }
 }

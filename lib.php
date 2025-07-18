@@ -31,7 +31,7 @@ use mod_board\local\note;
  * @return bool|null
  */
 function board_supports($feature) {
-    switch($feature) {
+    switch ($feature) {
         case FEATURE_SHOW_DESCRIPTION:
             return true;
         case FEATURE_GROUPS:
@@ -115,12 +115,18 @@ function board_add_instance($data, $mform = null) {
     $boardid = $DB->insert_record('board', $data);
     if ($boardid) {
         $columnheading = get_string('default_column_heading', 'mod_board');
-        $DB->insert_record('board_columns',
-            ['boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 1]);
-        $DB->insert_record('board_columns',
-            ['boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 2]);
-        $DB->insert_record('board_columns',
-            ['boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 3]);
+        $DB->insert_record(
+            'board_columns',
+            ['boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 1]
+        );
+        $DB->insert_record(
+            'board_columns',
+            ['boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 2]
+        );
+        $DB->insert_record(
+            'board_columns',
+            ['boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 3]
+        );
     }
 
     // Save background image if set.
@@ -129,8 +135,14 @@ function board_add_instance($data, $mform = null) {
     if (!empty($data->background_image)) {
         $fs = get_file_storage();
         $fs->delete_area_files($context->id, 'mod_board', 'background');
-        file_save_draft_area_files($data->background_image, $context->id, 'mod_board', 'background',
-            0, ['subdirs' => 0, 'maxfiles' => 1]);
+        file_save_draft_area_files(
+            $data->background_image,
+            $context->id,
+            'mod_board',
+            'background',
+            0,
+            ['subdirs' => 0, 'maxfiles' => 1]
+        );
     }
 
     return $boardid;
@@ -162,8 +174,14 @@ function board_update_instance($data, $mform) {
     if (!empty($data->background_image)) {
         $fs = get_file_storage();
         $fs->delete_area_files($context->id, 'mod_board', 'background');
-        file_save_draft_area_files($data->background_image, $context->id, 'mod_board', 'background',
-            0, ['subdirs' => 0, 'maxfiles' => 1]);
+        file_save_draft_area_files(
+            $data->background_image,
+            $context->id,
+            'mod_board',
+            'background',
+            0,
+            ['subdirs' => 0, 'maxfiles' => 1]
+        );
     }
 
     return true;
@@ -210,10 +228,14 @@ function board_extend_settings_navigation(settings_navigation $settings, navigat
     if (has_capability('mod/board:manageboard', $context)) {
         $params = ['id' => $settings->get_page()->cm->id];
 
-        $node = navigation_node::create(get_string('export', 'board'),
-                new moodle_url('/mod/board/export.php', $params),
-                navigation_node::TYPE_SETTING, null, null,
-                new pix_icon('i/export', ''));
+        $node = navigation_node::create(
+            get_string('export', 'board'),
+            new moodle_url('/mod/board/export.php', $params),
+            navigation_node::TYPE_SETTING,
+            null,
+            null,
+            new pix_icon('i/export', '')
+        );
         $boardnode->add_node($node);
     }
 }
@@ -411,8 +433,10 @@ function board_get_coursemodule_info($coursemodule) {
  */
 function mod_board_get_completion_active_rule_descriptions($cm) {
     // Values will be present in cm_info, and we assume these are up to date.
-    if (empty($cm->customdata['customcompletionrules'])
-        || $cm->completion != COMPLETION_TRACKING_AUTOMATIC) {
+    if (
+        empty($cm->customdata['customcompletionrules'])
+        || $cm->completion != COMPLETION_TRACKING_AUTOMATIC
+    ) {
         return [];
     }
 
@@ -486,7 +510,6 @@ function board_cm_info_dynamic(cm_info $cm) {
     if ($embedallowed && $board->embed) {
         $cm->set_no_view_link();
     }
-
 }
 
 /**
@@ -517,8 +540,10 @@ function board_cm_info_view(cm_info $cm) {
             'allowfullscreen' => true,
         ]);
         $output .= html_writer::end_tag('iframe');
-        $output .= html_writer::link(new moodle_url('/mod/board/view.php', ['id' => $cm->id]),
-            get_string('viewboard', 'board'));
+        $output .= html_writer::link(
+            new moodle_url('/mod/board/view.php', ['id' => $cm->id]),
+            get_string('viewboard', 'board')
+        );
         $output .= html_writer::end_tag('div');
         $cm->set_content($output, true);
     }

@@ -99,7 +99,6 @@ final class get_configuration extends external_api {
             } else {
                 $groupid = 0;
             }
-
         } else {
             if (!$ownerid) {
                 debugging('ownerid is required in single-user modes', DEBUG_DEVELOPER);

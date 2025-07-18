@@ -68,7 +68,7 @@ final class move_note_test extends \advanced_testcase {
         $result = move_note::clean_returnvalue(move_note::execute_returns(), $result);
         $this->assertTrue($result['status']);
         $this->assertNotEmpty($result['historyid']);
-        list($note1, $note2, $note3)
+        [$note1, $note2, $note3]
             = array_values($DB->get_records('board_notes', ['columnid' => $columns1[0]->id], 'id ASC'));
         $this->assertSame('1', $note1->sortorder);
         $this->assertSame('0', $note2->sortorder);
@@ -80,7 +80,7 @@ final class move_note_test extends \advanced_testcase {
         $result = move_note::clean_returnvalue(move_note::execute_returns(), $result);
         $this->assertTrue($result['status']);
         $this->assertNotEmpty($result['historyid']);
-        list($note1, $note2, $note3)
+        [$note1, $note2, $note3]
             = array_values($DB->get_records('board_notes', ['columnid' => $columns1[0]->id], 'id ASC'));
         $this->assertSame('0', $note1->sortorder);
         $this->assertSame('1', $note2->sortorder);
@@ -93,7 +93,8 @@ final class move_note_test extends \advanced_testcase {
             $this->assertInstanceOf(\core\exception\required_capability_exception::class, $ex);
             $this->assertSame(
                 'Sorry, but you do not currently have permissions to do that (Manage columns and manage all posts.).',
-                $ex->getMessage());
+                $ex->getMessage()
+            );
         }
 
         $this->setUser($student4);

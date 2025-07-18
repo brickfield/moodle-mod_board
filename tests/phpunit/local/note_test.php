@@ -46,7 +46,7 @@ final class note_test extends \advanced_testcase {
             'singleusermode' => board::SINGLEUSER_PRIVATE,
         ]);
 
-        list($column1, $column2, $column3)
+        [$column1, $column2, $column3]
             = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
 
         $this->setUser($user1);
@@ -82,7 +82,7 @@ final class note_test extends \advanced_testcase {
         $this->assertSame('1', $note2->sortorder);
         $this->assertSame('0', $note2->deleted);
 
-        list($column1, $column2, $column3)
+        [$column1, $column2, $column3]
             = array_values($DB->get_records('board_columns', ['boardid' => $board2->id], 'id ASC'));
 
         $note3 = note::create($column1->id, $user1->id, null, '', 'NC 3', ['type' => 0, 'info' => '', 'url' => ''], $user2->id);
@@ -102,7 +102,7 @@ final class note_test extends \advanced_testcase {
 
         $this->setUser($user1);
 
-        list($column1, $column2, $column3)
+        [$column1, $column2, $column3]
             = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
 
         try {
@@ -120,7 +120,8 @@ final class note_test extends \advanced_testcase {
             $this->assertInstanceOf(\invalid_parameter_exception::class, $ex);
             $this->assertSame(
                 'Invalid parameter value detected (ownerid must match userid if single user mode disabled)',
-                $ex->getMessage());
+                $ex->getMessage()
+            );
         }
 
         $this->setUser(null);
@@ -143,7 +144,7 @@ final class note_test extends \advanced_testcase {
             $this->assertSame('Invalid parameter value detected (Invalid groupid)', $ex->getMessage());
         }
 
-        list($column1, $column2, $column3)
+        [$column1, $column2, $column3]
             = array_values($DB->get_records('board_columns', ['boardid' => $board2->id], 'id ASC'));
 
         try {
@@ -167,7 +168,7 @@ final class note_test extends \advanced_testcase {
             'singleusermode' => board::SINGLEUSER_DISABLED,
         ]);
 
-        list($column1, $column2, $column3)
+        [$column1, $column2, $column3]
             = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
 
         $this->setUser($user1);
@@ -237,7 +238,7 @@ final class note_test extends \advanced_testcase {
             'singleusermode' => board::SINGLEUSER_DISABLED,
         ]);
 
-        list($column1, $column2, $column3)
+        [$column1, $column2, $column3]
             = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
 
         $this->setUser($user1);
@@ -250,7 +251,7 @@ final class note_test extends \advanced_testcase {
         $hisotryid = note::delete($note2->id);
         $this->assertNotEmpty($hisotryid);
 
-        list($note1, $note2, $note3, $note4)
+        [$note1, $note2, $note3, $note4]
             = array_values($DB->get_records('board_notes', ['columnid' => $column1->id], 'id ASC'));
         $this->assertSame('0', $note1->deleted);
         $this->assertSame('1', $note2->deleted);
@@ -274,7 +275,7 @@ final class note_test extends \advanced_testcase {
             'singleusermode' => board::SINGLEUSER_DISABLED,
         ]);
 
-        list($column1, $column2, $column3)
+        [$column1, $column2, $column3]
             = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
 
         $this->setUser($user1);
@@ -286,7 +287,7 @@ final class note_test extends \advanced_testcase {
 
         $historyid = note::move($note3->id, $column1->id, 1);
         $this->assertNotEmpty($historyid);
-        list($note1, $note2, $note3, $note4)
+        [$note1, $note2, $note3, $note4]
             = array_values($DB->get_records('board_notes', ['columnid' => $column1->id], 'id ASC'));
         $this->assertSame('0', $note1->sortorder);
         $this->assertSame('1', $note3->sortorder);
@@ -295,7 +296,7 @@ final class note_test extends \advanced_testcase {
 
         $historyid = note::move($note3->id, $column1->id, 10);
         $this->assertNotEmpty($historyid);
-        list($note1, $note2, $note3, $note4)
+        [$note1, $note2, $note3, $note4]
             = array_values($DB->get_records('board_notes', ['columnid' => $column1->id], 'id ASC'));
         $this->assertSame('0', $note1->sortorder);
         $this->assertSame('1', $note2->sortorder);
@@ -304,12 +305,12 @@ final class note_test extends \advanced_testcase {
 
         $historyid = note::move($note2->id, $column2->id, 0);
         $this->assertNotEmpty($historyid);
-        list($note1, $note3, $note4)
+        [$note1, $note3, $note4]
             = array_values($DB->get_records('board_notes', ['columnid' => $column1->id], 'id ASC'));
         $this->assertSame('0', $note1->sortorder);
         $this->assertSame('1', $note4->sortorder);
         $this->assertSame('9', $note3->sortorder);
-        list($note2)
+        [$note2]
             = array_values($DB->get_records('board_notes', ['columnid' => $column2->id], 'id ASC'));
         $this->assertSame('0', $note2->sortorder);
     }
@@ -595,7 +596,7 @@ final class note_test extends \advanced_testcase {
             'singleusermode' => board::SINGLEUSER_DISABLED,
         ]);
 
-        list($column1, $column2, $column3)
+        [$column1, $column2, $column3]
             = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
 
         $this->setUser($user1);
@@ -634,7 +635,7 @@ final class note_test extends \advanced_testcase {
             'singleusermode' => board::SINGLEUSER_DISABLED,
         ]);
 
-        list($column1, $column2, $column3)
+        [$column1, $column2, $column3]
             = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
 
         $this->setUser($user1);

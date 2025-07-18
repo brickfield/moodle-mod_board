@@ -27,16 +27,31 @@ use mod_board\board;
 defined('MOODLE_INTERNAL') || die;
 
 if ($ADMIN->fulltree) {
+    $settings->add(new admin_setting_description(
+        'mod_board/logo',
+        '',
+        html_writer::img(
+            $OUTPUT->image_url('brickfield-logo-small', 'mod_board'),
+            'logo',
+            ['style' => 'display: block; margin: -50px auto -30px auto; float: right;']
+        )
+    ));
 
-    $settings->add(new admin_setting_description('mod_board/logo', '',
-        html_writer::img($OUTPUT->image_url('brickfield-logo-small', 'mod_board'), 'logo',
-            ['style' => 'display: block; margin: -50px auto -30px auto; float: right;'])));
+    $settings->add(new admin_setting_configtext(
+        'mod_board/new_column_icon',
+        get_string('new_column_icon', 'mod_board'),
+        get_string('new_column_icon_desc', 'mod_board'),
+        'fa-plus',
+        PARAM_RAW_TRIMMED
+    ));
 
-    $settings->add(new admin_setting_configtext('mod_board/new_column_icon', get_string('new_column_icon', 'mod_board'),
-                       get_string('new_column_icon_desc', 'mod_board'), 'fa-plus', PARAM_RAW_TRIMMED));
-
-    $settings->add(new admin_setting_configtext('mod_board/new_note_icon', get_string('new_note_icon', 'mod_board'),
-                       get_string('new_note_icon_desc', 'mod_board'), 'fa-plus', PARAM_RAW_TRIMMED));
+    $settings->add(new admin_setting_configtext(
+        'mod_board/new_note_icon',
+        get_string('new_note_icon', 'mod_board'),
+        get_string('new_note_icon_desc', 'mod_board'),
+        'fa-plus',
+        PARAM_RAW_TRIMMED
+    ));
 
     $settings->add(new admin_setting_configcheckbox(
         'mod_board/enableprivacystatement',
@@ -49,14 +64,29 @@ if ($ADMIN->fulltree) {
         1 => get_string('media_selection_buttons', 'mod_board'),
         2 => get_string('media_selection_dropdown', 'mod_board'),
     ];
-    $settings->add(new admin_setting_configselect('mod_board/media_selection', get_string('media_selection', 'mod_board'),
-                       get_string('media_selection_desc', 'mod_board'), 1, $options));
+    $settings->add(new admin_setting_configselect(
+        'mod_board/media_selection',
+        get_string('media_selection', 'mod_board'),
+        get_string('media_selection_desc', 'mod_board'),
+        1,
+        $options
+    ));
 
-    $settings->add(new admin_setting_configtext('mod_board/post_max_length', get_string('post_max_length', 'mod_board'),
-                       get_string('post_max_length_desc', 'mod_board'), 250, PARAM_INT));
+    $settings->add(new admin_setting_configtext(
+        'mod_board/post_max_length',
+        get_string('post_max_length', 'mod_board'),
+        get_string('post_max_length_desc', 'mod_board'),
+        250,
+        PARAM_INT
+    ));
 
-    $settings->add(new admin_setting_configtext('mod_board/history_refresh', get_string('history_refresh', 'mod_board'),
-                       get_string('history_refresh_desc', 'mod_board'), 60, PARAM_INT));
+    $settings->add(new admin_setting_configtext(
+        'mod_board/history_refresh',
+        get_string('history_refresh', 'mod_board'),
+        get_string('history_refresh_desc', 'mod_board'),
+        60,
+        PARAM_INT
+    ));
 
     $settings->add(new admin_setting_configtextarea(
         'mod_board/column_colours',
@@ -64,8 +94,7 @@ if ($ADMIN->fulltree) {
         get_string('column_colours_desc', 'mod_board'),
         implode("\n", board::get_default_colours()),
         PARAM_TEXT
-        )
-    );
+    ));
 
     $settings->add(new admin_setting_configcheckbox(
         'mod_board/allowyoutube',
@@ -81,11 +110,21 @@ if ($ADMIN->fulltree) {
         '1'
     ));
 
-    $settings->add(new admin_setting_configtext('mod_board/embed_width', get_string('embed_width', 'mod_board'),
-                       get_string('embed_width_desc', 'mod_board'), '99%', PARAM_TEXT));
+    $settings->add(new admin_setting_configtext(
+        'mod_board/embed_width',
+        get_string('embed_width', 'mod_board'),
+        get_string('embed_width_desc', 'mod_board'),
+        '99%',
+        PARAM_TEXT
+    ));
 
-    $settings->add(new admin_setting_configtext('mod_board/embed_height', get_string('embed_height', 'mod_board'),
-                       get_string('embed_height_desc', 'mod_board'), '500px', PARAM_TEXT));
+    $settings->add(new admin_setting_configtext(
+        'mod_board/embed_height',
+        get_string('embed_height', 'mod_board'),
+        get_string('embed_height_desc', 'mod_board'),
+        '500px',
+        PARAM_TEXT
+    ));
 
     // Accepted filetypes for background.
     $settings->add(new admin_setting_configmulticheckbox(
@@ -134,45 +173,47 @@ if ($ADMIN->fulltree) {
     ));
 
     // Heading.
-    $setting = new admin_setting_heading('mod_board/settings_heading_logging',
-            get_string('settings_heading_logging', 'mod_board'),
-            get_string('settings_heading_logging_info', 'mod_board'));
+    $setting = new admin_setting_heading(
+        'mod_board/settings_heading_logging',
+        get_string('settings_heading_logging', 'mod_board'),
+        get_string('settings_heading_logging_info', 'mod_board')
+    );
     $settings->add($setting);
 
     $settings->add(new admin_setting_configcheckbox(
-            'mod_board/addcolumnnametolog',
-            get_string('settings:addcolumnnametolog', 'mod_board'),
-            '',
-            '1'
+        'mod_board/addcolumnnametolog',
+        get_string('settings:addcolumnnametolog', 'mod_board'),
+        '',
+        '1'
     ));
     $settings->add(new admin_setting_configcheckbox(
-            'mod_board/addnotetolog',
-            get_string('settings:addnotetolog', 'mod_board'),
-            '',
-            '1'
+        'mod_board/addnotetolog',
+        get_string('settings:addnotetolog', 'mod_board'),
+        '',
+        '1'
     ));
     $settings->add(new admin_setting_configcheckbox(
-            'mod_board/addcommenttolog',
-            get_string('settings:addcommenttolog', 'mod_board'),
-            '',
-            '1'
+        'mod_board/addcommenttolog',
+        get_string('settings:addcommenttolog', 'mod_board'),
+        '',
+        '1'
     ));
     $settings->add(new admin_setting_configcheckbox(
-            'mod_board/addheadingtolog',
-            get_string('settings:addheadingtolog', 'mod_board'),
-            '',
-            '1'
+        'mod_board/addheadingtolog',
+        get_string('settings:addheadingtolog', 'mod_board'),
+        '',
+        '1'
     ));
     $settings->add(new admin_setting_configcheckbox(
-            'mod_board/addattachmenttolog',
-            get_string('settings:addattachmenttolog', 'mod_board'),
-            '',
-            '1'
+        'mod_board/addattachmenttolog',
+        get_string('settings:addattachmenttolog', 'mod_board'),
+        '',
+        '1'
     ));
     $settings->add(new admin_setting_configcheckbox(
-            'mod_board/addratingtolog',
-            get_string('settings:addratingtolog', 'mod_board'),
-            '',
-            '1'
+        'mod_board/addratingtolog',
+        get_string('settings:addratingtolog', 'mod_board'),
+        '',
+        '1'
     ));
 }

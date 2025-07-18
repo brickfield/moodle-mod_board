@@ -87,7 +87,7 @@ final class column {
 
         $transaction = $DB->start_delegated_transaction();
 
-        $DB->set_field('board_columns', 'name' , $name, ['id' => $column->id]);
+        $DB->set_field('board_columns', 'name', $name, ['id' => $column->id]);
         $column->name = $name;
 
         $historyid = $DB->insert_record('board_history', ['boardid' => $column->boardid, 'action' => 'update_column',

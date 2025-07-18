@@ -16,7 +16,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-require_once($CFG->dirroot.'/course/moodleform_mod.php');
+require_once($CFG->dirroot . '/course/moodleform_mod.php');
 
 use mod_board\board;
 use mod_board\local\note;
@@ -59,7 +59,7 @@ class mod_board_mod_form extends moodleform_mod {
 
         $extensions = note::get_accepted_file_extensions();
 
-        $extensions = array_map(function($extension) {
+        $extensions = array_map(function ($extension) {
             return '.' . $extension;
         }, $extensions);
 
@@ -68,11 +68,19 @@ class mod_board_mod_form extends moodleform_mod {
         $filemanageroptions['maxbytes'] = 0;
         $filemanageroptions['maxfiles'] = 1;
         $filemanageroptions['subdirs'] = 0;
-        $mform->addElement('filemanager', 'background_image',
-                get_string('background_image', 'mod_board'), null, $filemanageroptions);
+        $mform->addElement(
+            'filemanager',
+            'background_image',
+            get_string('background_image', 'mod_board'),
+            null,
+            $filemanageroptions
+        );
 
-        $mform->addElement('select', 'addrating', get_string('addrating', 'mod_board'),
-           [
+        $mform->addElement(
+            'select',
+            'addrating',
+            get_string('addrating', 'mod_board'),
+            [
                 board::RATINGDISABLED => get_string('addrating_none', 'mod_board'),
                 board::RATINGBYSTUDENTS => get_string('addrating_students', 'mod_board'),
                 board::RATINGBYTEACHERS => get_string('addrating_teachers', 'mod_board'),
@@ -84,8 +92,11 @@ class mod_board_mod_form extends moodleform_mod {
         $mform->addElement('checkbox', 'hideheaders', get_string('hideheaders', 'mod_board'));
         $mform->setType('hideheaders', PARAM_INT);
 
-        $mform->addElement('select', 'sortby', get_string('sortby', 'mod_board'),
-           [
+        $mform->addElement(
+            'select',
+            'sortby',
+            get_string('sortby', 'mod_board'),
+            [
                 board::SORTBYNONE => get_string('sortbynone', 'mod_board'),
                 board::SORTBYDATE => get_string('sortbydate', 'mod_board'),
                 board::SORTBYRATING => get_string('sortbyrating', 'mod_board'),
@@ -95,9 +106,9 @@ class mod_board_mod_form extends moodleform_mod {
 
         $boardhasnotes = (!empty($this->_cm) && board::board_has_notes($this->_cm->instance));
         if ($boardhasnotes) {
-            $mform->addElement('html', '<div class="alert alert-info">'.get_string('boardhasnotes', 'mod_board').'</div>');
+            $mform->addElement('html', '<div class="alert alert-info">' . get_string('boardhasnotes', 'mod_board') . '</div>');
         }
-        list($allowprivate, $allowpublic) = str_split(get_config('mod_board', 'allowed_singleuser_modes'));
+        [$allowprivate, $allowpublic] = str_split(get_config('mod_board', 'allowed_singleuser_modes'));
         $modesallow = [
             board::SINGLEUSER_PRIVATE => $allowprivate,
             board::SINGLEUSER_PUBLIC => $allowpublic,
@@ -107,10 +118,9 @@ class mod_board_mod_form extends moodleform_mod {
             board::SINGLEUSER_DISABLED => get_string('singleusermodenone', 'mod_board'),
             board::SINGLEUSER_PRIVATE => get_string('singleusermodeprivate', 'mod_board'),
             board::SINGLEUSER_PUBLIC => get_string('singleusermodepublic', 'mod_board'),
-            ], function($mode) use ($modesallow) {
+            ], function ($mode) use ($modesallow) {
                 return $modesallow[$mode];
-            }, ARRAY_FILTER_USE_KEY
-        );
+            }, ARRAY_FILTER_USE_KEY);
         if (count($allowedsumodes) > 1) {
             $mform->addElement('select', 'singleusermode', get_string('singleusermode', 'mod_board'), $allowedsumodes);
         }
@@ -153,8 +163,14 @@ class mod_board_mod_form extends moodleform_mod {
      */
     public function data_preprocessing(&$defaultvalues) {
         $draftitemid = file_get_submitted_draft_itemid('background_image');
-        file_prepare_draft_area($draftitemid, $this->context->id, 'mod_board', 'background', 0,
-            ['subdirs' => 0, 'maxfiles' => 1]);
+        file_prepare_draft_area(
+            $draftitemid,
+            $this->context->id,
+            'mod_board',
+            'background',
+            0,
+            ['subdirs' => 0, 'maxfiles' => 1]
+        );
         $defaultvalues['background_image'] = $draftitemid;
 
         $defaultvalues['postbyenabled'] = !empty($defaultvalues['postby']);
@@ -198,8 +214,12 @@ class mod_board_mod_form extends moodleform_mod {
         }
 
         $group = [];
-        $group[] = $mform->createElement('checkbox', 'completionnotesenabled' . $suffix, '',
-            get_string('completionnotes', 'mod_board'));
+        $group[] = $mform->createElement(
+            'checkbox',
+            'completionnotesenabled' . $suffix,
+            '',
+            get_string('completionnotes', 'mod_board')
+        );
         $group[] = $mform->createElement('text', 'completionnotes' . $suffix, '', ['size' => 3]);
         $mform->setType('completionnotes' . $suffix, PARAM_INT);
         $mform->addGroup($group, 'completionnotesgroup' . $suffix, get_string('completionnotesgroup', 'mod_board'), [' '], false);

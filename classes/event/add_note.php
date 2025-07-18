@@ -38,7 +38,11 @@ class add_note extends \core\event\base {
      * @return self
      */
     public static function create_from_note(
-        stdClass $note, ?array $attachment, stdClass $column, stdClass $board, \context_module $context
+        stdClass $note,
+        ?array $attachment,
+        stdClass $column,
+        stdClass $board,
+        \context_module $context
     ): self {
         /** @var self $event */
         $event = self::create([
@@ -83,13 +87,13 @@ class add_note extends \core\event\base {
      * @return \lang_string|string|null
      */
     public function get_description() {
-        $obj = new stdClass;
+        $obj = new stdClass();
         $obj->userid = $this->userid;
         $obj->objectid = $this->objectid;
         $obj->heading = $this->other['heading'];
         $obj->content = $this->other['content'];
         $obj->media = (!empty($this->other['attachment']) && !empty($this->other['attachment']['type'])) ?
-                      ($this->other['attachment']['info'].' '.$this->other['attachment']['url']) : '';
+                      ($this->other['attachment']['info'] . ' ' . $this->other['attachment']['url']) : '';
         $obj->columnid = $this->other['columnid'];
         $obj->groupid = isset($this->other['groupid']) ? $this->other['groupid'] : null;
         return get_string('event_add_note_desc', 'mod_board', $obj);

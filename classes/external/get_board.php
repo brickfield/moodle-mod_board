@@ -91,7 +91,8 @@ final class get_board extends external_api {
                 if ($groupid) {
                     board::require_access_for_group($board, $groupid);
                 } else {
-                    if (!has_capability('moodle/site:accessallgroups', $context)
+                    if (
+                        !has_capability('moodle/site:accessallgroups', $context)
                         && !has_capability('mod/board:manageboard', $context)
                     ) {
                         return [];
@@ -99,7 +100,6 @@ final class get_board extends external_api {
                 }
                 // NOTE: in visible groups mode everybody can see everything, only posting is restricted to own group.
             }
-
         } else {
             if (!$ownerid) {
                 debugging('ownerid is required in single-user modes', DEBUG_DEVELOPER);
@@ -135,8 +135,12 @@ final class get_board extends external_api {
                 $params['ownerid'] = $ownerid;
             }
 
-            $column->notes = $DB->get_records('board_notes', $params, 'sortorder',
-                'id, userid, heading, content, type, info, url, timecreated, sortorder');
+            $column->notes = $DB->get_records(
+                'board_notes',
+                $params,
+                'sortorder',
+                'id, userid, heading, content, type, info, url, timecreated, sortorder'
+            );
             foreach ($column->notes as $colid => $note) {
                 $note->rating = note::get_rating($note->id);
             }

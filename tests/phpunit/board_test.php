@@ -29,7 +29,6 @@ use mod_board\local\note;
  * @covers     \mod_board\board
  */
 final class board_test extends \advanced_testcase {
-
     public function test_coursemodule_for_board(): void {
         $this->resetAfterTest();
 
@@ -277,7 +276,8 @@ final class board_test extends \advanced_testcase {
             $this->assertInstanceOf(\required_capability_exception::class, $ex);
             $this->assertSame(
                 'Sorry, but you do not currently have permissions to do that (Access all groups).',
-                $ex->getMessage());
+                $ex->getMessage()
+            );
         }
         try {
             board::require_access_for_group($board2, $group2->id);
@@ -286,7 +286,8 @@ final class board_test extends \advanced_testcase {
             $this->assertInstanceOf(\required_capability_exception::class, $ex);
             $this->assertSame(
                 'Sorry, but you do not currently have permissions to do that (Access all groups).',
-                $ex->getMessage());
+                $ex->getMessage()
+            );
         }
     }
 
@@ -459,7 +460,7 @@ final class board_test extends \advanced_testcase {
             'course' => $course->id,
             'singleusermode' => board::SINGLEUSER_DISABLED,
         ]);
-        list($column1, $column2, $column3)
+        [$column1, $column2, $column3]
             = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
 
         $this->assertFalse(board::board_has_notes($board1->id));
@@ -484,7 +485,8 @@ final class board_test extends \advanced_testcase {
             $this->assertInstanceOf(\core\exception\invalid_parameter_exception::class, $ex);
             $this->assertSame(
                 'Invalid parameter value detected (The 10 cannot be found in the given array.)',
-                $ex->getMessage());
+                $ex->getMessage()
+            );
         }
     }
 
@@ -584,7 +586,8 @@ final class board_test extends \advanced_testcase {
         $columns = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
 
         $note = $generator->create_note(
-            ['columnid' => $columns[0]->id, 'userid' => $user->id, 'content' => 'abc <div>xx</div><br>xyz']);
+            ['columnid' => $columns[0]->id, 'userid' => $user->id, 'content' => 'abc <div>xx</div><br>xyz']
+        );
 
         $this->assertSame("abc <div>xx</div>\nxyz", board::get_export_note($note));
     }
@@ -793,7 +796,8 @@ final class board_test extends \advanced_testcase {
             $this->assertSame(
                 // phpcs:ignore moodle.Files.LineLength.TooLong
                 'Coding error detected, it must be fixed by a programmer: get_existing_owners_for_board can be used only in singleusemode',
-                $ex->getMessage());
+                $ex->getMessage()
+            );
         }
     }
 

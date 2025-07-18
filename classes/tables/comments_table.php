@@ -30,13 +30,12 @@ require_once($CFG->libdir . '/tablelib.php');
 
 use table_sql;
 use moodle_url;
-use mod_board\board as board;
+use mod_board\board;
 
 /**
  * Define comments table class.
  */
 class comments_table extends table_sql {
-
     /**
      * Constructor
      * @param int $cmid The course module id.
@@ -67,7 +66,7 @@ class comments_table extends table_sql {
         $this->define_columns($columns);
 
         // Define the titles of columns to show in header.
-        $headers = array_map(function($column) {
+        $headers = array_map(function ($column) {
             // Remove the p from the column name.
             if (substr($column, 0, 1) == 'p') {
                 $column = substr($column, 1);

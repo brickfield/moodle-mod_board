@@ -40,7 +40,13 @@ final class note {
      * @return stdClass note record with extra historyid property
      */
     public static function create(
-        int $columnid, int $ownerid, ?int $groupid, string $heading, string $content, array $attachment, ?int $userid = null
+        int $columnid,
+        int $ownerid,
+        ?int $groupid,
+        string $heading,
+        string $content,
+        array $attachment,
+        ?int $userid = null
     ): stdClass {
         global $DB, $USER;
 
@@ -131,7 +137,8 @@ final class note {
         }
 
         $event = \mod_board\event\add_note::create_from_note($note, $attachment, $column, $board, $context);
-        $event->trigger();;
+        $event->trigger();
+        ;
 
         $note->historyid = $historyid;
 
@@ -191,7 +198,8 @@ final class note {
         $transaction->allow_commit();
 
         $event = \mod_board\event\update_note::create_from_note($note, $attachment, $column, $board, $context);
-        $event->trigger();;
+        $event->trigger();
+        ;
 
         board::clear_history();
 
@@ -460,8 +468,14 @@ final class note {
         }
         $file = self::get_file_storage_settings($noteid);
         $fs = get_file_storage();
-        $f = $fs->get_file($file->contextid, $file->component, $file->filearea, $file->itemid,
-            $file->filepath, basename($note->url));
+        $f = $fs->get_file(
+            $file->contextid,
+            $file->component,
+            $file->filearea,
+            $file->itemid,
+            $file->filepath,
+            basename($note->url)
+        );
         if ($f === false) {
             $f = null;
         }
@@ -491,12 +505,23 @@ final class note {
     protected static function store_note_file(int $noteid, int $draftitemid) {
         $settings = self::get_file_storage_settings($noteid);
 
-        file_save_draft_area_files($draftitemid, $settings->contextid, $settings->component, $settings->filearea,
-            $settings->itemid);
+        file_save_draft_area_files(
+            $draftitemid,
+            $settings->contextid,
+            $settings->component,
+            $settings->filearea,
+            $settings->itemid
+        );
 
         $fs = get_file_storage();
-        $files = $fs->get_area_files($settings->contextid, $settings->component, $settings->filearea, $settings->itemid,
-            'itemid, filepath, filename', false);
+        $files = $fs->get_area_files(
+            $settings->contextid,
+            $settings->component,
+            $settings->filearea,
+            $settings->itemid,
+            'itemid, filepath, filename',
+            false
+        );
 
         $storedfile = reset($files);
         if (!$storedfile) {
@@ -504,9 +529,14 @@ final class note {
             return null;
         }
 
-        return \moodle_url::make_pluginfile_url($storedfile->get_contextid(), $storedfile->get_component(),
-            $storedfile->get_filearea(), $storedfile->get_itemid(), $storedfile->get_filepath(),
-            $storedfile->get_filename())->get_path();
+        return \moodle_url::make_pluginfile_url(
+            $storedfile->get_contextid(),
+            $storedfile->get_component(),
+            $storedfile->get_filearea(),
+            $storedfile->get_itemid(),
+            $storedfile->get_filepath(),
+            $storedfile->get_filename()
+        )->get_path();
     }
 
     /**
@@ -566,7 +596,7 @@ final class note {
     public static function get_image_picker_options(): array {
         $extensions = self::get_accepted_file_extensions();
 
-        $extensions = array_map(function($extension) {
+        $extensions = array_map(function ($extension) {
             return '.' . $extension;
         }, $extensions);
 

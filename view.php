@@ -36,7 +36,6 @@ if ($b) {
         throw new \moodle_exception('invalidaccessparameter');
     }
     $cm = get_coursemodule_from_instance('board', $board->id, $board->course, false, MUST_EXIST);
-
 } else {
     if (!$cm = get_coursemodule_from_id('board', $id)) {
         throw new \moodle_exception('invalidcoursemodule');
@@ -112,7 +111,8 @@ if ($board->singleusermode != board::SINGLEUSER_PRIVATE || has_capability('mod/b
     echo html_writer::tag('div', groups_print_activity_menu($cm, $baseurl, true));
 }
 
-if ($board->singleusermode == board::SINGLEUSER_PUBLIC ||
+if (
+    $board->singleusermode == board::SINGLEUSER_PUBLIC ||
     ($board->singleusermode == board::SINGLEUSER_PRIVATE && has_capability('mod/board:manageboard', $context))
 ) {
     $users = board::get_users_for_board($board, $groupid);
@@ -143,7 +143,9 @@ if (!$ownerid && $board->singleusermode != board::SINGLEUSER_DISABLED) {
     echo $OUTPUT->notification(get_string('selectuserplease', 'mod_board'));
     echo $OUTPUT->box_end();
 } else {
-    $PAGE->requires->js_call_amd('mod_board/main', 'initialize',
+    $PAGE->requires->js_call_amd(
+        'mod_board/main',
+        'initialize',
         [
             'boardid' => $board->id,
             'ownerid' => $ownerid,
@@ -155,17 +157,25 @@ if (!$ownerid && $board->singleusermode != board::SINGLEUSER_DISABLED) {
     $files = $fs->get_area_files($context->id, 'mod_board', 'background', 0, '', false);
     if (count($files)) {
         $file = reset($files);
-        $url = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(),
-                $file->get_itemid(), $file->get_filepath(), $file->get_filename())->get_path();
+        $url = moodle_url::make_pluginfile_url(
+            $file->get_contextid(),
+            $file->get_component(),
+            $file->get_filearea(),
+            $file->get_itemid(),
+            $file->get_filepath(),
+            $file->get_filename()
+        )->get_path();
         $extrabackground = "background:url({$url}) no-repeat center center; -webkit-background-size: cover;
         -moz-background-size: cover; -o-background-size: cover; background-size: cover;";
     }
     echo '<div class="mod_board_wrapper">';
     echo '<div class="mod_board flex-fill" style="' . $extrabackground . '"></div>';
     if (has_capability('mod/board:manageboard', $context)) {
-        $img = html_writer::img($OUTPUT->image_url('brickfield-logo-poweredby', 'mod_board'),
+        $img = html_writer::img(
+            $OUTPUT->image_url('brickfield-logo-poweredby', 'mod_board'),
             get_string('brickfieldlogo', 'mod_board'),
-            ['style' => 'display: block !important; width: 140px;']);
+            ['style' => 'display: block !important; width: 140px;']
+        );
         if (get_config('core', 'version') > 2024100799) {
             $visuallyhidden = 'visually-hidden';
         } else {

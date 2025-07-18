@@ -44,7 +44,7 @@ final class comment_test extends \advanced_testcase {
             'singleusermode' => board::SINGLEUSER_DISABLED,
         ]);
 
-        list($column1, $column2, $column3)
+        [$column1, $column2, $column3]
             = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
 
         $note1 = $generator->create_note(['columnid' => $column1->id, 'userid' => $user2->id]);
@@ -77,7 +77,7 @@ final class comment_test extends \advanced_testcase {
             'singleusermode' => board::SINGLEUSER_DISABLED,
         ]);
 
-        list($column1, $column2, $column3)
+        [$column1, $column2, $column3]
             = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
 
         $note1 = $generator->create_note(['columnid' => $column1->id, 'userid' => $user2->id]);

@@ -30,7 +30,6 @@ require_once($CFG->libdir . "/formslib.php");
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class note_form extends \moodleform {
-
     /**
      * Definition of the form elements.
      */
@@ -50,11 +49,20 @@ class note_form extends \moodleform {
         $mform->setType('groupid', PARAM_INT);
 
         $maxlenheading = board::LENGTH_HEADING;
-        $mform->addElement('text', 'heading', get_string('form_title', 'mod_board'),
-            ['maxlength' => $maxlenheading]);
+        $mform->addElement(
+            'text',
+            'heading',
+            get_string('form_title', 'mod_board'),
+            ['maxlength' => $maxlenheading]
+        );
         $mform->setType('heading', PARAM_TEXT);
-        $mform->addRule('heading', get_string('maximumchars', '', $maxlenheading), 'maxlength',
-            $maxlenheading, 'client');
+        $mform->addRule(
+            'heading',
+            get_string('maximumchars', '', $maxlenheading),
+            'maxlength',
+            $maxlenheading,
+            'client'
+        );
 
         $maxlen = $config->post_max_length;
         $options = ['maxlength' => $maxlen, 'cols' => 30, 'rows' => 3];
@@ -132,5 +140,4 @@ class note_form extends \moodleform {
         $mform->addElement('filemanager', 'imagefile', get_string('form_image_file', 'mod_board'), null, $pickerparams);
         $mform->hideIf('imagefile', 'mediatype', 'neq', 2);
     }
-
 }

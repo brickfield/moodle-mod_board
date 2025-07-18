@@ -82,8 +82,9 @@ final class delete_note_test extends \advanced_testcase {
         } catch (\core\exception\moodle_exception $ex) {
             $this->assertInstanceOf(\core\exception\required_capability_exception::class, $ex);
             $this->assertSame(
-                'Sorry, but you do not currently have permissions to do that (Manage columns and manage all posts.).'
-                , $ex->getMessage());
+                'Sorry, but you do not currently have permissions to do that (Manage columns and manage all posts.).',
+                $ex->getMessage()
+            );
         }
 
         $this->setUser($teacher0);

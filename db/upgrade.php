@@ -54,7 +54,6 @@ function xmldb_board_upgrade(int $oldversion) {
     }
 
     if ($oldversion < 2021052406) {
-
         // Define field sortorder to be added to board_notes.
         $table = new xmldb_table('board_notes');
         $field = new xmldb_field('sortorder', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'timecreated');
@@ -193,7 +192,6 @@ function xmldb_board_upgrade(int $oldversion) {
     }
 
     if ($oldversion < 2022040110) {
-
         // Define field deleted to be added to board_notes.
         $table = new xmldb_table('board_notes');
         $field = new xmldb_field('deleted', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'sortorder');
@@ -217,7 +215,6 @@ function xmldb_board_upgrade(int $oldversion) {
     }
 
     if ($oldversion < 2022040114) {
-
         // Define field hidename to be added to board.
         $table = new xmldb_table('board');
         $field = new xmldb_field('hidename', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'name');

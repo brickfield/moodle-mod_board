@@ -135,7 +135,7 @@ final class generator_test extends \advanced_testcase {
             'course' => $course->id,
             'singleusermode' => board::SINGLEUSER_DISABLED,
         ]);
-        list($column1, $column2, $column3)
+        [$column1, $column2, $column3]
             = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
 
         $this->setUser($user1);
@@ -157,7 +157,8 @@ final class generator_test extends \advanced_testcase {
 
         $this->setCurrentTimeStart();
         $note = $generator->create_note(
-            ['columnid' => $column1->id, 'heading' => 'Head 2', 'groupid' => $group->id, 'userid' => $user2->id]);
+            ['columnid' => $column1->id, 'heading' => 'Head 2', 'groupid' => $group->id, 'userid' => $user2->id]
+        );
         $this->assertSame($column1->id, $note->columnid);
         $this->assertSame($user2->id, $note->ownerid);
         $this->assertSame($user2->id, $note->userid);
@@ -177,12 +178,13 @@ final class generator_test extends \advanced_testcase {
             'course' => $course->id,
             'singleusermode' => board::SINGLEUSER_PRIVATE,
         ]);
-        list($column1, $column2, $column3)
+        [$column1, $column2, $column3]
             = array_values($DB->get_records('board_columns', ['boardid' => $board2->id], 'id ASC'));
 
         $this->setCurrentTimeStart();
         $note = $generator->create_note(
-            ['columnid' => $column1->id, 'content' => 'XXX', 'userid' => $user1->id, 'ownerid' => $user2->id]);
+            ['columnid' => $column1->id, 'content' => 'XXX', 'userid' => $user1->id, 'ownerid' => $user2->id]
+        );
         $this->assertSame($column1->id, $note->columnid);
         $this->assertSame($user2->id, $note->ownerid);
         $this->assertSame($user1->id, $note->userid);
@@ -256,7 +258,7 @@ final class generator_test extends \advanced_testcase {
             'course' => $course->id,
             'singleusermode' => board::SINGLEUSER_DISABLED,
         ]);
-        list($column1, $column2, $column3)
+        [$column1, $column2, $column3]
             = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
 
         $this->setUser($user1);

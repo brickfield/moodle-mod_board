@@ -22,7 +22,6 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class restore_board_activity_structure_step extends restore_activity_structure_step {
-
     /**
      * Structure definition.
      * @return mixed
@@ -201,7 +200,7 @@ class restore_board_activity_structure_step extends restore_activity_structure_s
                     continue;
                 }
                 $pattern = '/pluginfile.php\/(\d+)\//i';
-                $replacement = 'pluginfile.php/'.$context->id.'/';
+                $replacement = 'pluginfile.php/' . $context->id . '/';
                 $url = preg_replace($pattern, $replacement, $note->url);
 
                 $DB->update_record('board_notes', ['id' => $noteid, 'url' => $url]);

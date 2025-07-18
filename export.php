@@ -52,17 +52,28 @@ $table->is_downloading($download, $filename);
 
 $pageurl = new moodle_url('/mod/board/export.php', ['id' => $id, 'ownerid' => $ownerid, 'tabletype' => $tabletype,
     'group' => $group, 'includedeleted' => $includedeleted]);
-$baseurl = new moodle_url('/mod/board/export.php',
-    ['id' => $id, 'tabletype' => $tabletype, 'includedeleted' => $includedeleted]);
+$baseurl = new moodle_url(
+    '/mod/board/export.php',
+    ['id' => $id, 'tabletype' => $tabletype, 'includedeleted' => $includedeleted]
+);
 
 // Create tabs for the 3 table types.
 $tabs = [];
-$tabs[] = new tabobject('board', new moodle_url($pageurl, ['tabletype' => 'board']),
-    get_string('export_board', 'mod_board'));
-$tabs[] = new tabobject('notes', new moodle_url($pageurl, ['tabletype' => 'notes']),
-    get_string('export_submissions', 'mod_board'));
-$tabs[] = new tabobject('comments', new moodle_url($pageurl, ['tabletype' => 'comments']),
-    get_string('export_comments', 'mod_board'));
+$tabs[] = new tabobject(
+    'board',
+    new moodle_url($pageurl, ['tabletype' => 'board']),
+    get_string('export_board', 'mod_board')
+);
+$tabs[] = new tabobject(
+    'notes',
+    new moodle_url($pageurl, ['tabletype' => 'notes']),
+    get_string('export_submissions', 'mod_board')
+);
+$tabs[] = new tabobject(
+    'comments',
+    new moodle_url($pageurl, ['tabletype' => 'comments']),
+    get_string('export_comments', 'mod_board')
+);
 
 if (!$table->is_downloading()) {
     // Only print headers if not asked to download data.
@@ -92,9 +103,14 @@ if (!$table->is_downloading()) {
     $includedeletedurl = new moodle_url($pageurl, ['includedeleted' => !$includedeleted]);
     $onchangelocation = "window.location.href = '" . $includedeletedurl->out(false) . "';";
     $includedeletedlabel = get_string('include_deleted', 'mod_board');
-    $includedeletedcheckbox = html_writer::checkbox('includedeleted', 1, $includedeleted, $includedeletedlabel,
+    $includedeletedcheckbox = html_writer::checkbox(
+        'includedeleted',
+        1,
+        $includedeleted,
+        $includedeletedlabel,
         ['id' => 'includedeleted', 'class' => 'form-check-input', 'onChange' => $onchangelocation],
-        ['class' => 'form-check-label']);
+        ['class' => 'form-check-label']
+    );
     echo html_writer::div($includedeletedcheckbox, 'form-check mb-1');
 }
 

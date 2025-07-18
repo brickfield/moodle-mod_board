@@ -127,8 +127,12 @@ class mod_board_generator extends testing_module_generator {
                 throw new coding_exception('Note generator requires $record->columnid');
             } else {
                 $board = board::get_board($record->boardid, MUST_EXIST);
-                $column = $DB->get_record('board_columns',
-                    ['boardid' => $board->id, 'sortorder' => $record->column], '*', MUST_EXIST);
+                $column = $DB->get_record(
+                    'board_columns',
+                    ['boardid' => $board->id, 'sortorder' => $record->column],
+                    '*',
+                    MUST_EXIST
+                );
                 $record->columnid = $column->id;
             }
         }
@@ -146,7 +150,13 @@ class mod_board_generator extends testing_module_generator {
         $attachment = []; // Not supported here for now.
 
         $note = \mod_board\local\note::create(
-            $record->columnid, $ownerid, $groupid, $heading, $content, $attachment, $userid
+            $record->columnid,
+            $ownerid,
+            $groupid,
+            $heading,
+            $content,
+            $attachment,
+            $userid
         );
 
         if (!empty($record->deleted)) {

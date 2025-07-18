@@ -26,7 +26,6 @@ require_once($CFG->dirroot . '/mod/board/backup/moodle2/restore_board_stepslib.p
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class restore_board_activity_task extends restore_activity_task {
-
     /**
      * Define any settings.
      */

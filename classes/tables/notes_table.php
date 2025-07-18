@@ -36,7 +36,6 @@ use mod_board\board;
  * Define notes table class.
  */
 class notes_table extends table_sql {
-
     /** @var bool $showemail Determine if the email should be displayed in the CSV export. */
     private $showemail = false;
 
@@ -56,8 +55,10 @@ class notes_table extends table_sql {
         // Set the showemail variable based on if the user has either capabilities.
         $cm = get_coursemodule_from_id('board', $cmid);
         $context = \context_course::instance($cm->course);
-        if (has_capability('moodle/user:viewhiddendetails', $context) ||
-            has_capability('moodle/course:viewhiddenuserfields', $context)) {
+        if (
+            has_capability('moodle/user:viewhiddendetails', $context) ||
+            has_capability('moodle/course:viewhiddenuserfields', $context)
+        ) {
             $this->showemail = true;
         }
 
@@ -77,7 +78,7 @@ class notes_table extends table_sql {
         $this->define_columns($columns);
 
         // Define the titles of columns to show in header.
-        $headers = array_map(function($column) {
+        $headers = array_map(function ($column) {
             return get_string('export_' . $column, 'board');
         }, $columns);
         $this->define_headers($headers);

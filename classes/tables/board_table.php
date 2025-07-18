@@ -31,14 +31,13 @@ require_once($CFG->libdir . '/tablelib.php');
 use flexible_table;
 use moodle_url;
 use html_writer;
-use mod_board\board as board;
+use mod_board\board;
 use mod_board\local\note;
 
 /**
  * Define board table class.
  */
 class board_table extends flexible_table {
-
     /** @var int The board. */
     protected $board;
 
@@ -89,21 +88,21 @@ class board_table extends flexible_table {
         // Get the columns from the database.
         $columns = $DB->get_records('board_columns', ['boardid' => $this->board->id], 'sortorder', 'id, name, sortorder');
 
-        $columnids = array_map(function($column) {
+        $columnids = array_map(function ($column) {
             return $column->name . $column->id;
         }, $columns);
 
-        $columnnames = array_map(function($column) {
+        $columnnames = array_map(function ($column) {
             return $column->name;
         }, $columns);
 
         // In the $columnids and $columnnames array add a rating array value after each item in the array.
         if ($this->hasrating) {
-            $columnids = array_map(function($column) {
+            $columnids = array_map(function ($column) {
                 return [$column, $column . 'rating'];
             }, $columnids);
             $columnids = array_reduce($columnids, 'array_merge', []);
-            $columnnames = array_map(function($column) {
+            $columnnames = array_map(function ($column) {
                 return [$column, get_string('sortbyrating', 'mod_board')];
             }, $columnnames);
             $columnnames = array_reduce($columnnames, 'array_merge', []);
@@ -151,12 +150,17 @@ class board_table extends flexible_table {
                 $where .= " AND EXISTS (SELECT 'x' FROM {groups_members} gm WHERE gm.userid = ownerid AND gm.groupid = :groupid)";
                 $params['groupid'] = $this->groupid;
             }
-            $column->notes = $DB->get_records_select('board_notes', $where, $params,
-                'sortorder', 'id, heading, content, info, url, type');
+            $column->notes = $DB->get_records_select(
+                'board_notes',
+                $where,
+                $params,
+                'sortorder',
+                'id, heading, content, info, url, type'
+            );
         }
 
         // Get the column with the most notes.
-        $maxnotes = max(array_map(function($column) {
+        $maxnotes = max(array_map(function ($column) {
             return count($column->notes);
         }, $columns));
 
@@ -213,9 +217,11 @@ class board_table extends flexible_table {
         // If we have a separator, print it.
         if ($row === null) {
             $colcount = count($this->columns);
-            $html .= html_writer::tag('td', html_writer::tag('div', '',
-                    ['class' => 'tabledivider']), ['colspan' => $colcount]);
-
+            $html .= html_writer::tag('td', html_writer::tag(
+                'div',
+                '',
+                ['class' => 'tabledivider']
+            ), ['colspan' => $colcount]);
         } else {
             $colbyindex = array_flip($this->columns);
             foreach ($row as $index => $data) {

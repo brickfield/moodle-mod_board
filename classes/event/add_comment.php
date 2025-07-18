@@ -38,7 +38,11 @@ class add_comment extends \core\event\base {
      * @return self
      */
     public static function create_from_comment(
-        stdClass $comment, stdClass $note, stdClass $column, stdClass $board, \context_module $context
+        stdClass $comment,
+        stdClass $note,
+        stdClass $column,
+        stdClass $board,
+        \context_module $context
     ): self {
         /** @var self $event */
         $event = self::create([
@@ -81,7 +85,7 @@ class add_comment extends \core\event\base {
      * @return \lang_string|string|null
      */
     public function get_description() {
-        $obj = new stdClass;
+        $obj = new stdClass();
         $obj->userid = $this->userid;
         $obj->objectid = $this->objectid;
         $obj->content = $this->other['content'];
