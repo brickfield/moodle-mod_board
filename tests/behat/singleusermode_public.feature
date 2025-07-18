@@ -272,3 +272,33 @@ Feature: Usage of mod_board in public single user mode
     And the "Select user" select box should contain "Second Student"
     And the "Select user" select box should not contain "Third Student"
     And the "Select user" select box should contain "First Teacher"
+
+  Scenario: Admin may login-as to student account and post in mod_board in public single user mode
+    Given the following "activity" exists:
+      | activity       | board                  |
+      | course         | C1                     |
+      | name           | Sample board           |
+      | groupmode      | 0                      |
+      | singleusermode | 2                      |
+    And the following "mod_board > notes" exist:
+      | board        | column      | heading     | content     | user     | owner    |
+      | Sample board | 1           | Heading T1  |             | teacher1 | teacher1 |
+      | Sample board | 1           | Heading S1  |             | student1 | student1 |
+    When I am on the "student1" "user > profile" page logged in as "admin"
+    And I follow "Log in as"
+    And I should see "You are logged in as First Student"
+    And I press "Continue"
+    And I am on the "My courses" page
+    And I follow "Course 1"
+    And I follow "Sample board"
+    And I should not see "Heading T1"
+    And I should see "Heading S1"
+    And I click on "Add new post to column Heading" "mod_board > button" in the "1" "mod_board > column"
+    And I set the following fields to these values:
+      | Post title | Heading X1   |
+    And I click on "Post" "button" in the "New post for column Heading" "dialogue"
+    Then I should not see "Heading T1"
+    And I should see "Heading S1"
+    And I should see "Heading X1"
+
+    And I am on homepage

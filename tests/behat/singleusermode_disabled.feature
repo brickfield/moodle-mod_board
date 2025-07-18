@@ -62,3 +62,33 @@ Feature: Usage of mod_board with disabled single user mode
     And I should see "Title Student 2-1" in the "2" "mod_board > column"
 
     And I am on homepage
+
+  Scenario: Admin may login-as to student account and post in mod_board when single user mode disabled
+    Given the following "activity" exists:
+      | activity       | board                  |
+      | course         | C1                     |
+      | name           | Sample board           |
+      | groupmode      | 0                      |
+      | singleusermode | 0                      |
+    And the following "mod_board > notes" exist:
+      | board        | column      | heading     | content     | user     |
+      | Sample board | 1           | Heading T1  |             | teacher1 |
+      | Sample board | 1           | Heading S1  |             | student1 |
+    When I am on the "student1" "user > profile" page logged in as "admin"
+    And I follow "Log in as"
+    And I should see "You are logged in as First Student"
+    And I press "Continue"
+    And I am on the "My courses" page
+    And I follow "Course 1"
+    And I follow "Sample board"
+    And I should see "Heading T1"
+    And I should see "Heading S1"
+    And I click on "Add new post to column Heading" "mod_board > button" in the "1" "mod_board > column"
+    And I set the following fields to these values:
+      | Post title | Heading X1   |
+    And I click on "Post" "button" in the "New post for column Heading" "dialogue"
+    Then I should see "Heading T1"
+    And I should see "Heading S1"
+    And I should see "Heading X1"
+
+    And I am on homepage
