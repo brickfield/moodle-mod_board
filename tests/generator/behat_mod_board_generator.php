@@ -43,6 +43,11 @@ class behat_mod_board_generator extends behat_generator_base {
                 'required' => ['note', 'content', 'user'],
                 'switchids' => ['note' => 'noteid', 'user' => 'userid'],
             ],
+            'templates' => [
+                'singular' => 'template',
+                'datagenerator' => 'template',
+                'required' => ['name'],
+            ],
         ];
     }
 
@@ -90,5 +95,24 @@ class behat_mod_board_generator extends behat_generator_base {
         global $DB;
         $note = $DB->get_record('board_notes', ['heading' => $heading], '*', MUST_EXIST);
         return $note->id;
+    }
+
+    /**
+     * If contextlevel and reference are specified for template, transform them to the contextid.
+     *
+     * @param array $data
+     * @return array
+     */
+    protected function preprocess_template($data) {
+        if (isset($data['contextlevel'])) {
+            if (!isset($data['reference'])) {
+                throw new Exception('If field contextlevel is specified, field reference must also be present');
+            }
+            $context = $this->get_context($data['contextlevel'], $data['reference']);
+            unset($data['contextlevel']);
+            unset($data['reference']);
+            $data['contextid'] = $context->id;
+        }
+        return $data;
     }
 }

@@ -17,6 +17,7 @@
 namespace mod_board\phpunit;
 
 use mod_board\board;
+use mod_board\local\template;
 
 /**
  * Board generator tests.
@@ -36,7 +37,9 @@ final class generator_test extends \advanced_testcase {
     }
 
     public function test_create_instance(): void {
+        global $DB;
         $this->resetAfterTest();
+
         $course = $this->getDataGenerator()->create_course([]);
 
         $this->setCurrentTimeStart();
@@ -95,6 +98,38 @@ final class generator_test extends \advanced_testcase {
         $this->assertSame('1', $board->enableblanktarget);
         $this->assertSame('1', $board->completionnotes);
         $this->assertSame('0', $board->embed);
+        $columns = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'sortorder ASC'));
+        $this->assertSame('Heading', $columns[0]->name);
+        $this->assertSame('Heading', $columns[1]->name);
+        $this->assertSame('Heading', $columns[2]->name);
+        $this->assertCount(3, $columns);
+
+        $template = template::create((object)[
+            'name' => 'Some template',
+            'columns' => "Col 1\nCol 2",
+            'singleusermode' => board::SINGLEUSER_PRIVATE,
+        ]);
+        $board = $this->getDataGenerator()->create_module('board', [
+            'course' => $course->id,
+            'templateid' => $template->id,
+            'singleusermode' => board::SINGLEUSER_PUBLIC,
+        ]);
+        $this->assertSame((string)board::SINGLEUSER_PRIVATE, $board->singleusermode);
+        $columns = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'sortorder ASC'));
+        $this->assertSame('Col 1', $columns[0]->name);
+        $this->assertSame('Col 2', $columns[1]->name);
+        $this->assertCount(2, $columns);
+
+        $template = template::create((object)[
+            'name' => 'Some template',
+            'columns' => '',
+        ]);
+        $board = $this->getDataGenerator()->create_module('board', [
+            'course' => $course->id,
+            'templateid' => $template->id,
+        ]);
+        $columns = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'sortorder ASC'));
+        $this->assertCount(0, $columns);
     }
 
     public function test_create_column(): void {
@@ -302,5 +337,39 @@ final class generator_test extends \advanced_testcase {
         $this->assertSame('Comment 3', $comment3->content);
         $this->assertSame($user1->id, $comment3->userid);
         $this->assertSame('1', $comment3->deleted);
+    }
+
+    public function test_create_template(): void {
+        $this->resetAfterTest();
+
+        /** @var \mod_board_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_board');
+
+        $syscontext = \context_system::instance();
+        $category = $this->getDataGenerator()->create_category();
+        $categorycontext = \context_coursecat::instance($category->id);
+
+        $this->setCurrentTimeStart();
+        $template = $generator->create_template();
+        $this->assertSame('Template 1', $template->name);
+        $this->assertSame((string)$syscontext->id, $template->contextid);
+        $this->assertSame('', $template->description);
+        $this->assertSame('', $template->columns);
+        $this->assertSame('[]', $template->jsonsettings);
+        $this->assertTimeCurrent($template->timecreated);
+
+        $template = $generator->create_template([
+            'name' => 'My template',
+            'description' => 'Fancy <em>template</em>',
+            'contextid' => $categorycontext->id,
+            'columns' => "Col 1\r\nCol2",
+            'singleusermode' => board::SINGLEUSER_PRIVATE,
+            'sortby' => board::SORTBYNONE,
+        ]);
+        $this->assertSame('My template', $template->name);
+        $this->assertSame((string)$categorycontext->id, $template->contextid);
+        $this->assertSame('Fancy <em>template</em>', $template->description);
+        $this->assertSame("Col 1\nCol2", $template->columns);
+        $this->assertSame('{"sortby":"3","singleusermode":"1"}', $template->jsonsettings);
     }
 }

@@ -171,6 +171,28 @@ final class board_test extends \advanced_testcase {
         }
     }
 
+    public function test_get_teplate(): void {
+        $this->resetAfterTest();
+
+        $template = \mod_board\local\template::create((object)[
+            'name' => 'Some template',
+            'columns' => "Col 1\nCol 2",
+            'singleusermode' => board::SINGLEUSER_PRIVATE,
+        ]);
+
+        $result = board::get_template($template->id);
+        $this->assertEquals($template, $result);
+
+        $this->assertNull(board::get_note(-1));
+
+        try {
+            board::get_template(-1, MUST_EXIST);
+            $this->fail('Exception expected');
+        } catch (\core\exception\moodle_exception $ex) {
+            $this->assertInstanceOf(\dml_missing_record_exception::class, $ex);
+        }
+    }
+
     public function test_context_for_board(): void {
         $this->resetAfterTest();
 
@@ -460,13 +482,19 @@ final class board_test extends \advanced_testcase {
             'course' => $course->id,
             'singleusermode' => board::SINGLEUSER_DISABLED,
         ]);
+        $board2 = $this->getDataGenerator()->create_module('board', [
+            'course' => $course->id,
+            'singleusermode' => board::SINGLEUSER_DISABLED,
+        ]);
         [$column1, $column2, $column3]
             = array_values($DB->get_records('board_columns', ['boardid' => $board1->id], 'id ASC'));
 
         $this->assertFalse(board::board_has_notes($board1->id));
+        $this->assertFalse(board::board_has_notes($board2->id));
 
         $note = $generator->create_note(['columnid' => $column1->id, 'userid' => $user->id]);
         $this->assertTrue(board::board_has_notes($board1->id));
+        $this->assertFalse(board::board_has_notes($board2->id));
     }
 
     public function test_repositionan_array_element(): void {

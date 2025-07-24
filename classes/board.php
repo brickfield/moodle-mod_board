@@ -202,6 +202,22 @@ class board {
     }
 
     /**
+     * Retrieves a record of the selected template.
+     *
+     * @param int $id
+     * @param int $strictness IGNORE_MISSING or MUST_EXIST
+     * @return stdClass|null
+     */
+    public static function get_template(int $id, int $strictness = IGNORE_MISSING): ?stdClass {
+        global $DB;
+        $result = $DB->get_record('board_templates', ['id' => $id], '*', $strictness);
+        if ($result === false) {
+            $result = null;
+        }
+        return $result;
+    }
+
+    /**
      * Retrieves the context of the selected board.
      *
      * @param int|stdClass $boardorid
@@ -351,12 +367,11 @@ class board {
      */
     public static function board_has_notes(int $boardid): bool {
         global $DB;
-        $sql = "SELECT COUNT(*)
-                  FROM {board_notes}
-             LEFT JOIN {board_columns} ON {board_notes}.columnid = {board_columns}.id
-                 WHERE {board_columns}.boardid = :boardid
-                       AND {board_notes}.deleted = 0";
-        return $DB->count_records_sql($sql, ['boardid' => $boardid]) > 0;
+        $sql = "SELECT 'x'
+                  FROM {board_notes} bn
+                  JOIN {board_columns} bc ON bc.id = bn.columnid
+                 WHERE bc.boardid = :boardid AND bn.deleted = 0";
+        return $DB->record_exists_sql($sql, ['boardid' => $boardid]);
     }
 
     /**

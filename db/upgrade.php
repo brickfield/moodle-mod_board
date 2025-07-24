@@ -379,5 +379,74 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2025070708, 'board');
     }
 
+    if ($oldversion < 2025070709) {
+        // Define table board_templates to be created.
+        $table = new xmldb_table('board_templates');
+
+        // Adding fields to table board_templates.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('name', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('contextid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('description', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_field('columns', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_field('jsonsettings', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table board_templates.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('contextid', XMLDB_KEY_FOREIGN, ['contextid'], 'context', ['id']);
+
+        // Conditionally launch create table for board_templates.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2025070709, 'board');
+    }
+
+    if ($oldversion < 2025070711) {
+        $table = new xmldb_table('board');
+
+        $DB->set_field('board', 'addrating', '0', ['addrating' => null]);
+        $field = new xmldb_field('addrating', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'background_color');
+        $dbman->change_field_notnull($table, $field);
+
+        $DB->set_field('board', 'hideheaders', '0', ['hideheaders' => null]);
+        $field = new xmldb_field('hideheaders', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'addrating');
+        $dbman->change_field_notnull($table, $field);
+
+        $DB->set_field('board', 'sortby', '1', ['sortby' => null]);
+        $field = new xmldb_field('sortby', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'hideheaders');
+        $dbman->change_field_notnull($table, $field);
+
+        $DB->set_field('board', 'postby', '0', ['postby' => null]);
+        $field = new xmldb_field('postby', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'sortby');
+        $dbman->change_field_notnull($table, $field);
+
+        $DB->set_field('board', 'userscanedit', '0', ['userscanedit' => null]);
+        $field = new xmldb_field('userscanedit', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'postby');
+        $dbman->change_field_notnull($table, $field);
+
+        $DB->set_field('board', 'singleusermode', '0', ['singleusermode' => null]);
+        $field = new xmldb_field('singleusermode', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, '0', 'userscanedit');
+        $dbman->change_field_notnull($table, $field);
+
+        $DB->set_field('board', 'enableblanktarget', '0', ['enableblanktarget' => null]);
+        $field = new xmldb_field('enableblanktarget', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'singleusermode');
+        $dbman->change_field_notnull($table, $field);
+
+        $DB->set_field('board', 'completionnotes', '0', ['completionnotes' => null]);
+        $field = new xmldb_field('completionnotes', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'enableblanktarget');
+        $dbman->change_field_notnull($table, $field);
+
+        $DB->set_field('board', 'embed', '0', ['embed' => null]);
+        $field = new xmldb_field('embed', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'completionnotes');
+        $dbman->change_field_notnull($table, $field);
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2025070711, 'board');
+    }
+
     return true;
 }

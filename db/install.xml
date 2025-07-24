@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/board/db" VERSION="2024102001" COMMENT="XMLDB file for Moodle mod/board"
+<XMLDB PATH="mod/board/db" VERSION="20250724" COMMENT="XMLDB file for Moodle mod/board"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -15,15 +15,15 @@
         <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="historyid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="background_color" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
-        <FIELD NAME="addrating" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="0 means disabled, see board::RATING* constants"/>
-        <FIELD NAME="hideheaders" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="0 means show headers to students"/>
-        <FIELD NAME="sortby" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="1" SEQUENCE="false" COMMENT="1 is by date, 2 is by rating 3 is manual ordering"/>
-        <FIELD NAME="postby" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="Timestamp of deadline for posting, read-only mode afterwards"/>
-        <FIELD NAME="userscanedit" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="1 means user that can post can edit placement of their posts"/>
-        <FIELD NAME="singleusermode" TYPE="int" LENGTH="4" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="0 means normal mode or group mode used, 1 means each userr has private board, 2 means users have own board that other can see"/>
-        <FIELD NAME="enableblanktarget" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="1 means all links open in new window"/>
+        <FIELD NAME="addrating" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0 means disabled, see board::RATING* constants"/>
+        <FIELD NAME="hideheaders" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0 means show headers to students"/>
+        <FIELD NAME="sortby" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="1 is by date, 2 is by rating 3 is manual ordering"/>
+        <FIELD NAME="postby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Timestamp of deadline for posting, read-only mode afterwards"/>
+        <FIELD NAME="userscanedit" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1 means user that can post can edit placement of their posts"/>
+        <FIELD NAME="singleusermode" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0 means normal mode or group mode used, 1 means each userr has private board, 2 means users have own board that other can see"/>
+        <FIELD NAME="enableblanktarget" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1 means all links open in new window"/>
         <FIELD NAME="completionnotes" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Nonzero if a certain number of notes are required to mark this board completed for a user."/>
-        <FIELD NAME="embed" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="embed" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -110,6 +110,21 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="fk_comment_noteid" TYPE="foreign" FIELDS="noteid" REFTABLE="board_notes" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="board_templates" COMMENT="Templates for new boards">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Name of template"/>
+        <FIELD NAME="contextid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Related context, for visibility purposes only"/>
+        <FIELD NAME="description" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Template usage description in HTML format"/>
+        <FIELD NAME="columns" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="List of columns, one per line, unix newline as separator"/>
+        <FIELD NAME="jsonsettings" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="JSON encoded template settings"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="contextid" TYPE="foreign" FIELDS="contextid" REFTABLE="context" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
   </TABLES>

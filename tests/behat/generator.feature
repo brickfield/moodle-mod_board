@@ -159,3 +159,21 @@ Feature: Use mod_board generator to create test data
 
     And I click on "Close" "button" in the "Heading T1" "dialogue"
     And I am on homepage
+
+  Scenario: Use generator to create templates in mod_board
+    Given the following "categories" exist:
+      | name  | category | idnumber |
+      | Cat A | 0        | cata     |
+      | Cat B | 0        | catb     |
+    When the following "mod_board > templates" exist:
+      | name        |
+      | Template 01 |
+    And the following "mod_board > templates" exist:
+      | name        | description        | columns                    | contextlevel | reference | singleusermode | sortby |
+      | Template 02 | Second description | Col 1\nCol 2\nCol 3\nCol 4 | Category     | cata      | 1              | 3      |
+    And I log in as "admin"
+    And I navigate to "Plugins > Activity modules > Board > Board templates" in site administration
+    Then the following should exist in the "reportbuilder-table" table:
+      | Name        | Description        | Category | Columns | Settings      |
+      | Template 01 |                    | System   |         |               |
+      | Template 02 | Second description | Cat A    | Col 1   | Sort by: None |

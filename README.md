@@ -34,6 +34,7 @@ On the board, a teacher can:
 * Download a copy of the board contents.
 * Download a spreadsheet of submissions of the students.
 * Download a spreadsheet of comments by the students.
+* Board templates can be applied to boards that do not have any posts yet.
 
 ## Funding credits ##
 Initial funding for this plugin was provided by the National Institute for Digital Learning

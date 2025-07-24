@@ -33,6 +33,10 @@ class mod_board_generator extends testing_module_generator {
      * @var int keep track of how many comments have been created.
      */
     protected $commentcount = 0;
+    /**
+     * @var int keep track of how many templates have been created.
+     */
+    protected $templatecount = 0;
 
     /**
      * To be called from data reset code only,
@@ -42,6 +46,7 @@ class mod_board_generator extends testing_module_generator {
     public function reset() {
         $this->columncount = 3;
         $this->commentcount = 0;
+        $this->templatecount = 0;
         parent::reset();
     }
 
@@ -206,5 +211,35 @@ class mod_board_generator extends testing_module_generator {
         }
 
         return $DB->get_record('board_comments', ['id' => $comment->id], '*', MUST_EXIST);
+    }
+
+    /**
+     * Create new a template.
+     *
+     * @param array|stdClass|null $record
+     * @return stdClass template record
+     */
+    public function create_template($record = null): stdClass {
+        global $DB;
+
+        $record = (object)(array)$record;
+        if (empty($record->contextid)) {
+            $record->contextid = context_system::instance()->id;
+        }
+
+        $this->templatecount++;
+
+        if (empty($record->name)) {
+            $record->name = "Template {$this->templatecount}";
+        }
+
+        if (isset($record->columns)) {
+            // Workaround for allowing entering of newlines in behat generator tables.
+            $record->columns = str_replace('\n', "\n", $record->columns);
+        }
+
+        $template = \mod_board\local\template::create($record);
+
+        return $DB->get_record('board_templates', ['id' => $template->id], '*', MUST_EXIST);
     }
 }

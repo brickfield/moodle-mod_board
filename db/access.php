@@ -68,6 +68,13 @@ $capabilities = [
             'manager' => CAP_ALLOW,
         ],
     ],
+    'mod/board:managetemplates' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => [
+            'manager' => CAP_ALLOW,
+        ],
+    ],
     'mod/board:postcomment' => [
         'captype' => 'write',
         'contextlevel' => CONTEXT_MODULE,

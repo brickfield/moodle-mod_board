@@ -111,21 +111,34 @@ function board_add_instance($data, $mform = null) {
         $data->postby = 0;
     }
 
-    // Add 3 default columns.
+    // Add 3 columns by default.
+    $columnheading = get_string('default_column_heading', 'mod_board');
+    $columns = [$columnheading, $columnheading, $columnheading];
+
+    // Apply template if selected.
+    if (!empty($data->templateid)) {
+        $template = $DB->get_record('board_templates', ['id' => $data->templateid], '*', MUST_EXIST);
+
+        if ($template->columns === '') {
+            $columns = [];
+        } else {
+            $columns = explode("\n", $template->columns);
+        }
+
+        $settings = \mod_board\local\template::get_settings($template->jsonsettings);
+        foreach ($settings as $k => $v) {
+            $data->$k = $v;
+        }
+    }
+
+    // Add default columns.
     $boardid = $DB->insert_record('board', $data);
-    if ($boardid) {
-        $columnheading = get_string('default_column_heading', 'mod_board');
+    $i = 0;
+    foreach ($columns as $columname) {
+        $i++;
         $DB->insert_record(
             'board_columns',
-            ['boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 1]
-        );
-        $DB->insert_record(
-            'board_columns',
-            ['boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 2]
-        );
-        $DB->insert_record(
-            'board_columns',
-            ['boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 3]
+            ['boardid' => $boardid, 'name' => $columname, 'sortorder' => $i]
         );
     }
 
@@ -224,14 +237,29 @@ function board_delete_instance($id) {
  * @param navigation_node $boardnode
  */
 function board_extend_settings_navigation(settings_navigation $settings, navigation_node $boardnode) {
-    global $PAGE;
-    $context = context_module::instance($settings->get_page()->cm->id);
-    if (has_capability('mod/board:manageboard', $context)) {
-        $params = ['id' => $settings->get_page()->cm->id];
+    $cm = $settings->get_page()->cm;
+    $context = context_module::instance($cm->id);
 
+    if (
+        has_capability('moodle/course:manageactivities', $context)
+        && !board::board_has_notes($cm->instance)
+        && \mod_board\local\template::get_applicable_templates($context)
+    ) {
+        $node = navigation_node::create(
+            get_string('template_apply', 'board'),
+            new moodle_url('/mod/board/template/apply.php', ['id' => $cm->id]),
+            navigation_node::TYPE_SETTING,
+            null,
+            null,
+            new pix_icon('i/settings', '')
+        );
+        $boardnode->add_node($node);
+    }
+
+    if (has_capability('mod/board:manageboard', $context)) {
         $node = navigation_node::create(
             get_string('export', 'board'),
-            new moodle_url('/mod/board/export.php', $params),
+            new moodle_url('/mod/board/export.php', ['id' => $cm->id]),
             navigation_node::TYPE_SETTING,
             null,
             null,

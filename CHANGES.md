@@ -7,8 +7,9 @@ _NOTE - This release will work on Moodle 4.5, & 5.0_
 New features / improvements:
 
 * New option to attach general files to posts.
-* Post content can be formatted using limited MarkDown syntax.
+* Post content can be formatted using limited Markdown syntax.
 * All group modes are now supported in single user modes. 
+* Board templates can be created in admin settings.
 
 Bug fixes:
 
@@ -20,6 +21,7 @@ Technical changes:
 * Major code refactoring was completed.
 * PHPUnit and Behat tests were added for most areas.
 * Coding style was updated to match latest recommendations from Moodle HQ.
+* New CLI Grunt script was added to simplify compilation of SCSS into CSS.
 
 ##### 1.404.03 (Build 2024102003)
 

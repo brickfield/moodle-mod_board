@@ -22,9 +22,9 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require('../../config.php');
-
 use mod_board\board;
+
+require('../../config.php');
 
 $id      = optional_param('id', 0, PARAM_INT); // Course Module ID.
 $b       = optional_param('b', 0, PARAM_INT);  // Board instance ID.

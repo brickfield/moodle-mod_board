@@ -39,7 +39,7 @@ if (!$cm = get_coursemodule_from_id('board', $id)) {
 $board = board::get_board($cm->instance, MUST_EXIST);
 $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
 
-require_course_login($course, true, $cm);
+require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/board:manageboard', $context);
 
@@ -80,6 +80,7 @@ if (!$table->is_downloading()) {
     $PAGE->set_url($pageurl);
     $PAGE->set_title(get_string('export', 'mod_board'));
     $PAGE->set_heading(get_string('export', 'mod_board'));
+    $PAGE->activityheader->disable();
 
     echo $OUTPUT->header();
 

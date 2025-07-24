@@ -1,5 +1,5 @@
 @mod @mod_board @javascript
-Feature: Limited markdown support in mod_board post content
+Feature: Limited Markdown support in mod_board post content
 
   Background:
     Given the following "users" exist:
@@ -26,7 +26,7 @@ Feature: Limited markdown support in mod_board post content
     And the following config values are set as admin:
       | media_selection | 2 | mod_board |
 
-  Scenario: Users may use limited markdown syntax in mod_board post content
+  Scenario: Users may use limited Markdown syntax in mod_board post content
     Given I am on the "Sample board" "board activity" page logged in as "teacher1"
     And I change mod_board "1" column name to "First Column"
     And I change mod_board "2" column name to "Second Column"

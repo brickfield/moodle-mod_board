@@ -26,6 +26,18 @@ use mod_board\board;
 
 defined('MOODLE_INTERNAL') || die;
 
+$ADMIN->add(
+    'modsettings',
+    new admin_category('modboardfolder', new lang_string('pluginname', 'mod_board'), $module->is_enabled() === false)
+);
+
+$settings = new admin_settingpage(
+    $section,
+    get_string('settings', 'mod_board'),
+    'moodle/site:config',
+    $module->is_enabled() === false
+);
+
 if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_description(
         'mod_board/logo',
@@ -226,3 +238,15 @@ if ($ADMIN->fulltree) {
         '1'
     ));
 }
+
+$ADMIN->add('modboardfolder', $settings);
+// Standard settings structure is not used.
+$settings = null;
+
+$ADMIN->add('modboardfolder', new admin_externalpage(
+    'modboardtemplates',
+    new lang_string('templates', 'mod_board'),
+    new moodle_url('/mod/board/template/index.php'),
+    'mod/board:managetemplates',
+    !$module->is_enabled()
+));

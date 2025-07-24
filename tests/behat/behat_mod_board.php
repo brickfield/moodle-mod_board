@@ -119,4 +119,20 @@ class behat_mod_board extends behat_base {
             ]),
         ];
     }
+
+    /**
+     * Convert page names to URLs for steps like 'When I am on the "[page name]" page'.
+     *
+     * @param string $page name of the page, with the component name removed e.g. 'Admin notification'.
+     * @return moodle_url the corresponding URL.
+     */
+    protected function resolve_page_url(string $page): moodle_url {
+        switch (strtolower($page)) {
+            case 'templates':
+                return new moodle_url('/mod/board/template/index.php');
+
+            default:
+                throw new Exception('Unrecognised tool_muprog page "' . $page . '."');
+        }
+    }
 }

@@ -252,7 +252,7 @@ final class submit_note_form extends external_api {
                     'id' => new external_value(PARAM_INT, 'post id'),
                     'userid' => new external_value(PARAM_INT, 'Original author user id'),
                     'heading' => new external_value(PARAM_TEXT, 'Post heading - plain text with html entities, no tags allowed'),
-                    'content' => new external_value(PARAM_RAW, 'Post content - html formatted using simplified markdown'),
+                    'content' => new external_value(PARAM_RAW, 'Post content - html formatted using simplified Markdown'),
                     'type' => new external_value(PARAM_INT, 'Type of attachment'),
                     'info' => new external_value(
                         PARAM_TEXT,

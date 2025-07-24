@@ -49,6 +49,13 @@ class mod_board_mod_form extends moodleform_mod {
         $this->standard_intro_elements();
 
         $mform->addElement('header', 'board', get_string('boardsettings', 'mod_board'));
+        if (!$this->current->id) {
+            $templates = \mod_board\local\template::get_applicable_templates($this->context);
+            if ($templates) {
+                $templates = ['' => get_string('choosedots')] + $templates;
+                $mform->addElement('select', 'templateid', get_string('template', 'mod_board'), $templates);
+            }
+        }
 
         $mform->addElement('text', 'background_color', get_string('background_color', 'mod_board'), ['size' => '50']);
         $mform->setType('background_color', PARAM_TEXT);
