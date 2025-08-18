@@ -30,6 +30,8 @@ require_once($CFG->libdir . "/formslib.php");
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class template_delete extends \moodleform {
+    use \mod_board\local\ajax_form_trait;
+
     /**
      * Form definition.
      */
@@ -44,12 +46,11 @@ final class template_delete extends \moodleform {
         $mform->addElement('static', 'namestatic', get_string('name'), s($template->name));
 
         $description = format_text($template->description, FORMAT_HTML);
-        $mform->addElement('static', 'namedescription', get_string('description'), $description);
+        $mform->addElement('static', 'namedescription', get_string('template_description', 'mod_board'), $description);
 
         $options = template::get_context_menu($template->contextid);
         $mform->addElement('static', 'contextidstatic', get_string('category'), $options[$template->contextid]);
 
-        $this->add_action_buttons(true, get_string('template_delete', 'mod_board'));
         $this->set_data($template);
     }
 }

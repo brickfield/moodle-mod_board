@@ -30,6 +30,8 @@ require_once($CFG->libdir . "/formslib.php");
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class template_edit extends \moodleform {
+    use \mod_board\local\ajax_form_trait;
+
     /**
      * Form definition.
      */
@@ -47,7 +49,12 @@ final class template_edit extends \moodleform {
         $mform->addRule('name', null, 'required', null, 'client');
         $mform->addRule('name', get_string('maximumchars', '', 100), 'maxlength', 100, 'client');
 
-        $mform->addElement('editor', 'description_editor', get_string('description'));
+        $mform->addElement(
+            'editor',
+            'description_editor',
+            get_string('template_description', 'mod_board'),
+            ['autosave' => false, 'rows' => 7]
+        );
 
         $options = template::get_context_menu($contextid);
         $mform->addElement('select', 'contextid', get_string('category'), $options);
@@ -63,17 +70,12 @@ final class template_edit extends \moodleform {
         foreach ($allsettings as $field => $setting) {
             if ($setting['type'] === 'select') {
                 $mform->addElement('select', $field, $setting['name'], $setting['options']);
+            } else if ($setting['type'] === 'html') {
+                $mform->addElement('editor', $field . '_editor', $setting['name'], ['autosave' => false, 'rows' => 7]);
             } else {
                 debugging('Unknown template setting type: ' . $setting['type'], DEBUG_DEVELOPER);
             }
         }
-
-        if ($id) {
-            $submitstr = get_string('template_update', 'mod_board');
-        } else {
-            $submitstr = get_string('template_create', 'mod_board');
-        }
-        $this->add_action_buttons(true, $submitstr);
     }
 
     #[\Override]

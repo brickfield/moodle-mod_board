@@ -23,6 +23,9 @@
  */
 
 use mod_board\local\template;
+use mod_board\local\form\template_delete;
+
+define('AJAX_SCRIPT', true);
 
 require('../../../config.php');
 
@@ -33,25 +36,27 @@ $syscontext = context_system::instance();
 require_login();
 require_capability('mod/board:managetemplates', $syscontext);
 
-$pageurl = new moodle_url('/mod/board/template/delete.php', ['id' => $id]);
+$pageurl = new moodle_url('/mod/board/template/delete_ajax.php', ['id' => $id]);
 $returnurl = new moodle_url('/mod/board/template/index.php');
-$title = get_string('template_delete', 'mod_board');
-template::setup_management_page($pageurl, $title);
+
+$PAGE->set_url($pageurl);
+$PAGE->set_context($syscontext);
 
 $template = $DB->get_record('board_templates', ['id' => $id], '*', MUST_EXIST);
 
-$form = new \mod_board\local\form\template_delete(null, ['template' => $template]);
+$form = new template_delete(null, ['template' => $template]);
 
 if ($form->is_cancelled()) {
-    redirect($returnurl);
+    $form::ajax_form_cancelled($returnurl);
 }
 if ($data = $form->get_data()) {
     template::delete($data->id);
-    redirect($returnurl);
+    $form::ajax_form_submitted($returnurl);
 }
-
-echo $OUTPUT->header();
 
 $form->display();
 
-echo $OUTPUT->footer();
+$form::ajax_form_render(
+    dialogtitle: get_string('template_delete', 'mod_board'),
+    submittext: get_string('template_delete', 'mod_board')
+);

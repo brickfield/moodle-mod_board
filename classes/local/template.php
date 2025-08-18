@@ -52,13 +52,22 @@ final class template {
         foreach (self::get_all_settings() as $field => $setting) {
             if ($setting['type'] === 'select') {
                 if (isset($data->$field)) {
-                    $value = $data->$field;
-                    if ((string)$value === '-1') {
+                    $value = (string)$data->$field;
+                    if ($value === '-1') {
                         continue;
                     }
                     if (isset($setting['options'][$value])) {
-                        $settings[$field] = (string)$value;
+                        $settings[$field] = $value;
                     }
+                }
+            } else if ($setting['type'] === 'html') {
+                $editor = $field . '_editor';
+                if (isset($data->$editor) || isset($data->$field)) {
+                    $value = ($data->$editor)['text'] ?? $data->$field;
+                    if (!is_string($value) || trim($value) === '') {
+                        continue;
+                    }
+                    $settings[$field] = $value;
                 }
             }
         }
@@ -114,13 +123,22 @@ final class template {
         foreach (self::get_all_settings() as $field => $setting) {
             if ($setting['type'] === 'select') {
                 if (isset($data->$field)) {
-                    $value = $data->$field;
-                    if ((string)$value === '-1') {
+                    $value = (string)$data->$field;
+                    if ($value === '-1') {
                         continue;
                     }
                     if (isset($setting['options'][$value])) {
-                        $settings[$field] = (string)$value;
+                        $settings[$field] = $value;
                     }
+                }
+            } else if ($setting['type'] === 'html') {
+                $editor = $field . '_editor';
+                if (isset($data->$editor) || isset($data->$field)) {
+                    $value = ($data->$editor)['text'] ?? $data->$field;
+                    if (!is_string($value) || trim($value) === '') {
+                        continue;
+                    }
+                    $settings[$field] = $value;
                 }
             }
         }
@@ -227,6 +245,10 @@ final class template {
      */
     public static function get_all_settings(): array {
         $result = [
+            'intro' => [
+                'name' => get_string('moduleintro'),
+                'type' => 'html',
+            ],
             'addrating' => [
                 'name' => get_string('addrating', 'mod_board'),
                 'type' => 'select',
@@ -337,14 +359,22 @@ final class template {
         $settings = json_decode($jsonsettings);
         $result = [];
         foreach ($allsettings as $field => $setting) {
-            if (!isset($settings->$field) || (string)$settings->$field === '-1') {
+            if (!isset($settings->$field)) {
                 continue;
             }
-            $value = $settings->$field;
+            $value = (string)$settings->$field;
             if ($setting['type'] === 'select') {
-                if (isset($setting['options'][$value])) {
-                    $result[$field] = (string)$value;
+                if ($value === '-1') {
+                    continue;
                 }
+                if (isset($setting['options'][$value])) {
+                    $result[$field] = $value;
+                }
+            } else if ($setting['type'] === 'html') {
+                if (trim($value) === '') {
+                    continue;
+                }
+                $result[$field] = clean_text($value);
             }
         }
 
@@ -362,14 +392,22 @@ final class template {
         $settings = json_decode($jsonsettings);
         $result = [];
         foreach ($allsettings as $field => $setting) {
-            if (!isset($settings->$field) || (string)$settings->$field === '-1') {
+            if (!isset($settings->$field)) {
                 continue;
             }
-            $value = $settings->$field;
+            $value = (string)$settings->$field;
             if ($setting['type'] === 'select') {
+                if ($value === '-1') {
+                    continue;
+                }
                 if (isset($setting['options'][$value])) {
                     $result[] = $setting['name'] . ': ' . $setting['options'][$value];
                 }
+            } else if ($setting['type'] === 'html') {
+                if (trim($value) === '') {
+                    continue;
+                }
+                $result[] = $setting['name'] . ': ' . clean_text(strip_tags(shorten_text($value)));
             }
         }
         return implode('<br />', $result);
@@ -434,10 +472,19 @@ final class template {
             if (!isset($data->$field)) {
                 continue;
             }
-            if ($setting['type'] === 'select' && (string)$data->$field !== '-1') {
-                if (isset($setting['options'][$data->$field])) {
-                    $template->$field = $data->$field;
+            $value = (string)$data->$field;
+            if ($setting['type'] === 'select') {
+                if ($value === '-1') {
+                    continue;
                 }
+                if (isset($setting['options'][$value])) {
+                    $template->$field = $value;
+                }
+            } else if ($setting['type'] === 'html') {
+                if (trim($value) === '') {
+                    continue;
+                }
+                $template->$field = clean_text($value);
             }
         }
 
@@ -507,6 +554,10 @@ final class template {
         $settings = self::get_settings($template->jsonsettings);
         if ($settings) {
             $settings['id'] = $board->id;
+            if (isset($settings['intro'])) {
+                // Any preexisting images will be kept, but not shown.
+                $settings['introformat'] = FORMAT_HTML;
+            }
             $DB->update_record('board', $settings);
         }
 
@@ -517,29 +568,5 @@ final class template {
         \core\event\course_module_updated::create_from_cm($cm, $context)->trigger();
 
         return board::get_board($board->id, MUST_EXIST);
-    }
-
-    /**
-     * Set up page for template management and check permissions.
-     *
-     * @param \moodle_url $pageurl
-     * @param string $title
-     */
-    public static function setup_management_page(\moodle_url $pageurl, string $title): void {
-        global $PAGE, $CFG;
-
-        $syscontext = \context_system::instance();
-
-        if (has_capability('moodle/site:config', $syscontext)) {
-            require_once("$CFG->libdir/adminlib.php");
-            admin_externalpage_setup('modboardtemplates', '', null, $pageurl, ['pagelayout' => 'admin', 'nosearch' => true]);
-        } else {
-            $PAGE->set_url($pageurl);
-            $PAGE->set_context($syscontext);
-        }
-
-        $PAGE->set_secondary_navigation(false);
-        $PAGE->set_title($title);
-        $PAGE->set_heading($title);
     }
 }

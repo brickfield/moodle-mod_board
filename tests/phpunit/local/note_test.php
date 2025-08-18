@@ -1044,6 +1044,14 @@ final class note_test extends \advanced_testcase {
         $this->assertTrue(note::is_draft_file_present(6662));
     }
 
+    public function test_is_youtube_url(): void {
+        $this->assertTrue(note::is_youtube_url('https://youtube.com/watch?v=1234567890A'));
+        $this->assertTrue(note::is_youtube_url('http://youtube.com/watch?v=1234567890A'));
+        $this->assertTrue(note::is_youtube_url('http://whatever.com/watch?v=1234567890A'));
+        $this->assertFalse(note::is_youtube_url('https://youtube.com/watch?v=1234567890'));
+        $this->assertFalse(note::is_youtube_url('https://youtube.com/watch?x=1234567890A'));
+    }
+
     public function test_format_plain_text(): void {
         $this->assertSame(null, note::format_plain_text(null));
         $this->assertSame('', note::format_plain_text(''));
@@ -1134,10 +1142,11 @@ list
         $this->setUser($user);
 
         $note = $generator->create_note(
-            ['columnid' => $column1->id, 'userid' => $user->id, 'content' => "# My heading\n\nAnd some text"]
+            ['columnid' => $column1->id, 'userid' => $user->id, 'content' => "# My 'heading'\n\nAnd some text"]
         );
         $result = note::format_for_display($note, $column1, $board, $context);
-        $this->assertSame("<h4 class=\"h5\">My heading</h4>\n<p>And some text</p>\n", $result->content);
+        $this->assertSame('My &apos;heading&apos;', $result->identifier);
+        $this->assertSame("<h4 class=\"h5\">My 'heading'</h4>\n<p>And some text</p>\n", $result->content);
         $this->assertSame(null, $result->heading);
         $this->assertSame('0', $result->type);
         $this->assertSame(null, $result->info);
@@ -1146,25 +1155,24 @@ list
         $this->assertSame(null, $result->rating);
 
         $note = $generator->create_note(
-            ['columnid' => $column1->id, 'userid' => $user->id, 'heading' => 'My heading only']
+            ['columnid' => $column1->id, 'userid' => $user->id, 'heading' => 'My &quot;heading&quot; only']
         );
         $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame('My &quot;heading&quot; only', $result->identifier);
         $this->assertSame('', $result->content);
-        $this->assertSame('My heading only', $result->heading);
+        $this->assertSame('My &quot;heading&quot; only', $result->heading);
         $this->assertSame('0', $result->type);
         $this->assertSame(null, $result->info);
         $this->assertSame(null, $result->url);
         $this->assertSame(null, $result->filename);
         $this->assertSame(null, $result->rating);
 
-        $note = note::update_attachment(
-            $note->id,
-            ['type' => board::MEDIATYPE_YOUTUBE, 'info' => 'Some Video', 'url' => 'https://youtube.com/watch?v=1234567890A'],
-            $context
-        );
+        $note = note::update($note->id, '', '', ['type' => board::MEDIATYPE_YOUTUBE,
+            'info' => 'Some Video', 'url' => 'https://youtube.com/watch?v=1234567890A']);
         $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame('Some Video', $result->identifier);
         $this->assertSame('', $result->content);
-        $this->assertSame('My heading only', $result->heading);
+        $this->assertSame(null, $result->heading);
         $this->assertSame('1', $result->type);
         $this->assertSame('Some Video', $result->info);
         $this->assertSame('https://youtube.com/watch?v=1234567890A', $result->url);
@@ -1177,8 +1185,9 @@ list
             $context
         );
         $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame('https://youtube.com/watch?v=1234567890A', $result->identifier);
         $this->assertSame('', $result->content);
-        $this->assertSame('My heading only', $result->heading);
+        $this->assertSame(null, $result->heading);
         $this->assertSame('1', $result->type);
         $this->assertSame('https://youtube.com/watch?v=1234567890A', $result->info);
         $this->assertSame('https://youtube.com/watch?v=1234567890A', $result->url);
@@ -1191,8 +1200,9 @@ list
             $context
         );
         $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame('Some URL', $result->identifier);
         $this->assertSame('', $result->content);
-        $this->assertSame('My heading only', $result->heading);
+        $this->assertSame(null, $result->heading);
         $this->assertSame('3', $result->type);
         $this->assertSame('Some URL', $result->info);
         $this->assertSame('https://example.com/1', $result->url);
@@ -1205,8 +1215,9 @@ list
             $context
         );
         $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame('https://example.com/1', $result->identifier);
         $this->assertSame('', $result->content);
-        $this->assertSame('My heading only', $result->heading);
+        $this->assertSame(null, $result->heading);
         $this->assertSame('3', $result->type);
         $this->assertSame('https://example.com/1', $result->info);
         $this->assertSame('https://example.com/1', $result->url);
@@ -1227,8 +1238,9 @@ list
             $context
         );
         $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame('Some image', $result->identifier);
         $this->assertSame('', $result->content);
-        $this->assertSame('My heading only', $result->heading);
+        $this->assertSame(null, $result->heading);
         $this->assertSame('2', $result->type);
         $this->assertSame('Some image', $result->info);
         $this->assertSame("$CFG->wwwroot/pluginfile.php/$context->id/mod_board/images/$note->id/image.png", $result->url);
@@ -1249,8 +1261,9 @@ list
             $context
         );
         $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame('image.png', $result->identifier);
         $this->assertSame('', $result->content);
-        $this->assertSame('My heading only', $result->heading);
+        $this->assertSame(null, $result->heading);
         $this->assertSame('2', $result->type);
         $this->assertSame('image.png', $result->info);
         $this->assertSame("$CFG->wwwroot/pluginfile.php/$context->id/mod_board/images/$note->id/image.png", $result->url);
@@ -1272,8 +1285,9 @@ list
             $context
         );
         $result = note::format_for_display($note, $column1, $board, $context);
+        $this->assertSame('text.txt', $result->identifier);
         $this->assertSame('', $result->content);
-        $this->assertSame('My heading only', $result->heading);
+        $this->assertSame(null, $result->heading);
         $this->assertSame('4', $result->type);
         $this->assertSame('text.txt', $result->info);
         $this->assertSame("$CFG->wwwroot/pluginfile.php/$context->id/mod_board/files/$note->id/text.txt", $result->url);

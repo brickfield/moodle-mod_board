@@ -22,6 +22,7 @@ Technical changes:
 * PHPUnit and Behat tests were added for most areas.
 * Coding style was updated to match latest recommendations from Moodle HQ.
 * New CLI Grunt script was added to simplify compilation of SCSS into CSS.
+* Added support for displaying of ajax forms in modal dialogs.
 
 ##### 1.404.03 (Build 2024102003)
 

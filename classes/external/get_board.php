@@ -171,6 +171,7 @@ final class get_board extends external_api {
                             [
                                 'id' => new external_value(PARAM_INT, 'post id'),
                                 'userid' => new external_value(PARAM_INT, 'user id'),
+                                'identifier' => new external_value(PARAM_RAW, 'name used when referencing a note'),
                                 'heading' => new external_value(PARAM_TEXT, 'post heading'),
                                 'content' => new external_value(PARAM_RAW, 'post content'),
                                 'type' => new external_value(PARAM_INT, 'type'),

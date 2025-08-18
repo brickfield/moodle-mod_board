@@ -24,7 +24,7 @@ Feature: Add and update media attachments in mod_board
       | groupmode      | 0                      |
       | singleusermode | 0                      |
     And the following config values are set as admin:
-      | media_selection | 2 | mod_board |
+      | media_selection | 0 | mod_board |
 
   Scenario: Users may add URL media attachment in mod_board
     Given I am on the "Sample board" "board activity" page logged in as "teacher1"
@@ -46,18 +46,18 @@ Feature: Add and update media attachments in mod_board
     When I click on "Edit post My post S1" "mod_board > button" in the "1" "mod_board > column"
     And I set the following fields to these values:
       | Media      | Link                       |
-      | Link title |                            |
+      | Post title |                            |
+      | Link title | My less fancy link         |
       | Link URL   | https://www.example.com/2/ |
     And I click on "Post" "button" in the "Edit post for column First Column" "dialogue"
-    Then I should see "https://www.example.com/2/" in the "My post S1" "mod_board > note"
-    Then I should not see "My fancy link" in the "My post S1" "mod_board > note"
+    Then I should see "My less fancy link"
 
-    When I click on "Edit post My post S1" "mod_board > button" in the "1" "mod_board > column"
+    When I click on "Edit post My less fancy link" "mod_board > button" in the "1" "mod_board > column"
     And I set the following fields to these values:
+      | Post title | My post X1                 |
       | Media      | None                       |
     And I click on "Post" "button" in the "Edit post for column First Column" "dialogue"
-    Then I should not see "https://www.example.com/2/" in the "My post S1" "mod_board > note"
-    Then I should not see "My fancy link" in the "My post S1" "mod_board > note"
+    Then I should not see "My less fancy link"
 
   @_file_upload
   Scenario: Users may add Image media attachment in mod_board

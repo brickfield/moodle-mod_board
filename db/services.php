@@ -124,15 +124,6 @@ $functions = [
         'loginrequired' => true,
     ],
 
-    'mod_board_submit_note_form' => [
-        'classname'     => \mod_board\external\submit_note_form::class,
-        'description'   => 'Process the submission of the note add/edit form',
-        'type'          => 'write',
-        'capabilities'  => '',
-        'ajax'          => true,
-        'loginrequired' => true,
-    ],
-
     'mod_board_get_comments' => [
         'classname'     => \mod_board\external\get_comments::class,
         'description'   => 'Get the list of comments for a note',

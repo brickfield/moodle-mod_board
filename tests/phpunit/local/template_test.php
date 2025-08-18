@@ -57,6 +57,20 @@ final class template_test extends \advanced_testcase {
         $this->assertSame('Fancy <em>template</em>', $template->description);
         $this->assertSame("Col 1\nCol2", $template->columns);
         $this->assertSame('{"sortby":"3","singleusermode":"1"}', $template->jsonsettings);
+
+        $template = template::create((object)[
+            'name' => 'My template 3',
+            'intro' => 'Fancy intro',
+        ]);
+        $this->assertSame('My template 3', $template->name);
+        $this->assertSame('{"intro":"Fancy intro"}', $template->jsonsettings);
+
+        $template = template::create((object)[
+            'name' => 'My template 4',
+            'intro_editor' => ['text' => 'Fancy <b>intro</b>', 'format' => 5],
+        ]);
+        $this->assertSame('My template 4', $template->name);
+        $this->assertSame('{"intro":"Fancy <b>intro<\/b>"}', $template->jsonsettings);
     }
 
     public function test_update(): void {
@@ -90,6 +104,22 @@ final class template_test extends \advanced_testcase {
         $this->assertSame('Fancy <strong>template</strong>', $template->description);
         $this->assertSame("Col 1\nCol 2\nCol 3", $template->columns);
         $this->assertSame('{"hideheaders":"1","sortby":"2"}', $template->jsonsettings);
+
+        $template = template::update((object)[
+            'id' => $template->id,
+            'name' => 'Your template',
+            'columns' => "Col 1\r\nCol 2\nCol 3",
+            'intro' => 'Fancy intro',
+        ]);
+        $this->assertSame('{"intro":"Fancy intro"}', $template->jsonsettings);
+
+        $template = template::update((object)[
+            'id' => $template->id,
+            'name' => 'Your template',
+            'columns' => "Col 1\r\nCol 2\nCol 3",
+            'intro_editor' => ['text' => 'More fancy <b>intro</b>'],
+        ]);
+        $this->assertSame('{"intro":"More fancy <b>intro<\/b>"}', $template->jsonsettings);
     }
 
     public function test_delete(): void {
@@ -200,6 +230,8 @@ final class template_test extends \advanced_testcase {
             $this->assertIsString($setting['name']);
             if ($setting['type'] === 'select') {
                 $this->assertArrayHasKey(-1, $setting['options']);
+            } else if ($setting['type'] === 'html') {
+                $this->assertArrayNotHasKey('options', $setting);
             } else {
                 $this->fail('Unsupported setting type: ' . $setting['type']);
             }
@@ -273,10 +305,12 @@ final class template_test extends \advanced_testcase {
             'name' => 'My template',
             'description' => 'Fancy <em>template</em>',
             'columns' => "Col 1\r\nCol2",
+            'intro' => 'Some fancy <em>text</em>',
             'singleusermode' => board::SINGLEUSER_PRIVATE,
             'sortby' => 999999,
         ]);
         $expected = [
+            'intro' => 'Some fancy <em>text</em>',
             'singleusermode' => (string)board::SINGLEUSER_PRIVATE,
         ];
         $this->assertSame($expected, template::get_settings($template->jsonsettings));
@@ -286,6 +320,7 @@ final class template_test extends \advanced_testcase {
             'name' => 'My template',
             'description' => 'Fancy <em>template</em>',
             'columns' => "Col 1\r\nCol2",
+            'intro' => '',
             'singleusermode' => board::SINGLEUSER_PRIVATE,
             'embed' => '1',
             'hidename' => '1',
@@ -314,10 +349,11 @@ final class template_test extends \advanced_testcase {
             'name' => 'My template',
             'description' => 'Fancy <em>template</em>',
             'columns' => "Col 1\r\nCol2",
+            'intro' => 'Some <x>text</x>',
             'singleusermode' => board::SINGLEUSER_PRIVATE,
             'sortby' => board::SORTBYNONE,
         ]);
-        $expected = 'Sort by: None<br />Single user mode: Single user mode (private)';
+        $expected = 'Description: Some text<br />Sort by: None<br />Single user mode: Single user mode (private)';
         $this->assertSame($expected, template::format_settings($template->jsonsettings));
     }
 
@@ -344,6 +380,7 @@ final class template_test extends \advanced_testcase {
             'name' => 'My template',
             'description' => 'Fancy <em>template</em>',
             'columns' => "Col 1\r\nCol2",
+            'intro' => 'Some fancy <em>text</em>',
             'singleusermode' => board::SINGLEUSER_PRIVATE,
             'sortby' => board::SORTBYNONE,
         ]);
@@ -351,6 +388,7 @@ final class template_test extends \advanced_testcase {
     "name": "My template",
     "description": "Fancy <em>template</em>",
     "columns": "Col 1\nCol2",
+    "intro": "Some fancy <em>text</em>",
     "sortby": "3",
     "singleusermode": "1"
 }';
@@ -456,6 +494,7 @@ final class template_test extends \advanced_testcase {
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_board');
 
         $template = $generator->create_template([
+            'intro' => 'Some <em>intro</em>',
             'columns' => "Col 1\nCol 2",
             'singleusermode' => board::SINGLEUSER_PRIVATE,
             'sortby' => board::SORTBYNONE,
@@ -469,6 +508,8 @@ final class template_test extends \advanced_testcase {
         ]);
 
         $board = template::apply($board->id, $template->id);
+        $this->assertSame('Some <em>intro</em>', $board->intro);
+        $this->assertSame(FORMAT_HTML, $board->introformat);
         $this->assertSame((string)board::SINGLEUSER_PRIVATE, $board->singleusermode);
         $this->assertSame((string)board::SORTBYNONE, $board->sortby);
         $columns = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'sortorder ASC'));
@@ -482,6 +523,8 @@ final class template_test extends \advanced_testcase {
         ]);
 
         $board = template::apply($board->id, $template->id);
+        $this->assertSame('Some <em>intro</em>', $board->intro);
+        $this->assertSame(FORMAT_HTML, $board->introformat);
         $this->assertSame((string)board::SINGLEUSER_PUBLIC, $board->singleusermode);
         $this->assertSame((string)board::SORTBYNONE, $board->sortby);
         $columns = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'sortorder ASC'));

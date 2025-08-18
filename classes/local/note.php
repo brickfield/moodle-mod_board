@@ -116,10 +116,17 @@ final class note {
 
         $historyid = $DB->insert_record('board_history', ['boardid' => $board->id, 'groupid' => $groupid,
             'action' => 'add_note', 'ownerid' => $ownerid, 'userid' => $userid,
-            'content' => json_encode(['id' => $note->id, 'columnid' => $columnid,
-                'heading' => $formatted->heading, 'content' => $formatted->content,
+            'content' => json_encode([
+                'id' => $note->id,
+                'columnid' => $columnid,
+                'identifier' => $formatted->identifier,
+                'heading' => $formatted->heading,
+                'content' => $formatted->content,
                 'attachment' => ['type' => $formatted->type, 'info' => $formatted->info, 'url' => $formatted->url],
-                'rating' => $formatted->rating, 'timecreated' => $note->timecreated, 'sortorder' => $countnotes]),
+                'rating' => $formatted->rating,
+                'timecreated' => $note->timecreated,
+                'sortorder' => $countnotes,
+            ]),
             'timecreated' => time()]);
 
         $DB->set_field('board', 'historyid', $historyid, ['id' => $board->id]);
@@ -185,9 +192,14 @@ final class note {
         $formatted = self::format_for_display($note, $column, $board, $context);
 
         $historyid = $DB->insert_record('board_history', ['boardid' => $board->id, 'action' => 'update_note',
-            'ownerid' => $note->ownerid, 'userid' => $USER->id, 'content' => json_encode(['id' => $id,
-                'columnid' => $column->id, 'heading' => $formatted->heading, 'content' => $formatted->content,
-                'attachment' => ['type' => $formatted->type, 'info' => $formatted->info, 'url' => $formatted->url]]),
+            'ownerid' => $note->ownerid, 'userid' => $USER->id, 'content' => json_encode([
+                'id' => $id,
+                'columnid' => $column->id,
+                'identifier' => $formatted->identifier,
+                'heading' => $formatted->heading,
+                'content' => $formatted->content,
+                'attachment' => ['type' => $formatted->type, 'info' => $formatted->info, 'url' => $formatted->url],
+            ]),
             'timecreated' => time()]);
 
         $DB->set_field('board', 'historyid', $historyid, ['id' => $board->id]);
@@ -285,10 +297,17 @@ final class note {
             'ownerid' => $note->ownerid, 'userid' => $USER->id, 'timecreated' => time()]);
         $historyid = $DB->insert_record('board_history', ['boardid' => $board->id, 'groupid' => $note->groupid,
             'action' => 'add_note', 'userid' => $note->userid, 'ownerid' => $note->ownerid,
-            'content' => json_encode(['id' => $note->id, 'columnid' => $columnid,
-                'heading' => $formatted->heading, 'content' => $formatted->content,
+            'content' => json_encode([
+                'id' => $note->id,
+                'columnid' => $columnid,
+                'identifier' => $formatted->identifier,
+                'heading' => $formatted->heading,
+                'content' => $formatted->content,
                 'attachment' => ['type' => $formatted->type, 'info' => $formatted->info, 'url' => $formatted->url],
-                'timecreated' => $note->timecreated, 'rating' => $formatted->rating, 'sortorder' => $sortorder]),
+                'timecreated' => $note->timecreated,
+                'rating' => $formatted->rating,
+                'sortorder' => $sortorder,
+            ]),
             'timecreated' => time()]);
         // Checking if we move the note up or down.
         $ismovingup = $note->sortorder < $sortorder;
@@ -803,6 +822,18 @@ final class note {
     }
 
     /**
+     * Does the URL look like valid YouTube url?
+     *
+     * @param string $url
+     * @return bool
+     */
+    public static function is_youtube_url(string $url): bool {
+        // NOTE: this has to match getEmbedUrl() in board.js file.
+        $regex = '/(\/|%3D|v=)([0-9A-z-_]{11})([%#?&]|$)/';
+        return preg_match($regex, $url);
+    }
+
+    /**
      * Similar to s(), but the entities are encoded only once.
      *
      * This is necessary because historically data was s()ed before saving
@@ -962,6 +993,30 @@ final class note {
 
         if (isset($note->info)) {
             $note->info = self::format_plain_text($note->info);
+        }
+
+        // Identifier of note.
+        $note->identifier = null;
+        if (trim($note->heading ?? '') !== '') {
+            $note->identifier = $note->heading;
+        } else if ($note->content !== '') {
+            // The limited Markdown formatting normalises newlines,
+            // so use just the first like/paragraph as note identifier.
+            $lines = explode("\n", $note->content);
+            $line = strip_tags($lines[0]);
+            if (trim($line) !== '') {
+                $note->identifier = $line;
+            }
+        }
+        if ($note->identifier === null) {
+            if (trim($note->info ?? '') !== '') {
+                $note->identifier = $note->info;
+            } else if ($note->filename) {
+                $note->identifier = $note->filename;
+            }
+        }
+        if (isset($note->identifier)) {
+            $note->identifier = self::format_plain_text($note->identifier);
         }
 
         if (!$note->deleted && board::board_rating_enabled($board)) {

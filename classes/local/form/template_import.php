@@ -28,6 +28,8 @@ require_once($CFG->libdir . "/formslib.php");
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class template_import extends \moodleform {
+    use \mod_board\local\ajax_form_trait;
+
     /**
      * Form definition.
      */
@@ -42,8 +44,6 @@ final class template_import extends \moodleform {
             ['accepted_types' => ['.json']]
         );
         $mform->addRule('importfile', null, 'required');
-
-        $this->add_action_buttons(true, get_string('continue'));
     }
 
     #[\Override]

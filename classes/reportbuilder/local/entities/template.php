@@ -20,6 +20,7 @@ use lang_string;
 use core_reportbuilder\local\entities\base;
 use core_reportbuilder\local\filters\text;
 use core_reportbuilder\local\report\{column, filter};
+use core_reportbuilder\local\filters\select;
 
 /**
  * Template entity class.
@@ -95,7 +96,7 @@ final class template extends base {
 
         $columns[] = (new column(
             'description',
-            new lang_string('description', 'core'),
+            new lang_string('template_description', 'mod_board'),
             $this->get_entity_name()
         ))
             ->add_joins($this->get_joins())
@@ -175,6 +176,34 @@ final class template extends base {
             "{$templatealias}.name"
         ))
             ->add_joins($this->get_joins());
+
+        $filters[] = (new filter(
+            select::class,
+            'context',
+            new lang_string('category'),
+            $this->get_entity_name(),
+            "{$templatealias}.contextid"
+        ))
+            ->add_joins($this->get_joins())
+            ->set_options_callback(static function (): array {
+                global $DB;
+
+                $sql = "SELECT DISTINCT bt.contextid
+                          FROM {board_templates} bt";
+                $contextids = $DB->get_fieldset_sql($sql);
+                $result = [];
+                foreach ($contextids as $contextid) {
+                    $context = \context::instance_by_id($contextid, IGNORE_MISSING);
+                    if (!$context) {
+                        $result[$contextid] = get_string('error');
+                        continue;
+                    }
+                    $result[$contextid] = $context->get_context_name(false);
+                }
+
+                \core_collator::asort($result);
+                return $result;
+            });
 
         return $filters;
     }

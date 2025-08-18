@@ -174,6 +174,6 @@ Feature: Use mod_board generator to create test data
     And I log in as "admin"
     And I navigate to "Plugins > Activity modules > Board > Board templates" in site administration
     Then the following should exist in the "reportbuilder-table" table:
-      | Name        | Description        | Category | Columns | Settings      |
-      | Template 01 |                    | System   |         |               |
-      | Template 02 | Second description | Cat A    | Col 1   | Sort by: None |
+      | Name        | Template description | Category | Columns | Settings      |
+      | Template 01 |                      | System   |         |               |
+      | Template 02 | Second description   | Cat A    | Col 1   | Sort by: None |

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Export a template.
+ * Create a board template.
  *
  * @package    mod_board
  * @copyright  2025 Brickfield Education Labs <https://www.brickfield.ie/>
@@ -23,31 +23,44 @@
  */
 
 use mod_board\local\template;
+use mod_board\local\form\template_edit;
 
-define('NO_DEBUG_DISPLAY', true);
+define('AJAX_SCRIPT', true);
 
 require('../../../config.php');
-require_once("$CFG->libdir/filelib.php");
-
-$id = required_param('id', PARAM_INT);
 
 $syscontext = context_system::instance();
 
 require_login();
 require_capability('mod/board:managetemplates', $syscontext);
 
-$pageurl = new moodle_url('/mod/board/template/delete.php', ['id' => $id]);
+$pageurl = new moodle_url('/mod/board/template/create_ajax.php');
+$returnurl = new moodle_url('/mod/board/template/index.php');
 
 $PAGE->set_url($pageurl);
 $PAGE->set_context($syscontext);
 
-$template = $DB->get_record('board_templates', ['id' => $id], '*', MUST_EXIST);
+$template = (object)[
+    'id' => '0',
+    'name' => '',
+    'columns' => '',
+    'contextid' => $syscontext->id,
+];
 
-$filename = template::get_export_filename($template);
-$json = template::get_export_json($template);
+$form = new template_edit(null, ['id' => 0, 'contextid' => $template->contextid]);
+$form->set_data($template);
 
-if (defined('BEHAT_SITE_RUNNING') && BEHAT_SITE_RUNNING) {
-    send_file($json, $filename, 0, 0, true, false, 'text/plain');
-} else {
-    send_file($json, $filename, 0, 0, true, true, 'application/json');
+if ($form->is_cancelled()) {
+    $form::ajax_form_cancelled($returnurl);
 }
+if ($data = $form->get_data()) {
+    template::create($data);
+    $form::ajax_form_submitted($returnurl);
+}
+
+$form->display();
+
+$form::ajax_form_render(
+    dialogtitle: get_string('template_create', 'mod_board'),
+    submittext: get_string('template_create', 'mod_board')
+);

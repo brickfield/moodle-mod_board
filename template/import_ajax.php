@@ -24,6 +24,8 @@
 
 use mod_board\local\template;
 
+define('AJAX_SCRIPT', true);
+
 require('../../../config.php');
 require_once("$CFG->libdir/filelib.php");
 
@@ -34,16 +36,20 @@ require_capability('mod/board:managetemplates', $syscontext);
 
 $pageurl = new moodle_url('/mod/board/template/import.php');
 $returnurl = new moodle_url('/mod/board/template/index.php');
-$title = get_string('template_import', 'mod_board');
-template::setup_management_page($pageurl, $title);
+
+$PAGE->set_url($pageurl);
+$PAGE->set_context($syscontext);
 
 $form1 = new \mod_board\local\form\template_import(null, []);
 $form2 = new \mod_board\local\form\template_edit(null, ['id' => 0, 'contextid' => $syscontext->id]);
 
 $template = [];
 
-if ($form1->is_cancelled() || $form2->is_cancelled()) {
-    redirect($returnurl);
+if ($form1->is_cancelled()) {
+    $form1::ajax_form_cancelled($returnurl);
+}
+if ($form2->is_cancelled()) {
+    $form2::ajax_form_cancelled($returnurl);
 }
 
 if ($form1->get_data()) {
@@ -52,6 +58,7 @@ if ($form1->get_data()) {
     $template = \mod_board\local\template::decode_import_file($content);
     if ($template) {
         file_prepare_standard_editor($template, 'description', []);
+        file_prepare_standard_editor($template, 'intro', []);
         $form2->set_data($template);
     }
     $form = $form2;
@@ -61,7 +68,7 @@ if ($form1->get_data()) {
 } else if ($data = $form2->get_data()) {
     // Final step - create the template.
     template::create($data);
-    redirect($returnurl);
+    $form2::ajax_form_submitted($returnurl);
 } else if ($form2->is_submitted()) {
     // Template validation errors.
     $form = $form2;
@@ -70,8 +77,16 @@ if ($form1->get_data()) {
     $form = $form1;
 }
 
-echo $OUTPUT->header();
-
 $form->display();
 
-echo $OUTPUT->footer();
+if ($form instanceof \mod_board\local\form\template_import) {
+    $form::ajax_form_render(
+        dialogtitle: get_string('template_import', 'mod_board'),
+        submittext: get_string('continue')
+    );
+} else {
+    $form::ajax_form_render(
+        dialogtitle: get_string('template_import', 'mod_board'),
+        submittext: get_string('template_create', 'mod_board'),
+    );
+}

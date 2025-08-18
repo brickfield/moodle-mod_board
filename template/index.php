@@ -22,8 +22,6 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use mod_board\local\template;
-
 require('../../../config.php');
 
 $syscontext = context_system::instance();
@@ -33,13 +31,31 @@ require_capability('mod/board:managetemplates', $syscontext);
 
 $pageurl = new moodle_url('/mod/board/template/index.php');
 $title = get_string('templates', 'mod_board');
-template::setup_management_page($pageurl, $title);
+
+if (has_capability('moodle/site:config', $syscontext)) {
+    require_once("$CFG->libdir/adminlib.php");
+    admin_externalpage_setup('modboardtemplates', '', null, $pageurl, ['pagelayout' => 'admin', 'nosearch' => true]);
+} else {
+    $PAGE->set_url($pageurl);
+    $PAGE->set_context($syscontext);
+}
+
+$PAGE->set_secondary_navigation(false);
+$PAGE->set_title($title);
+$PAGE->set_heading($title);
 
 $buttons = [];
-$url = new moodle_url('/mod/board/template/edit.php', ['id' => 0]);
-$buttons[] = $OUTPUT->single_button($url, get_string('template_create', 'mod_board'));
-$url = new moodle_url('/mod/board/template/import.php');
-$buttons[] = $OUTPUT->single_button($url, get_string('template_import', 'mod_board'));
+
+$url = new moodle_url('/mod/board/template/create_ajax.php');
+$button = new \mod_board\output\ajax_form\modal\button($url, get_string('template_create', 'mod_board'));
+$button->set_form_size('lg');
+$buttons[] = $OUTPUT->render($button);
+
+$url = new moodle_url('/mod/board/template/import_ajax.php');
+$button = new \mod_board\output\ajax_form\modal\button($url, get_string('template_import', 'mod_board'));
+$button->set_form_size('lg');
+$buttons[] = $OUTPUT->render($button);
+
 $PAGE->set_button(implode(' ', $buttons) . $PAGE->button);
 
 echo $OUTPUT->header();

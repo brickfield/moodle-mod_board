@@ -119,7 +119,6 @@ final class get_configuration extends external_api {
             'readonly' => ($forcereadonly || board::board_readonly($board, $groupid) || !board::can_post($board, $ownerid)),
             'columnicon' => $config->new_column_icon,
             'noteicon' => $config->new_note_icon,
-            'mediaselection' => $config->media_selection,
             'post_max_length' => $config->post_max_length,
             'history_refresh' => $config->history_refresh,
             'ratingenabled' => board::board_rating_enabled($board),

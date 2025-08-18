@@ -23,12 +23,12 @@ Feature: Templates for mod_board
     Then I should see "No templates found."
 
     When I press "Add template"
-    And I set the following fields to these values:
+    And I set the following fields in the "Add template" "dialogue" to these values:
       | Name        | Template 01 |
-    And I press "Add template"
+    And I click on "Add template" "button" in the "Add template" "dialogue"
     Then the following should exist in the "reportbuilder-table" table:
-      | Name        | Description        | Category | Columns | Settings      |
-      | Template 01 |                    | System   |         |               |
+      | Name        | Template description | Category | Columns | Settings      |
+      | Template 01 |                      | System   |         |               |
 
   Scenario: Site manager may access mod_board template management via direct URL
     Given I log in as "manager1"
@@ -37,12 +37,12 @@ Feature: Templates for mod_board
     Then I should see "No templates found."
 
     When I press "Add template"
-    And I set the following fields to these values:
+    And I set the following fields in the "Add template" "dialogue" to these values:
       | Name        | Template 01 |
-    And I press "Add template"
+    And I click on "Add template" "button" in the "Add template" "dialogue"
     Then the following should exist in the "reportbuilder-table" table:
-      | Name        | Description        | Category | Columns | Settings      |
-      | Template 01 |                    | System   |         |               |
+      | Name        | Template description | Category | Columns | Settings      |
+      | Template 01 |                      | System   |         |               |
 
   Scenario: Site manager may create, update and delete mod_board template
     Given the following "categories" exist:
@@ -53,55 +53,60 @@ Feature: Templates for mod_board
     And I am on the "mod_board > Templates" page
 
     When I press "Add template"
-    And I set the following fields to these values:
-      | Name        | Template 01      |
-      | Description | Some description |
-      | Category    | Cat A            |
-      | Sort by     | None             |
+    And I set the following fields in the "Add template" "dialogue" to these values:
+      | Name                 | Template 01      |
+      | Template description | Some description |
+      | Description          | Fancy info       |
+      | Category             | Cat A            |
+      | Sort by              | None             |
     And I set the field "Columns" to multiline:
 """
 Col 1
 Col 2
 """
-    And I press "Add template"
+    And I click on "Add template" "button" in the "Add template" "dialogue"
     Then the following should exist in the "reportbuilder-table" table:
-      | Name        | Description      | Category | Columns | Settings      |
-      | Template 01 | Some description | Cat A    | Col 1   | Sort by: None |
+      | Name        | Template description   | Category | Columns | Settings      |
+      | Template 01 | Some description       | Cat A    | Col 1   | Sort by: None |
     And I should see "Col 2" in the "Template 01" "table_row"
+    And I should see "Fancy info" in the "Template 01" "table_row"
     And I should not see "Single user mode" in the "Template 01" "table_row"
 
     When I click on "Actions" "link_or_button" in the "Template 01" "table_row"
     And I click on "Update template" "link" in the "Template 01" "table_row"
-    And the following fields match these values:
-      | Name        | Template 01      |
-      | Description | Some description |
-      | Category    | Cat A            |
-      | Sort by     | None             |
+    And the following fields in the "Update template" "dialogue" match these values:
+      | Name                 | Template 01      |
+      | Template description | Some description |
+      | Category             | Cat A            |
+      | Description          | Fancy info       |
+      | Sort by              | None             |
     And the field "Columns" matches multiline:
 """
 Col 1
 Col 2
 """
-    And I set the following fields to these values:
-      | Name             | Template 001      |
-      | Description      | Other description |
-      | Category         | Cat B             |
-      | Sort by          | Choose...         |
-      | Single user mode | Disabled          |
+    And I set the following fields in the "Update template" "dialogue" to these values:
+      | Name                 | Template 001      |
+      | Template description | Other description |
+      | Category             | Cat B             |
+      | Description          | Other info        |
+      | Sort by              | Choose...         |
+      | Single user mode     | Disabled          |
     And I set the field "Columns" to multiline:
 """
 Sloupec 1
 """
-    And I press "Update template"
+    And I click on "Update template" "button" in the "Update template" "dialogue"
     Then the following should exist in the "reportbuilder-table" table:
-      | Name         | Description       | Category | Columns   | Settings                   |
-      | Template 001 | Other description | Cat B    | Sloupec 1 | Single user mode: Disabled |
+      | Name         | Template description | Category | Columns   | Settings                   |
+      | Template 001 | Other description    | Cat B    | Sloupec 1 | Single user mode: Disabled |
     And I should not see "Col 2" in the "Template 001" "table_row"
+    And I should see "Other info" in the "Template 001" "table_row"
     And I should not see "Sort by" in the "Template 001" "table_row"
 
     When I click on "Actions" "link_or_button" in the "Template 001" "table_row"
     And I click on "Delete template" "link" in the "Template 001" "table_row"
-    And I press "Delete template"
+    And I click on "Delete template" "button" in the "Delete template" "dialogue"
     Then I should not see "Template 001"
     And I should see "No templates found."
 
@@ -113,21 +118,21 @@ Sloupec 1
     And I log in as "manager1"
     And I am on the "mod_board > Templates" page
     And I press "Add template"
-    And I set the following fields to these values:
-      | Name        | Template 01      |
-      | Description | Some description |
-      | Category    | Cat A            |
-      | Sort by     | None             |
+    And I set the following fields in the "Add template" "dialogue" to these values:
+      | Name                 | Template 01      |
+      | Template description | Some description |
+      | Category             | Cat A            |
+      | Sort by              | None             |
     And I set the field "Columns" to multiline:
 """
 Col 1
 Col 2
 """
-    And I press "Add template"
+    And I click on "Add template" "button" in the "Add template" "dialogue"
     And I click on "Actions" "link_or_button" in the "Template 01" "table_row"
     When I click on "Export template" "link" in the "Template 01" "table_row"
     Then I should see "\"name\": \"Template 01\""
-    And I should see "\"description\": \"<p>Some description</p>\","
+    And I should see "\"columns\": \"Col 1\nCol 2\""
     And I should see "\"sortby\": \"3\""
 
   @_file_upload
@@ -137,11 +142,20 @@ Col 2
 
     When I press "Import template"
     And I upload "mod/board/tests/fixtures/board.json" file to "File" filemanager
-    And I press "Continue"
-    And I press "Add template"
+    And I click on "Continue" "button" in the "Import template" "dialogue"
+    And I click on "Add template" "button" in the "Import template" "dialogue"
     Then the following should exist in the "reportbuilder-table" table:
-      | Name        | Description      | Category | Columns | Settings      |
-      | Template 01 | Some description | System   | Col 1   | Sort by: None |
+      | Name        | Template description | Category | Columns | Settings      |
+      | Template 01 | Some description     | System   | Col 1   | Sort by: None |
+    And I should see "Col 2" in the "Template 01" "table_row"
+
+    When I press "Import template"
+    And I upload "mod/board/tests/fixtures/board_intro.json" file to "File" filemanager
+    And I click on "Continue" "button" in the "Import template" "dialogue"
+    And I click on "Add template" "button" in the "Import template" "dialogue"
+    Then the following should exist in the "reportbuilder-table" table:
+      | Name        | Template description | Category | Columns | Settings                |
+      | Template 02 | Other description    | System   |         | Description: Fancy info |
     And I should see "Col 2" in the "Template 01" "table_row"
 
   Scenario: Teacher may apply template when creating mod_board activity
@@ -265,3 +279,41 @@ Col 2
     And I click on "Post" "button" in the "New post for column Col 1" "dialogue"
     And I reload the page
     Then I should not see "Apply template"
+
+  Scenario: Site manager may filter mod_board templates in management UI
+    Given the following "categories" exist:
+      | name  | category | idnumber |
+      | Cat A | 0        | cata     |
+      | Cat B | 0        | catb     |
+      | Cat C | 0        | catc     |
+    And the following "mod_board > templates" exist:
+      | name         | description        | contextlevel | reference |
+      | Template 000 |                    | System       |           |
+      | Template 001 |                    | Category     | cata      |
+      | Template 002 |                    | Category     | catb      |
+    And I log in as "manager1"
+    And I am on the "mod_board > Templates" page
+
+    When I click on "Filters" "button"
+    And I set the following fields in the "Category" "core_reportbuilder > Filter" to these values:
+      | Category operator | Is equal to |
+      | Category value    | System      |
+    And I click on "Apply" "button" in the "[data-region='report-filters']" "css_element"
+    And I click on "Filters" "button"
+    Then the following should exist in the "reportbuilder-table" table:
+      | Name         | Category |
+      | Template 000 | System   |
+    And I should not see "Template 001"
+    And I should not see "Template 002"
+
+    When I click on "Filters" "button"
+    And I set the following fields in the "Category" "core_reportbuilder > Filter" to these values:
+      | Category operator | Is equal to |
+      | Category value    | Cat A       |
+    And I click on "Apply" "button" in the "[data-region='report-filters']" "css_element"
+    And I click on "Filters" "button"
+    Then the following should exist in the "reportbuilder-table" table:
+      | Name         | Category |
+      | Template 001 | Cat A    |
+    And I should not see "Template 000"
+    And I should not see "Template 002"

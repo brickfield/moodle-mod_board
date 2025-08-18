@@ -16,10 +16,10 @@
 
 namespace mod_board\reportbuilder\local\systemreports;
 
-use mod_board\reportbuilder\local\entities\template;
-use core_reportbuilder\system_report;
 use core_reportbuilder\local\report\action;
+use core_reportbuilder\system_report;
 use lang_string;
+use mod_board\reportbuilder\local\entities\template;
 use moodle_url;
 use pix_icon;
 
@@ -89,6 +89,7 @@ final class templates extends system_report {
     protected function add_filters(): void {
         $filters = [
             'template:name',
+            'template:context',
         ];
         $this->add_filters_from_entities($filters);
     }
@@ -99,26 +100,27 @@ final class templates extends system_report {
      * Note the use of ":id" placeholder which will be substituted according to actual values in the row
      */
     protected function add_actions(): void {
-        $this->add_action((new action(
-            new moodle_url('/mod/board/template/edit.php', ['id' => ':id']),
-            new pix_icon('i/settings', ''),
-            [],
-            false,
-            new lang_string('template_update', 'mod_board'),
-        )));
-        $this->add_action((new action(
+        $link = (new \mod_board\output\ajax_form\modal\link(
+            formurl: new moodle_url('/mod/board/template/update_ajax.php', ['id' => ':id']),
+            label: new lang_string('template_update', 'mod_board')
+        ))
+            ->set_icon(new pix_icon('i/settings', ''))
+            ->set_form_size('lg');
+        $this->add_action($link->create_report_action());
+
+        $this->add_action(new action(
             new moodle_url('/mod/board/template/export.php', ['id' => ':id']),
             new pix_icon('t/download', ''),
             [],
             false,
             new lang_string('template_export', 'mod_board'),
-        )));
-        $this->add_action((new action(
-            new moodle_url('/mod/board/template/delete.php', ['id' => ':id']),
-            new pix_icon('i/delete', ''),
-            ['class' => 'text-danger'],
-            false,
-            new lang_string('template_delete', 'mod_board'),
-        )));
+        ));
+
+        $link = (new \mod_board\output\ajax_form\modal\link(
+            formurl: new moodle_url('/mod/board/template/delete_ajax.php', ['id' => ':id']),
+            label: new lang_string('template_delete', 'mod_board')
+        ))
+            ->set_icon(new pix_icon('i/delete', ''));
+        $this->add_action($link->create_report_action(['class' => 'text-danger']));
     }
 }

@@ -397,7 +397,7 @@ class board {
      * @return bool
      */
     public static function board_rating_enabled(stdClass $board): bool {
-        return (bool)$board->addrating;
+        return ($board->addrating != self::RATINGDISABLED);
     }
 
     /**
