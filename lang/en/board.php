@@ -61,6 +61,7 @@ $string['aria_newpost'] = 'Add new post to column {column}';
 $string['aria_postedit'] = 'Save post edit for post {post} from column {column}';
 $string['aria_postnew'] = 'Save new post for column {column}';
 $string['aria_ratepost'] = 'Rate post {post} from column {column}';
+$string['aria_updatecolumn'] = 'Update column {column}';
 $string['background_color'] = 'Background color';
 $string['background_color_help'] = 'Should be a valid hex colour, such as #00cc99';
 $string['background_image'] = 'Background Image';

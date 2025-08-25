@@ -61,14 +61,17 @@ class behat_mod_board extends behat_base {
      * @param string $name name of column to type
      */
     public function i_change_column_name(int $column, string $name) {
-        $xpath = "//div[contains(@class,'board_column ') and position()='$column']"
-            . "//div[contains(@class,'mod_board_column_name')]";
-        $this->get_selected_node('xpath', $xpath)->doubleClick();
-        $this->wait_for_pending_js();
+        $this->execute('behat_general::i_click_on_in_the', [
+            'Update column Heading', 'mod_board > button',
+            $column, 'mod_board > column',
+        ]);
+        $newdata = new \Behat\Gherkin\Node\TableNode([['Name', $name]]);
+        $this->execute('behat_forms::i_set_the_following_fields_to_these_values', $newdata);
+        $this->execute('behat_general::i_click_on_in_the', [
+            'Update', 'button',
+            'Update column Heading', 'dialogue',
+        ]);
 
-        $chars = str_split($name); // No Unicode support here, sorry.
-        $chars[] = behat_keys::ENTER;
-        behat_base::type_keys($this->getSession(), $chars);
         $this->wait_for_pending_js();
     }
 

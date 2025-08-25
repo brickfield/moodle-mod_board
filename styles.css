@@ -41,7 +41,6 @@
     position: relative;
 }
 .mod_board .board_column_header .mod_board_column_name {
-    cursor: pointer;
     float: left;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -58,7 +57,12 @@
     top: 3px;
     right: 5px;
     color: #333;
-    cursor: pointer;
+}
+.mod_board .board_column_header .mod_board_update {
+    position: absolute;
+    top: 3px;
+    right: 5px;
+    color: #333;
 }
 .mod_board .board_column_header .mod_board_remove:hover, .mod_board .board_column_header .mod_board_remove:focus {
     opacity: 0.8;

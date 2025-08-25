@@ -88,22 +88,33 @@ Feature: Basic mod_board management tasks
     And "5" "mod_board > column" should not exist
 
     When I click on "Add new column" "mod_board > button"
+    And I set the following fields to these values:
+      | Name | Fourth Column |
+    And I click on "Submit" "button" in the "Add new column" "dialogue"
     Then I should see "Heading" in the "1" "mod_board > column"
     And I should see "Heading" in the "2" "mod_board > column"
     And I should see "Heading" in the "3" "mod_board > column"
-    And I should see "Heading" in the "4" "mod_board > column"
+    And I should see "Fourth Column" in the "4" "mod_board > column"
     And "5" "mod_board > column" should not exist
     And I reload the page
     And I should see "Heading" in the "1" "mod_board > column"
     And I should see "Heading" in the "2" "mod_board > column"
     And I should see "Heading" in the "3" "mod_board > column"
-    And I should see "Heading" in the "4" "mod_board > column"
+    And I should see "Fourth Column" in the "4" "mod_board > column"
     And "5" "mod_board > column" should not exist
 
-    When I change mod_board "1" column name to "First Column"
-    And I change mod_board "2" column name to "Second Column"
-    And I change mod_board "3" column name to "Third Column"
-    And I change mod_board "4" column name to "Fourth Column"
+    When I click on "Update column Heading" "mod_board > button" in the "1" "mod_board > column"
+    And I set the following fields to these values:
+      | Name | First Column |
+    And I click on "Update" "button" in the "Update column Heading" "dialogue"
+    When I click on "Update column Heading" "mod_board > button" in the "2" "mod_board > column"
+    And I set the following fields to these values:
+      | Name | Second Column |
+    And I click on "Update" "button" in the "Update column Heading" "dialogue"
+    When I click on "Update column Heading" "mod_board > button" in the "3" "mod_board > column"
+    And I set the following fields to these values:
+      | Name | Third Column |
+    And I click on "Update" "button" in the "Update column Heading" "dialogue"
     Then I should see "First Column" in the "1" "mod_board > column"
     And I should see "Second Column" in the "2" "mod_board > column"
     And I should see "Third Column" in the "3" "mod_board > column"

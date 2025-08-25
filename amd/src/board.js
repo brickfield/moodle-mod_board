@@ -27,7 +27,6 @@ import Ajax from "core/ajax";
 import ModalCancel from "core/modal_cancel";
 import ModalEvents from "core/modal_events";
 import Notification from "core/notification";
-import "mod_board/jquery.editable.amd";
 import "mod_board/jquery.sortable.amd";
 import Comments from "mod_board/comments";
 import moveNotesDialog from "./movenotesdialog";
@@ -104,40 +103,6 @@ const handleAction = function(elem, callback) {
 };
 
 /**
- * Setting up element edibility.
- *
- * @param {object} elem
- * @param {function} callback
- * @param {function} callBeforeOnKeyEditing
- * @returns {*}
- */
-const handleEditableAction = function(elem, callback, callBeforeOnKeyEditing) {
-    if (elem.is(':editable')) {
-        throw new Error('handleEditableAction - must be called before setting the element as editable');
-    }
-
-    // Can't use on(edit) here because we want to do actions (save cache) before the control goes into edit mode
-    return elem.on('dblclick keypress', function(e) {
-        if (e.type === 'keypress') {
-            if (isAriaTriggerKey(e.keyCode) && !elem.is(':editing')) {
-                e.preventDefault();
-                if (callBeforeOnKeyEditing) {
-                    callback();
-                }
-                elem.editable('open');
-                if (callBeforeOnKeyEditing) {
-                    return;
-                }
-            } else {
-                return;
-            }
-        }
-
-        callback();
-    });
-};
-
-/**
  * The default function of the module, which does the setup of the page.
  *
  * @param {object} settings
@@ -176,6 +141,7 @@ export default function(settings) {
         aria_newcolumn: '',
         aria_newpost: '',
         aria_deletecolumn: '',
+        aria_updatecolumn: '',
         aria_movecolumn: '',
         aria_deletepost: '',
         aria_movepost: '',
@@ -348,10 +314,12 @@ export default function(settings) {
             columnIdentifier = column.find('.mod_board_column_name').text(),
             newNoteString = strings.aria_newpost.replace('{column}', columnIdentifier),
             moveColumnString = strings.aria_movecolumn.replace('{column}', columnIdentifier),
-            deleteColumnString = strings.aria_deletecolumn.replace('{column}', columnIdentifier);
+            deleteColumnString = strings.aria_deletecolumn.replace('{column}', columnIdentifier),
+            updateColumnString = strings.aria_updatecolumn.replace('{column}', columnIdentifier);
         column.find('.newnote').attr('aria-label', newNoteString).attr('title', newNoteString);
         column.find('.mod_column_move').attr('aria-label', moveColumnString).attr('title', moveColumnString);
         column.find('.delete_column').attr('aria-label', deleteColumnString).attr('title', deleteColumnString);
+        column.find('.update_column').attr('aria-label', updateColumnString).attr('title', updateColumnString);
 
         column.find(".board_note").each(function(index, note) {
             updateNoteAria($(note).data('ident'));
@@ -737,7 +705,6 @@ export default function(settings) {
     var addColumn = function(ident, name, locked, notes, colour) {
         let headerStyle = `style="border-top: 10px solid #${colour}"`;
         var iseditable = isEditor,
-            nameCache = null,
             column = $(`<div class="board_column board_column_hasdata" data-locked="${locked}"\
                  ${headerStyle} data-ident="${ident}"></div>`),
             columnHeader = $('<div class="board_column_header"></div>'),
@@ -798,10 +765,6 @@ export default function(settings) {
             });
             columnHeader.append(lockElement);
 
-            columnHeader.addClass('icon-size-3');
-            const moveElement = $('<div class="icon fa fa-arrows mod_column_move" role="button" tabindex="0"></div>');
-            columnHeader.append(moveElement);
-            moveColumnsDialog.init(moveColumn);
             var removeElement = $('<div class="icon fa fa-remove delete_column" role="button" tabindex="0"></div>');
             handleAction(removeElement, () => {
                 Notification.confirm(
@@ -819,43 +782,23 @@ export default function(settings) {
                     }
                 );
             });
-
             columnHeader.append(removeElement);
+
+            columnHeader.addClass('icon-size-3');
+            const moveElement = $('<div class="icon fa fa-arrows mod_column_move" role="button" tabindex="0"></div>');
+            columnHeader.append(moveElement);
+            moveColumnsDialog.init(moveColumn);
+
+            var updateElement = $('<div class="icon fa fa-pencil update_column" role="button" tabindex="0"></div>');
+            handleAction(updateElement, () => {
+                showColumnUpdateModal(ident);
+            });
+            columnHeader.append(updateElement);
         }
 
         column.append(columnHeader);
         column.append(columnContent);
         column.append(columnNewContent);
-
-        if (iseditable) {
-            handleEditableAction(columnName, function() {
-                nameCache = columnName.html();
-            }, true);
-
-            columnName.editable({
-                toggleFontSize: false,
-                closeOnEnter: true,
-                callback: function(data) {
-                    if (data.content) {
-                        serviceCall('update_column', {id: ident, name: columnName.html()}, function(result) {
-                            if (!result.status) {
-                                columnName.html(nameCache);
-                                nameCache = null;
-                            } else {
-                                lastHistoryId = result.historyid;
-                                updateColumnAria(ident);
-                            }
-                        }, function() {
-                            columnName.html(nameCache);
-                            nameCache = null;
-                        });
-                    } else {
-                        columnName.html(nameCache);
-                        nameCache = null;
-                    }
-                }
-            });
-        }
 
         if (!isReadOnlyBoard) {
             const newNoteButton = $('<div class="board_button newnote" role="button" tabindex="0">' +
@@ -909,25 +852,13 @@ export default function(settings) {
      * @method addNewColumnButton
      */
     var addNewColumnButton = function() {
-        var column = $('<div class="board_column_empty"></div>'),
-            newBusy = false;
+        var column = $('<div class="board_column_empty"></div>');
         column.append('<div class="board_button newcolumn" role="button" tabindex="0" aria-label="' +
             strings.aria_newcolumn + '" title="' + strings.aria_newcolumn + '"><div class="button_content"><span class="fa '
             + options.columnicon + '"></span></div></div>');
 
         handleAction(column.find('.newcolumn'), function() {
-            if (newBusy) {
-                return;
-            }
-            newBusy = true;
-
-            serviceCall('add_column', {boardid: board.id, name: strings.default_column_heading}, function(result) {
-                addColumn(result.id, strings.default_column_heading, false, {}, selectHeadingColour());
-                lastHistoryId = result.historyid;
-                newBusy = false;
-            }, function() {
-                newBusy = false;
-            });
+            showColumnCreateModal(board.id);
         });
 
         $(".mod_board").append(column);
@@ -1344,6 +1275,42 @@ export default function(settings) {
                 creatingNoteModal = null;
             });
         });
+    };
+
+    /**
+     * Show modal for column creation.
+     *
+     * @param {Number} boardID
+     */
+    const showColumnCreateModal = function(boardID) {
+        const urlParams = {'boardid': boardID};
+        const formUrl = Url.relativeUrl('/mod/board/column_create_ajax.php', urlParams, false);
+
+        const modalConfig = {
+            'formUrl': formUrl,
+            'formSize': 'sm',
+            'formSubmittedAction': 'reload',
+        };
+
+        AjaxFormModal.create(modalConfig);
+    };
+
+    /**
+     * Show modal for column update.
+     *
+     * @param {Number} columnId
+     */
+    const showColumnUpdateModal = function(columnId) {
+        const urlParams = {'id': columnId};
+        const formUrl = Url.relativeUrl('/mod/board/column_update_ajax.php', urlParams, false);
+
+        const modalConfig = {
+            'formUrl': formUrl,
+            'formSize': 'sm',
+            'formSubmittedAction': 'reload',
+        };
+
+        AjaxFormModal.create(modalConfig);
     };
 
     /**

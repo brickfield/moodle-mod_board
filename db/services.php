@@ -43,24 +43,6 @@ $functions = [
         'loginrequired' => true,
     ],
 
-    'mod_board_add_column' => [
-        'classname'     => \mod_board\external\add_column::class,
-        'description'   => 'Add a column on the board',
-        'type'          => 'write',
-        'capabilities'  => '',
-        'ajax'          => true,
-        'loginrequired' => true,
-    ],
-
-    'mod_board_update_column' => [
-        'classname'     => \mod_board\external\update_column::class,
-        'description'   => 'Update a column on the board',
-        'type'          => 'write',
-        'capabilities'  => '',
-        'ajax'          => true,
-        'loginrequired' => true,
-    ],
-
     'mod_board_delete_column' => [
         'classname'     => \mod_board\external\delete_column::class,
         'description'   => 'Delete a column from the board',
