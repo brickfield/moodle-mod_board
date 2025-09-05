@@ -429,7 +429,11 @@ final class template_test extends \advanced_testcase {
     }
 
     public function test_get_applicable_templates(): void {
+        global $DB;
         $this->resetAfterTest();
+
+        // Delete built-in templates.
+        $DB->delete_records('board_templates');
 
         /** @var \mod_board_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_board');

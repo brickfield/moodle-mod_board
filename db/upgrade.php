@@ -23,6 +23,7 @@
  */
 
 use mod_board\board;
+use mod_board\local\install;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -446,6 +447,12 @@ function xmldb_board_upgrade(int $oldversion) {
 
         // Board savepoint reached.
         upgrade_mod_savepoint(true, 2025070711, 'board');
+    }
+
+    if ($oldversion < 2025070713.01) {
+        install::setup_builtin_templates();
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2025070713.01, 'board');
     }
 
     return true;

@@ -20,7 +20,7 @@ Feature: Templates for mod_board
     Given I log in as "admin"
 
     When I navigate to "Plugins > Activity modules > Board > Board templates" in site administration
-    Then I should see "No templates found."
+    Then I should see "Board templates"
 
     When I press "Add template"
     And I set the following fields in the "Add template" "dialogue" to these values:
@@ -34,7 +34,7 @@ Feature: Templates for mod_board
     Given I log in as "manager1"
 
     When I am on the "mod_board > Templates" page
-    Then I should see "No templates found."
+    Then I should see "Board templates"
 
     When I press "Add template"
     And I set the following fields in the "Add template" "dialogue" to these values:
@@ -108,7 +108,6 @@ Sloupec 1
     And I click on "Delete template" "link" in the "Template 001" "table_row"
     And I click on "Delete template" "button" in the "Delete template" "dialogue"
     Then I should not see "Template 001"
-    And I should see "No templates found."
 
   Scenario: Site manager may export mod_board template
     Given the following "categories" exist:
