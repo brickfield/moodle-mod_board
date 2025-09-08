@@ -449,10 +449,10 @@ function xmldb_board_upgrade(int $oldversion) {
         upgrade_mod_savepoint(true, 2025070711, 'board');
     }
 
-    if ($oldversion < 2025070713.01) {
+    if ($oldversion < 2025070714) {
         install::setup_builtin_templates();
         // Board savepoint reached.
-        upgrade_mod_savepoint(true, 2025070713.01, 'board');
+        upgrade_mod_savepoint(true, 2025070714, 'board');
     }
 
     return true;
