@@ -42,8 +42,8 @@ class install {
      * @return array Array of template objects for the built-in templates.
      */
     public static function get_builtin_templates(): array {
-        $resourcesdir = __DIR__.'/../../resources/templates';
-        $builtin = glob($resourcesdir.'/*.json');
+        $resourcesdir = __DIR__ . '/../../resources/templates';
+        $builtin = glob($resourcesdir . '/*.json');
         $templates = [];
         foreach ($builtin as $file) {
             $json = file_get_contents($file);
