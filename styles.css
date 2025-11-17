@@ -1,5 +1,5 @@
 /* stylelint-disable selector-list-comma-newline-after */
-.mod_board {
+.mod_board_wrapper .mod_board {
     display: flex;
     flex-flow: row nowrap;
     align-items: flex-start;
