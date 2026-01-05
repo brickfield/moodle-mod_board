@@ -135,7 +135,54 @@ class behat_mod_board extends behat_base {
                 return new moodle_url('/mod/board/template/index.php');
 
             default:
-                throw new Exception('Unrecognised tool_muprog page "' . $page . '."');
+                throw new Exception('Unrecognised mod_board page "' . $page . '."');
         }
+    }
+
+    /**
+     * Convert page names to URLs for steps like 'When I am on the "[identifier]" "[page type]" page'.
+     *
+     * Recognised page names are:
+     * | pagetype          | name meaning                                | description                                           |
+     * | view              | Board name                                  | The board info page (view.php)                |
+     *
+     * @param string $type identifies which type of page this is, e.g. 'preview'.
+     * @param string $identifier identifies the particular page, e.g. 'Test board > preview > Attempt 1'.
+     * @return moodle_url the corresponding URL.
+     * @throws Exception with a meaningful error message if the specified page cannot be found.
+     */
+    protected function resolve_page_instance_url(string $type, string $identifier): moodle_url {
+        switch (strtolower($type)) {
+            case 'view':
+                return new moodle_url(
+                    '/mod/board/view.php',
+                    ['id' => $this->get_cm_by_board_name($identifier)->id]
+                );
+
+            default:
+                throw new Exception('Unrecognised board page type "' . $type . '."');
+        }
+    }
+
+    /**
+     * Get a board cmid from the board name.
+     *
+     * @param string $name board name.
+     * @return stdClass cm from get_coursemodule_from_instance.
+     */
+    protected function get_cm_by_board_name(string $name): stdClass {
+        $board = $this->get_board_by_name($name);
+        return get_coursemodule_from_instance('board', $board->id, $board->course);
+    }
+
+    /**
+     * Get a board by name.
+     *
+     * @param string $name board name.
+     * @return stdClass the corresponding DB row.
+     */
+    protected function get_board_by_name(string $name): stdClass {
+        global $DB;
+        return $DB->get_record('board', ['name' => $name], '*', MUST_EXIST);
     }
 }

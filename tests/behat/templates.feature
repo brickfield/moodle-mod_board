@@ -157,8 +157,9 @@ Col 2
       | Template 02 | Other description    | System   |         | Description: Fancy info |
     And I should see "Col 2" in the "Template 01" "table_row"
 
-  Scenario: Teacher may apply template when creating mod_board activity
-    Given the following "categories" exist:
+  Scenario: Teacher may apply template when creating mod_board activity for Moodle ≤ 5.0
+    Given the site is running Moodle version 5.0 or lower
+    And the following "categories" exist:
       | name  | category | idnumber |
       | Cat A | 0        | cata     |
       | Cat B | 0        | catb     |
@@ -201,6 +202,70 @@ Col 2
 
     And I am on the "Course 3" course page
     And I open dialog for adding mod_board to "General" section
+    When I set the following fields to these values:
+      | Board template | Template 00     |
+      | Name           | My test board 2 |
+    And I press "Save and display"
+    Then "1" "mod_board > column" should not exist
+    And "2" "mod_board > column" should not exist
+    And "3" "mod_board > column" should not exist
+    And I click on "Settings" "link" in the ".secondary-navigation" "css_element"
+    And the following fields match these values:
+      | Single user mode | Disabled      |
+      | Sort by          | Creation date |
+    And I should not see "Board template"
+    And I press "Cancel"
+
+  Scenario: Teacher may apply template when creating mod_board activity for Moodle ≥ 5.1
+    Given the site is running Moodle version 5.1 or higher
+    And the following "categories" exist:
+      | name  | category | idnumber |
+      | Cat A | 0        | cata     |
+      | Cat B | 0        | catb     |
+    And the following "courses" exist:
+      | fullname | shortname | category |
+      | Course 2 | C2        | cata     |
+      | Course 3 | C3        | cata     |
+    And the following "course enrolments" exist:
+      | user     | course | role           |
+      | teacher1 | C2     | editingteacher |
+      | teacher1 | C3     | editingteacher |
+    And the following "mod_board > templates" exist:
+      | name        | description        | columns                    | contextlevel | reference | singleusermode | sortby |
+      | Template 00 | First description  |                            | System       |           | -1             | 1      |
+      | Template 01 | Second description | Col 1\nCol 2               | Category     | cata      |  1             | -1     |
+      | Template 02 | Other description  | Col 1\nCol 2\nCol 3\nCol 4 | Category     | catb      | -1             | -1     |
+    When I log in as "teacher1"
+    And I am on "Course 2" course homepage with editing mode on
+    And I open the activity chooser
+    And I click on "Add a new Board" "link" in the "Add an activity or resource" "dialogue"
+    And I click on "Add selected activity" "button" in the "Add an activity or resource" "dialogue"
+    Then I should see "New Board"
+    And I expand all fieldsets
+    And the following fields match these values:
+      | Board template   | Choose... |
+      | Single user mode | Disabled  |
+      | Sort by          | None      |
+    And the "Board template" select box should contain "Template 01"
+    And the "Board template" select box should contain "Template 00"
+    And the "Board template" select box should not contain "Template 02"
+    When I set the following fields to these values:
+      | Board template | Template 01     |
+      | Name           | My test board 1 |
+    And I press "Save and display"
+    Then I should see "Col 1" in the "1" "mod_board > column"
+    And I should see "Col 2" in the "2" "mod_board > column"
+    And "3" "mod_board > column" should not exist
+    And I click on "Settings" "link" in the ".secondary-navigation" "css_element"
+    And the following fields match these values:
+      | Single user mode | Single user mode (private) |
+      | Sort by          | None                       |
+    And I should not see "Board template"
+
+    And I am on "Course 3" course homepage with editing mode on
+    And I open the activity chooser
+    And I click on "Add a new Board" "link" in the "Add an activity or resource" "dialogue"
+    And I click on "Add selected activity" "button" in the "Add an activity or resource" "dialogue"
     When I set the following fields to these values:
       | Board template | Template 00     |
       | Name           | My test board 2 |
