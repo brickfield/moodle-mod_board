@@ -176,24 +176,19 @@ $string['media_selection_dropdown'] = 'Dropdown';
 $string['modal_title_edit'] = 'Edit post for column {column}';
 $string['modal_title_new'] = 'New post for column {column}';
 $string['modulename'] = 'Board';
-$string['modulename_help'] = 'The board activity enables students to engage in discussions and thought-sharing anonymously, via a post-it board.
+$string['modulename_help'] = '###### Key features
+- Anonymous student participation.
+- Creation of posts containing text, images, links, or embedded videos.
+- Configurable options such as rating and commenting on posts.
+- Support for group or single-user modes.
+- Completion tracking and teacher download options.
 
-Students can create posts to display content, such as text, images, URL links, or embedded videos.
-
-The teacher can create boards with a number of different configurations, including:
-
-* Rating posts.
-* Commenting on posts.
-* Group or single-user modes.
-* Completion options.
-* Teacher download options.
-
-Boards may be used
-
-* As introductions / icebreakers.
-* As crowdsourcing content.
-* As discussion whiteboards.
-* For teacher feedback on sessions.';
+###### Ways to use it
+- Run introductions or icebreaker activities.
+- Crowdsource ideas or content from students.
+- Facilitate visual discussion boards or whiteboards.
+- Collect teacher feedback on sessions.';
+$string['modulename_summary'] = 'Enables students to share ideas and content anonymously through interactive posts, including text, images, links, and videos.';
 $string['modulenameplural'] = 'Boards';
 $string['move_column_to_aftercolumn'] = 'Move column after column {$a}';
 $string['move_column_to_firstplace'] = 'Move column to first place';
