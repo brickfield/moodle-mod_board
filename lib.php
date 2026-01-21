@@ -60,7 +60,7 @@ function board_reset_userdata($data) {
     // Any changes to the list of dates that needs to be rolled should be same during course restore and course reset.
     // See MDL-9367.
 
-    return array();
+    return [];
 }
 
 /**
@@ -74,7 +74,7 @@ function board_reset_userdata($data) {
  * @return array
  */
 function board_get_view_actions() {
-    return array('view', 'view all');
+    return ['view', 'view all'];
 }
 
 /**
@@ -88,7 +88,7 @@ function board_get_view_actions() {
  * @return array
  */
 function board_get_post_actions() {
-    return array('update', 'add');
+    return ['update', 'add'];
 }
 
 /**
@@ -112,11 +112,11 @@ function board_add_instance($data, $mform = null) {
     if ($boardid) {
         $columnheading = get_string('default_column_heading', 'mod_board');
         $DB->insert_record('board_columns',
-            array('boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 1));
+            ['boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 1]);
         $DB->insert_record('board_columns',
-            array('boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 2));
+            ['boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 2]);
         $DB->insert_record('board_columns',
-            array('boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 3));
+            ['boardid' => $boardid, 'name' => $columnheading, 'sortorder' => 3]);
     }
 
     // Save background image if set.
@@ -126,7 +126,7 @@ function board_add_instance($data, $mform = null) {
         $fs = get_file_storage();
         $fs->delete_area_files($context->id, 'mod_board', 'background');
         file_save_draft_area_files($data->background_image, $context->id, 'mod_board', 'background',
-            0, array('subdirs' => 0, 'maxfiles' => 1));
+            0, ['subdirs' => 0, 'maxfiles' => 1]);
     }
 
     return $boardid;
@@ -159,7 +159,7 @@ function board_update_instance($data, $mform) {
         $fs = get_file_storage();
         $fs->delete_area_files($context->id, 'mod_board', 'background');
         file_save_draft_area_files($data->background_image, $context->id, 'mod_board', 'background',
-            0, array('subdirs' => 0, 'maxfiles' => 1));
+            0, ['subdirs' => 0, 'maxfiles' => 1]);
     }
 
     return true;
@@ -173,24 +173,24 @@ function board_update_instance($data, $mform) {
 function board_delete_instance($id) {
     global $DB;
 
-    if (!$board = $DB->get_record('board', array('id' => $id))) {
+    if (!$board = $DB->get_record('board', ['id' => $id])) {
         return false;
     }
 
     // Remove notes.
-    $columns = $DB->get_records('board_columns', array('boardid' => $board->id), '', 'id');
+    $columns = $DB->get_records('board_columns', ['boardid' => $board->id], '', 'id');
     foreach ($columns as $columnid => $column) {
-        $notes = $DB->get_records('board_notes', array('columnid' => $columnid));
+        $notes = $DB->get_records('board_notes', ['columnid' => $columnid]);
         foreach ($notes as $noteid => $note) {
-            $DB->delete_records('board_note_ratings', array('noteid' => $noteid));
+            $DB->delete_records('board_note_ratings', ['noteid' => $noteid]);
         }
-        $DB->delete_records('board_notes', array('columnid' => $columnid));
+        $DB->delete_records('board_notes', ['columnid' => $columnid]);
     }
 
     // Remove columns.
-    $DB->delete_records('board_columns', array('boardid' => $board->id));
+    $DB->delete_records('board_columns', ['boardid' => $board->id]);
 
-    $DB->delete_records('board', array('id' => $board->id));
+    $DB->delete_records('board', ['id' => $board->id]);
 
     return true;
 }

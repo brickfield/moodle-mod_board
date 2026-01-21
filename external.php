@@ -18,6 +18,11 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once("$CFG->libdir/externallib.php");
 
+use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_multiple_structure;
+use core_external\external_single_structure;
+use core_external\external_value;
 use mod_board\board;
 use mod_board\note_form;
 
@@ -37,7 +42,7 @@ class mod_board_external extends external_api {
         return new external_function_parameters([
             'id' => new external_value(PARAM_INT, 'The board id', VALUE_REQUIRED),
             'ownerid' => new external_value(PARAM_INT, 'The board ownerid', VALUE_REQUIRED),
-            'since' => new external_value(PARAM_INT, 'The last historyid', VALUE_REQUIRED)
+            'since' => new external_value(PARAM_INT, 'The last historyid', VALUE_REQUIRED),
         ]);
     }
 
@@ -70,13 +75,13 @@ class mod_board_external extends external_api {
     public static function board_history_returns(): external_multiple_structure {
         return new external_multiple_structure(
             new external_single_structure(
-                array(
+                [
                     'id' => new external_value(PARAM_INT, 'id'),
                     'boardid' => new external_value(PARAM_INT, 'boardid'),
                     'action' => new external_value(PARAM_TEXT, 'action'),
                     'userid' => new external_value(PARAM_INT, 'userid'),
-                    'content' => new external_value(PARAM_RAW, 'content')
-                )
+                    'content' => new external_value(PARAM_RAW, 'content'),
+                ]
             )
         );
     }
@@ -88,7 +93,7 @@ class mod_board_external extends external_api {
     public static function get_board_parameters(): external_function_parameters {
         return new external_function_parameters([
             'id' => new external_value(PARAM_INT, 'The board id', VALUE_REQUIRED),
-            'ownerid' => new external_value(PARAM_INT, 'The ownerid', VALUE_DEFAULT, 0)
+            'ownerid' => new external_value(PARAM_INT, 'The ownerid', VALUE_DEFAULT, 0),
         ]);
     }
 
@@ -120,13 +125,13 @@ class mod_board_external extends external_api {
     public static function get_board_returns(): external_multiple_structure {
         return new external_multiple_structure(
             new external_single_structure(
-                array(
+                [
                     'id' => new external_value(PARAM_INT, 'column id'),
                     'name' => new external_value(PARAM_TEXT, 'column name'),
                     'locked' => new external_value(PARAM_BOOL, 'column locked'),
                     'notes' => new external_multiple_structure(
                         new external_single_structure(
-                            array(
+                            [
                                 'id' => new external_value(PARAM_INT, 'post id'),
                                 'userid' => new external_value(PARAM_INT, 'user id'),
                                 'heading' => new external_value(PARAM_TEXT, 'post heading'),
@@ -136,11 +141,11 @@ class mod_board_external extends external_api {
                                 'url' => new external_value(PARAM_TEXT, 'url'),
                                 'timecreated' => new external_value(PARAM_INT, 'timecreated'),
                                 'rating' => new external_value(PARAM_INT, 'rating'),
-                                'sortorder' => new external_value(PARAM_INT, 'note sort order')
-                            )
+                                'sortorder' => new external_value(PARAM_INT, 'note sort order'),
+                            ]
                         )
-                    )
-                )
+                    ),
+                ]
             )
         );
     }
@@ -152,7 +157,7 @@ class mod_board_external extends external_api {
     public static function add_column_parameters(): external_function_parameters {
         return new external_function_parameters([
             'boardid' => new external_value(PARAM_INT, 'The board id', VALUE_REQUIRED),
-            'name' => new external_value(PARAM_TEXT, 'The column name', VALUE_REQUIRED)
+            'name' => new external_value(PARAM_TEXT, 'The column name', VALUE_REQUIRED),
         ]);
     }
 
@@ -183,7 +188,7 @@ class mod_board_external extends external_api {
     public static function add_column_returns(): external_single_structure {
         return new external_single_structure([
             'id' => new external_value(PARAM_INT, 'The new column id'),
-            'historyid' => new external_value(PARAM_INT, 'The last history id')
+            'historyid' => new external_value(PARAM_INT, 'The last history id'),
         ]);
     }
 
@@ -194,7 +199,7 @@ class mod_board_external extends external_api {
     public static function update_column_parameters(): external_function_parameters {
         return new external_function_parameters([
             'id' => new external_value(PARAM_INT, 'The column id', VALUE_REQUIRED),
-            'name' => new external_value(PARAM_TEXT, 'The column name', VALUE_REQUIRED)
+            'name' => new external_value(PARAM_TEXT, 'The column name', VALUE_REQUIRED),
         ]);
     }
 
@@ -226,7 +231,7 @@ class mod_board_external extends external_api {
     public static function update_column_returns(): external_single_structure {
         return new external_single_structure([
             'status' => new external_value(PARAM_BOOL, 'The update status'),
-            'historyid' => new external_value(PARAM_INT, 'The last history id')
+            'historyid' => new external_value(PARAM_INT, 'The last history id'),
         ]);
     }
 
@@ -236,7 +241,7 @@ class mod_board_external extends external_api {
      */
     public static function delete_column_parameters(): external_function_parameters {
         return new external_function_parameters([
-            'id' => new external_value(PARAM_INT, 'The column id', VALUE_REQUIRED)
+            'id' => new external_value(PARAM_INT, 'The column id', VALUE_REQUIRED),
         ]);
     }
 
@@ -266,7 +271,7 @@ class mod_board_external extends external_api {
     public static function delete_column_returns(): external_single_structure {
         return new external_single_structure([
             'status' => new external_value(PARAM_BOOL, 'The delete status'),
-            'historyid' => new external_value(PARAM_INT, 'The last history id')
+            'historyid' => new external_value(PARAM_INT, 'The last history id'),
         ]);
     }
 
@@ -309,7 +314,7 @@ class mod_board_external extends external_api {
     public static function lock_column_returns(): external_single_structure {
         return new external_single_structure([
             'status' => new external_value(PARAM_BOOL, 'The lock status'),
-            'historyid' => new external_value(PARAM_INT, 'The last history id')
+            'historyid' => new external_value(PARAM_INT, 'The last history id'),
         ]);
     }
 
@@ -320,10 +325,10 @@ class mod_board_external extends external_api {
      */
     public static function submit_form_parameters(): external_function_parameters {
         return new external_function_parameters(
-            array(
+            [
                 'contextid' => new external_value(PARAM_INT, 'The context id for the course'),
-                'jsonformdata' => new external_value(PARAM_RAW, 'The data from the create group form, encoded as a json array')
-            )
+                'jsonformdata' => new external_value(PARAM_RAW, 'The data from the create group form, encoded as a json array'),
+            ]
         );
     }
 
@@ -345,7 +350,7 @@ class mod_board_external extends external_api {
 
         // Extract data out of the form content.
         $serialiseddata = json_decode($params['jsonformdata']);
-        $data = array();
+        $data = [];
         parse_str($serialiseddata, $data);
         $data = str_replace(["\r", "\n"], '', $data);
 
@@ -364,7 +369,7 @@ class mod_board_external extends external_api {
             $attachment = [
                 'type' => $data->mediatype,
                 'info' => '',
-                'url' => ''
+                'url' => '',
             ];
             switch ($data->mediatype) {
                 case 1:
@@ -397,9 +402,9 @@ class mod_board_external extends external_api {
                         'info' => '',
                         'url' => '',
                         'timecreated' => 0,
-                        'rating' => 0
+                        'rating' => 0,
                     ],
-                    'historyid' => 0
+                    'historyid' => 0,
                 ];
                 return $result;
             }
@@ -433,7 +438,7 @@ class mod_board_external extends external_api {
             'status' => new external_value(PARAM_BOOL, 'The status'),
             'action' => new external_value(PARAM_TEXT, 'The action that was performed'),
             'note' => new external_single_structure(
-                array(
+                [
                     'id' => new external_value(PARAM_INT, 'post id'),
                     'userid' => new external_value(PARAM_INT, 'user id'),
                     'heading' => new external_value(PARAM_RAW, 'post heading'),
@@ -442,10 +447,10 @@ class mod_board_external extends external_api {
                     'info' => new external_value(PARAM_TEXT, 'info'),
                     'url' => new external_value(PARAM_TEXT, 'url'),
                     'timecreated' => new external_value(PARAM_INT, 'timecreated'),
-                    'rating' => new external_value(PARAM_INT, 'rating', VALUE_OPTIONAL)
-                )
+                    'rating' => new external_value(PARAM_INT, 'rating', VALUE_OPTIONAL),
+                ]
             ),
-            'historyid' => new external_value(PARAM_INT, 'The last history id')
+            'historyid' => new external_value(PARAM_INT, 'The last history id'),
         ]);
     }
 
@@ -455,7 +460,7 @@ class mod_board_external extends external_api {
      */
     public static function delete_note_parameters(): external_function_parameters {
         return new external_function_parameters([
-            'id' => new external_value(PARAM_INT, 'The note id', VALUE_REQUIRED)
+            'id' => new external_value(PARAM_INT, 'The note id', VALUE_REQUIRED),
         ]);
     }
 
@@ -486,7 +491,7 @@ class mod_board_external extends external_api {
     public static function delete_note_returns(): external_single_structure {
         return new external_single_structure([
             'status' => new external_value(PARAM_BOOL, 'The delete status'),
-            'historyid' => new external_value(PARAM_INT, 'The last history id')
+            'historyid' => new external_value(PARAM_INT, 'The last history id'),
         ]);
     }
 
@@ -497,7 +502,7 @@ class mod_board_external extends external_api {
     public static function move_column_parameters(): external_function_parameters {
         return new external_function_parameters([
             'id' => new external_value(PARAM_INT, 'The column id', VALUE_REQUIRED),
-            'sortorder' => new external_value(PARAM_INT, 'The new sort order for the column', VALUE_REQUIRED)
+            'sortorder' => new external_value(PARAM_INT, 'The new sort order for the column', VALUE_REQUIRED),
         ]);
     }
 
@@ -529,7 +534,7 @@ class mod_board_external extends external_api {
     public static function move_column_returns(): external_single_structure {
         return new external_single_structure([
             'status' => new external_value(PARAM_BOOL, 'The move status'),
-            'historyid' => new external_value(PARAM_INT, 'The last history id')
+            'historyid' => new external_value(PARAM_INT, 'The last history id'),
         ]);
     }
 
@@ -542,7 +547,7 @@ class mod_board_external extends external_api {
             'id' => new external_value(PARAM_INT, 'The note id', VALUE_REQUIRED),
             'columnid' => new external_value(PARAM_INT, 'The new column id', VALUE_REQUIRED),
             'ownerid' => new external_value(PARAM_INT, 'The owner id', VALUE_REQUIRED),
-            'sortorder' => new external_value(PARAM_INT, 'The new sort order for the note', VALUE_REQUIRED)
+            'sortorder' => new external_value(PARAM_INT, 'The new sort order for the note', VALUE_REQUIRED),
         ]);
     }
 
@@ -578,7 +583,7 @@ class mod_board_external extends external_api {
     public static function move_note_returns(): external_single_structure {
         return new external_single_structure([
             'status' => new external_value(PARAM_BOOL, 'The move status'),
-            'historyid' => new external_value(PARAM_INT, 'The last history id')
+            'historyid' => new external_value(PARAM_INT, 'The last history id'),
         ]);
     }
 
@@ -588,7 +593,7 @@ class mod_board_external extends external_api {
      */
     public static function can_rate_note_parameters(): external_function_parameters {
         return new external_function_parameters([
-            'id' => new external_value(PARAM_INT, 'The note id', VALUE_REQUIRED)
+            'id' => new external_value(PARAM_INT, 'The note id', VALUE_REQUIRED),
         ]);
     }
 
@@ -629,7 +634,7 @@ class mod_board_external extends external_api {
      */
     public static function rate_note_parameters(): external_function_parameters {
         return new external_function_parameters([
-            'id' => new external_value(PARAM_INT, 'The note id', VALUE_REQUIRED)
+            'id' => new external_value(PARAM_INT, 'The note id', VALUE_REQUIRED),
         ]);
     }
 
@@ -661,7 +666,7 @@ class mod_board_external extends external_api {
         return new external_single_structure([
             'status' => new external_value(PARAM_BOOL, 'The rate status'),
             'rating' => new external_value(PARAM_INT, 'The new rating id'),
-            'historyid' => new external_value(PARAM_INT, 'The last history id')
+            'historyid' => new external_value(PARAM_INT, 'The last history id'),
         ]);
     }
 
@@ -690,9 +695,9 @@ class mod_board_external extends external_api {
         global $DB, $USER;
 
         $warnings = [];
-        $arrayparams = array(
+        $arrayparams = [
             'noteid' => $noteid,
-        );
+        ];
         $params = self::validate_parameters(self::get_comments_parameters(), $arrayparams);
 
         $context = board::can_view_note($params['noteid']);
@@ -717,13 +722,13 @@ class mod_board_external extends external_api {
             $comments[] = $comment;
         }
 
-        $results = array(
+        $results = [
             'noteid' => $params['noteid'],
             'commentcount' => count($comments),
             'canpost' => $canpost,
             'comments' => $comments,
-            'warnings' => $warnings
-        );
+            'warnings' => $warnings,
+        ];
         return $results;
     }
 
@@ -747,11 +752,11 @@ class mod_board_external extends external_api {
                             'noteid' => new external_value(PARAM_INT, 'The note id.'),
                             'candelete' => new external_value(PARAM_BOOL, 'Can delete the comment.'),
                             'date' => new external_value(PARAM_TEXT, 'The date of the comment.'),
-                            'content' => new external_value(PARAM_RAW, 'The content of the comment.')
+                            'content' => new external_value(PARAM_RAW, 'The content of the comment.'),
                         ]
                     )
                 ),
-                'warnings' => new external_warnings()
+                'warnings' => new external_warnings(),
             ]
         );
     }
@@ -786,7 +791,7 @@ class mod_board_external extends external_api {
         $warnings = [];
         $arrayparams = [
             'noteid' => $noteid,
-            'content' => $content
+            'content' => $content,
         ];
         $params = self::validate_parameters(self::add_comment_parameters(), $arrayparams);
 
@@ -799,20 +804,20 @@ class mod_board_external extends external_api {
 
         $comment = new \mod_board\comment($params);
         if (!$comment->can_create($context)) {
-            $results = array(
+            $results = [
                 'count' => '',
                 'id' => 0,
-                'warnings' => $warnings
-            );
+                'warnings' => $warnings,
+            ];
             return $results;
         }
 
         $comment->save();
 
-        $results = array(
+        $results = [
             'id' => $comment->id,
-            'warnings' => $warnings
-        );
+            'warnings' => $warnings,
+        ];
         return $results;
     }
 
@@ -827,7 +832,7 @@ class mod_board_external extends external_api {
         return new external_single_structure(
             [
                 'id' => new external_value(PARAM_INT, 'The comment id.'),
-                'warnings' => new external_warnings()
+                'warnings' => new external_warnings(),
             ]
         );
     }
@@ -871,14 +876,14 @@ class mod_board_external extends external_api {
             $warnings[] = [
                 'item' => $comment->id,
                 'warningcode' => 'errorcommentnotdeleted',
-                'message' => 'The comment could not be deleted.'
+                'message' => 'The comment could not be deleted.',
             ];
         }
 
-        $results = array(
+        $results = [
             'id' => $comment->id,
-            'warnings' => $warnings
-        );
+            'warnings' => $warnings,
+        ];
         return $results;
     }
 
@@ -889,7 +894,7 @@ class mod_board_external extends external_api {
         return new external_single_structure(
             [
                 'id' => new external_value(PARAM_INT, 'The comment id.'),
-                'warnings' => new external_warnings()
+                'warnings' => new external_warnings(),
             ]
         );
     }
@@ -936,10 +941,10 @@ class mod_board_external extends external_api {
      */
     public static function get_configuration_returns(): external_single_structure {
         return new external_single_structure(
-            array(
+            [
                 'settings' => new external_value(PARAM_RAW, 'The board settings'),
                 'warnings' => new external_warnings(),
-            )
+            ]
         );
     }
 
