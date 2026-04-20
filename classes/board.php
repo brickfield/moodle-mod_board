@@ -704,7 +704,7 @@ class board {
             if (!empty($note->content)) {
                 $notetitle = substr($note->content, 0, 20);
             } else if (!empty($note->info)) {
-				$notetitle = $note->info;
+                $notetitle = $note->info;
             }
         } else {
             $notetitle = $note->heading;
