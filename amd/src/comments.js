@@ -48,12 +48,33 @@ const fetchFor = (noteId, element) => {
  * @returns {Promise} resolved when the comments are rendered
  */
 const renderComments = (response, element) => {
+    updateCommentBadge(response.noteid, response.commentcount);
     return Templates.renderForPromise('mod_board/commentcontainer', response)
         .then(({html, js}) => {
             Templates.replaceNodeContents(element, html, js);
             return;
         })
         .catch();
+};
+
+/**
+ * Update the comment-count badge on the note card to reflect the current count.
+ * No-op if the note card isn't currently in the DOM.
+ *
+ * @param {Number} noteId
+ * @param {Number} count
+ */
+const updateCommentBadge = (noteId, count) => {
+    if (noteId === undefined || noteId === null) {
+        return;
+    }
+    const safeCount = Math.max(0, parseInt(count, 10) || 0);
+    const badgeValue = document.querySelector(
+        '[data-region="commentcount"][data-noteid="' + noteId + '"] .mod_board_commentcount_value'
+    );
+    if (badgeValue) {
+        badgeValue.textContent = safeCount;
+    }
 };
 
 /**

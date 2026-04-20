@@ -50,6 +50,7 @@ $string['aria_choosefileedit'] = 'Select file for post {post} from column {colum
 $string['aria_choosefilenew'] = 'Select file for new post from column {column}';
 $string['aria_column_locked'] = 'Column {$a} locked';
 $string['aria_column_unlocked'] = 'Column {$a} unlocked';
+$string['aria_commentcount'] = 'View comments';
 $string['aria_deleteattachment'] = 'Delete attachment for post {post} from column {column}';
 $string['aria_deletecolumn'] = 'Delete column {column}';
 $string['aria_deletepost'] = 'Delete post {post} from column {column}';

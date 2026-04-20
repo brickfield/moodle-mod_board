@@ -1025,7 +1025,20 @@ final class note {
             $note->rating = null;
         }
 
+        $note->commentcount = self::get_comment_count($note->id);
+
         return $note;
+    }
+
+    /**
+     * Count the non-deleted comments for a note.
+     *
+     * @param int $noteid
+     * @return int
+     */
+    public static function get_comment_count(int $noteid): int {
+        global $DB;
+        return (int) $DB->count_records('board_comments', ['noteid' => $noteid, 'deleted' => 0]);
     }
 
     /**

@@ -63,6 +63,10 @@ final class comment {
         $params = new stdClass();
         $params->boardname = format_string($board->name, true, ['context' => $context]);
         $params->noteheading = board::get_note_title($note);
+        // HTML variant — escape user-supplied content.
+        $htmlparams = clone $params;
+        $htmlparams->boardname = s($params->boardname);
+        $htmlparams->noteheading = s($htmlparams->noteheading);        
 
         // Send notification to note author.
         $author = $DB->get_record('user', ['id' => $note->userid], '*', MUST_EXIST);
@@ -74,14 +78,22 @@ final class comment {
         $message->subject = get_string('messageprovider:subject', 'mod_board');
         $message->fullmessage = get_string('messageprovider:fullmessage', 'mod_board', $params);
         $message->fullmessageformat = FORMAT_MARKDOWN;
-        $message->fullmessagehtml = get_string('messageprovider:fullmessagehtml', 'mod_board', $params);
+        $message->fullmessagehtml = get_string('messageprovider:fullmessagehtml', 'mod_board', $htmlparams);
         $message->smallmessage = get_string('messageprovider:smallmessage', 'mod_board', $params);
         $message->notification = 1;
         $message->contexturl = (new \moodle_url('/mod/board/view.php', ['id' => $context->instanceid]))->out(false);
         $message->contexturlname = get_string('messageprovider:contexturlname', 'mod_board');
 
         // Actually send the message
-        $messageid = message_send($message);
+        // Wrapped so a messaging failure cannot break the comment-create request.
+        try {
+            $messageid = message_send($message);
+        } catch (\Throwable $e) {
+            debugging(
+                'mod_board: failed to send comment notification: ' . $e->getMessage(),
+                DEBUG_DEVELOPER
+            );
+        }
 
         return $comment;
     }
