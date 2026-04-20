@@ -34,7 +34,7 @@ require_once(__DIR__ . '/upgradelib.php');
  * @param int $oldversion
  * @return bool
  */
-function xmldb_board_upgrade(int $oldversion) {
+function xmldb_board_upgrade($oldversion) {
     global $DB;
 
     $dbman = $DB->get_manager();

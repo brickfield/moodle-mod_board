@@ -59,6 +59,30 @@ final class comment {
         $event = \mod_board\event\add_comment::create_from_comment($comment, $note, $column, $board, $context);
         $event->trigger();
 
+        // Build language string placeholders.
+        $params = new stdClass();
+        $params->boardname = format_string($board->name, true, ['context' => $context]);
+        $params->noteheading = board::get_note_title($note);
+
+        // Send notification to note author.
+        $author = $DB->get_record('user', ['id' => $note->userid], '*', MUST_EXIST);
+        $message = new \core\message\message();
+        $message->component = 'mod_board';
+        $message->name = 'comment_added';
+        $message->userfrom = \core_user::get_noreply_user();
+        $message->userto = $author;
+        $message->subject = get_string('messageprovider:subject', 'mod_board');
+        $message->fullmessage = get_string('messageprovider:fullmessage', 'mod_board', $params);
+        $message->fullmessageformat = FORMAT_MARKDOWN;
+        $message->fullmessagehtml = get_string('messageprovider:fullmessagehtml', 'mod_board', $params);
+        $message->smallmessage = get_string('messageprovider:smallmessage', 'mod_board', $params);
+        $message->notification = 1;
+        $message->contexturl = (new \moodle_url('/mod/board/view.php', ['id' => $context->instanceid]))->out(false);
+        $message->contexturlname = get_string('messageprovider:contexturlname', 'mod_board');
+
+        // Actually send the message
+        $messageid = message_send($message);
+
         return $comment;
     }
 
