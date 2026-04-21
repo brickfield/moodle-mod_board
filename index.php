@@ -28,6 +28,10 @@ $id = required_param('id', PARAM_INT); // Course id.
 
 $course = $DB->get_record('course', ['id' => $id], '*', MUST_EXIST);
 
+if ($CFG->version > 2025041400) {
+    \core_courseformat\activityoverviewbase::redirect_to_overview_page($id, 'board');
+}
+
 require_course_login($course, true);
 $PAGE->set_pagelayout('incourse');
 

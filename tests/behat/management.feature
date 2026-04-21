@@ -14,8 +14,9 @@ Feature: Basic mod_board management tasks
       | student1 | C1     | student        |
       | teacher1 | C1     | editingteacher |
 
-  Scenario: Create and update mod_board instance
-    Given I am on the "Course 1" course page logged in as "teacher1"
+  Scenario: Create and update mod_board instance for Moodle ≤ 5.0
+    Given the site is running Moodle version 5.0 or lower
+    And I am on the "Course 1" course page logged in as "teacher1"
     And I turn editing mode on
 
     When I open dialog for adding mod_board to "General" section
@@ -63,6 +64,67 @@ Feature: Basic mod_board management tasks
     And I press "Save and return to course"
     And I open "My test board X" actions menu
     And I click on "Edit settings" "link" in the "My test board X" activity
+    Then the following fields match these values:
+      | Name                                                      | My test board X        |
+      | Description                                               | Such a bad test board  |
+      | Rating posts                                              | by All                 |
+      | Hide column headers from students                         | 1                      |
+      | Sort by                                                   | Creation date          |
+      | Single user mode                                          | Single user mode (private) |
+      | Allow all users to edit the placement of their own posts. | 1                      |
+      | Enable blank target                                       | 1                      |
+    And I press "Cancel"
+
+  Scenario: Create and update mod_board instance for Moodle ≥ 5.1
+    Given the site is running Moodle version 5.1 or higher
+    And I log in as "teacher1"
+    And I am on "Course 1" course homepage with editing mode on
+    And I open the activity chooser
+    And I click on "Add a new Board" "link" in the "Add an activity or resource" "dialogue"
+    And I click on "Add selected activity" "button" in the "Add an activity or resource" "dialogue"
+    And the following fields match these values:
+      | Rating posts                                              | Disabled               |
+      | Hide column headers from students                         | 0                      |
+      | Sort by                                                   | None                   |
+      | Single user mode                                          | Disabled               |
+      | Limit students posting by date                            | 0                      |
+      | Allow all users to edit the placement of their own posts. | 0                      |
+      | Enable blank target                                       | 0                      |
+      | Embed the board into the course page                      | 0                      |
+      | Hide embedded board name (needed on some themes)          | 0                      |
+    And I set the following fields to these values:
+      | Name        | My test board 1        |
+      | Description | Such a nice test board |
+    And I press "Save and return to course"
+    And I click on "My test board 1" "link" in the "General" "section"
+    Then I should see "Such a nice test board"
+
+    When I am on the "My test board 1" "mod_board > view" page
+    And I click on "Settings" "link"
+    And the following fields match these values:
+      | Name                                                      | My test board 1        |
+      | Description                                               | Such a nice test board |
+      | Rating posts                                              | Disabled               |
+      | Hide column headers from students                         | 0                      |
+      | Sort by                                                   | None                   |
+      | Single user mode                                          | Disabled               |
+      | Limit students posting by date                            | 0                      |
+      | Allow all users to edit the placement of their own posts. | 0                      |
+      | Enable blank target                                       | 0                      |
+      | Embed the board into the course page                      | 0                      |
+      | Hide embedded board name (needed on some themes)          | 0                      |
+    And I set the following fields to these values:
+      | Name                                                      | My test board X        |
+      | Description                                               | Such a bad test board  |
+      | Rating posts                                              | by All                 |
+      | Hide column headers from students                         | 1                      |
+      | Sort by                                                   | Creation date          |
+      | Single user mode                                          | Single user mode (private) |
+      | Allow all users to edit the placement of their own posts. | 1                      |
+      | Enable blank target                                       | 1                      |
+    And I press "Save and return to course"
+    And I am on the "My test board X" "mod_board > view" page
+    And I click on "Settings" "link"
     Then the following fields match these values:
       | Name                                                      | My test board X        |
       | Description                                               | Such a bad test board  |
