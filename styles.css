@@ -192,7 +192,7 @@
     margin-left: 8px;
     margin-bottom: 4px;
 }
-.path-mod-board .mod_board_note_text {
+.path-mod-board .mod_board_note_text, .path-mod-board .mod_board_note_heading {
     word-break: break-word;
 }
 .path-mod-board .mod_board_note_text ul, .path-mod-board .mod_board_note_text ol, .path-mod-board .mod_board_note_text p {
