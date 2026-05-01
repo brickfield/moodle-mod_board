@@ -689,4 +689,31 @@ class board {
             'maxbytes' => 0,
         ];
     }
+
+    /**
+     * Retrieve "title" information about a specific note.
+     *
+     * @param   \stdClass   $note The note from which to compile the title.
+     * @return  string      An identifiable note title for display.
+     */
+    public static function get_note_title(\stdClass $note): string {
+        $notetitle = '';
+
+        // Just need either heading, or content, or info for note 'title'.
+        if (empty($note->heading)) {
+            if (!empty($note->content)) {
+                $notetitle = substr($note->content, 0, 20);
+            } else if (!empty($note->info)) {
+                $notetitle = $note->info;
+            }
+        } else {
+            $notetitle = $note->heading;
+        }
+
+        if (empty($notetitle)) {
+            $notetitle = get_string('noname', 'mod_board');
+        }
+
+        return $notetitle;
+    }
 }

@@ -101,7 +101,8 @@
 }
 .mod_board .delete_note,
 .mod_board .move_note,
-.mod_board .edit_note {
+.mod_board .edit_note,
+.mod_board_commentcount {
     padding: 2px 8px 0;
 }
 .mod_board .board_note {
@@ -162,6 +163,9 @@
 }
 .mod_board .mod_board_editablenote .mod_board_rating {
     right: 25px;
+}
+.mod_board .mod_board_rating_value {
+    font-family: inherit;
 }
 .mod_board .mod_board_remove_attachment {
     position: relative;
@@ -327,4 +331,16 @@ iframe.mod_board-iframe {
 
 .mod_board_embed_container {
     width: 100%;
+}
+
+/* Comment-count badge on a board post. Styled to match the rating star
+ * (fa icon + a count). Clickable to open the note's comments UI. */
+.mod_board_commentcount {
+    cursor: pointer;
+}
+
+.mod_board_commentcount_value {
+    font-family: inherit;
+    font-weight: 800;
+    margin-inline-start: 0.15em;
 }

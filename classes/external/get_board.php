@@ -180,6 +180,7 @@ final class get_board extends external_api {
                                 'timecreated' => new external_value(PARAM_INT, 'timecreated'),
                                 'rating' => new external_value(PARAM_INT, 'rating'),
                                 'sortorder' => new external_value(PARAM_INT, 'note sort order'),
+                                'commentcount' => new external_value(PARAM_INT, 'number of comments on this note'),
                             ]
                         )
                     ),

@@ -33,6 +33,11 @@ final class add_comment_test extends \advanced_testcase {
     public function test_event(): void {
         $this->resetAfterTest();
 
+        $this->preventResetByRollback();
+        set_config('enabled_stores', 'logstore_standard', 'tool_log');
+        set_config('buffersize', 0, 'logstore_standard');
+        get_log_manager(true);
+
         $course = $this->getDataGenerator()->create_course([]);
         $user = $this->getDataGenerator()->create_user();
         $board = $this->getDataGenerator()->create_module('board', ['course' => $course->id]);
@@ -50,6 +55,8 @@ final class add_comment_test extends \advanced_testcase {
         $comment = comment::create($note->id, 'Comment 1');
         $events = $sink->get_events();
         $sink->close();
+        // Add comment and notification sent counts as 2 events.
+        // However, userid is same for both note and comment, hence notification is skipped.
         $this->assertCount(1, $events);
         $event = $events[0];
         $this->assertInstanceOf(\mod_board\event\add_comment::class, $event);

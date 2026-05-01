@@ -154,6 +154,7 @@ export default function(settings) {
         aria_postnew: '',
         aria_cancelnew: '',
         aria_ratepost: '',
+        aria_commentcount: '',
 
         invalid_youtube_url: '',
     };
@@ -583,8 +584,9 @@ export default function(settings) {
      * @param {object} owner
      * @param {number} sortorder
      * @param {string} rating
+     * @param {number} commentcount
      */
-    var addNote = function(columnid, ident, identifier, heading, content, attachment, owner, sortorder, rating) {
+    var addNote = function(columnid, ident, identifier, heading, content, attachment, owner, sortorder, rating, commentcount) {
         var ismynote = owner.id == userId || !ident;
         var iseditable = isEditor || (ismynote && !isReadOnlyBoard);
 
@@ -637,9 +639,25 @@ export default function(settings) {
 
         var columnContent = $('.board_column[data-ident=' + columnid + '] .board_column_content');
 
+        // Comment count badge. Always shown (consistent with the rating star).
+        // Clicking opens the note's full-screen view which contains the comments UI.
+        var commentCountValue = parseInt(commentcount, 10);
+        if (isNaN(commentCountValue) || commentCountValue < 0) {
+            commentCountValue = 0;
+        }
+        var commentCountElement = $('<div class="fa fa-comment-o mod_board_commentcount" role="button"'
+            + ' tabindex="0" data-region="commentcount" data-noteid="' + ident + '"'
+            + ' title="' + strings.aria_commentcount + '" aria-label="' + strings.aria_commentcount + '">'
+            + ' <span class="mod_board_commentcount_value">' + commentCountValue + '</span>'
+            + '</div>');
+        handleAction(commentCountElement, () => fullScreenNote(ident, notecontent));
+        notecontrols.append(commentCountElement);
+
         if (ratingenabled) {
             note.addClass('mod_board_rateablenote');
-            var rateElement = $(`<div class="fa fa-star mod_board_rating" role="button" tabindex="0"> ${rating} </div>`);
+            var rateElement = $('<div class="fa fa-star mod_board_rating" role="button" tabindex="0">'
+                + `<span class="mod_board_rating_value"> ${rating} </span>`
+                + '</div>');
 
             handleAction(rateElement, () => {
                 rateNote(ident);
@@ -824,7 +842,7 @@ export default function(settings) {
                 let sortorder = sortby == 3 ? notes[index].sortorder : notes[index].timecreated;
                 addNote(ident, notes[index].id, notes[index].identifier, notes[index].heading, notes[index].content,
                     {type: notes[index].type, info: notes[index].info, url: notes[index].url},
-                    {id: notes[index].userid}, sortorder, notes[index].rating);
+                    {id: notes[index].userid}, sortorder, notes[index].rating, notes[index].commentcount);
             }
         }
         sortNotes(columnContent);
@@ -927,7 +945,7 @@ export default function(settings) {
                 if (item.action === 'add_note') {
                     let sortorder = sortby == 3 ? data.sortorder : data.timecreated;
                     addNote(data.columnid, data.id, data.identifier, data.heading, data.content, data.attachment,
-                        {id: item.userid}, sortorder, data.rating);
+                        {id: item.userid}, sortorder, data.rating, 0);
                     updateNoteAria(data.id);
                     sortNotes($('.board_column[data-ident=' + data.columnid + '] .board_column_content'));
                 } else if (item.action === 'update_note') {
@@ -1255,7 +1273,7 @@ export default function(settings) {
             lastHistoryId = result.historyid;
             addNote(columnId, result.note.id, result.note.identifier, result.note.heading, result.note.content,
                 {type: result.note.type, info: result.note.info, url: result.note.url},
-                {id: result.note.userid}, result.note.timecreated, result.note.rating);
+                {id: result.note.userid}, result.note.timecreated, result.note.rating, 0);
             sortNotes($('.board_column[data-ident=' + columnId + '] .board_column_content'));
             updateNoteAria(result.note.id);
         };

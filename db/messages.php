@@ -15,19 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Board module version identification.
+ * The message provider script.
  * @package     mod_board
  * @author      Karen Holland <karen@brickfieldlabs.ie>
- * @copyright   2021 Brickfield Education Labs <https://www.brickfield.ie/>
+ * @copyright   2026 Brickfield Education Labs <https://www.brickfield.ie/>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
 
-/** @var stdClass $plugin */
-$plugin->component = 'mod_board'; // Full name of the plugin (used for diagnostics).
-$plugin->version   = 2025070716; // The current module version Use 2025.07.07 as base for 4.5.
-$plugin->requires  = 2024100700; // Moodle 4.5.0 and up.
-$plugin->release = '1.405.00';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->supported = [405, 501];
+$messageproviders = [
+    // Notify post author that a comment has been added.
+    'comment_added' => [
+        'defaults' => [
+            'popup' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED,
+            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED,
+        ],
+    ],
+];
