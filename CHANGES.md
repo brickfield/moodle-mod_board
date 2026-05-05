@@ -1,6 +1,19 @@
 # Release Notes
 
-_NOTE - This release will work on Moodle 4.5, & 5.0_
+_NOTE - This release will work on Moodle 4.5, 5.0, 5.1, & 5.2_
+
+##### 1.405.02 (Build 2025070716)
+
+New features / improvements:
+
+* Receive notifications about new comments on posts written.
+* New comments icon with counter.
+* Course activity overview support.
+
+Bug fixes:
+
+* CSS fix for board edit menu in Tiles.
+* CCS fix for post title wrapping.
 
 ##### 1.405.01 (Build 2025xxxxx)
 

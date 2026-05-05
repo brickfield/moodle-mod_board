@@ -22,18 +22,21 @@ Students can include the following in their notes:
 - Image.
 - Video (Youtube).
 - Comment on any viewable notes.
+- Receive notifications about new comments on notes written.
 - Rate any viewable notes, if enabled.
 
 ## License
 2023 Onward [Brickfield Education Labs](https://www.brickfield.ie)
 
 ## Version support
-This plugin has been developed to work on Moodle releases 4.5 and 5.0.
+This plugin has been developed to work on Moodle releases 4.5, 5.0, 5.1, and 5.2.
 
 ## Funding credits
 Initial funding for this plugin was provided by the National Institute for Digital Learning at Dublin City University under the SATLE fund from the National Forum. Subsequent funding has been received from Athlone Institute of Technology under the SATLE fund from the National Forum, and also from UCL.
 
 Funding for templates, text formatting, and file attachments was also provided by the National Institute for Digital Learning at Dublin City University under the SATLE fund from the National Forum.
+
+Funding for comment improvements, including notifications, icon, and icon count was provided by [Charité – Universitätsmedizin Berlin](https://www.charite.de).
 
 ## Development
 This plugin has been developed and is maintained by Brickfield Education Labs.

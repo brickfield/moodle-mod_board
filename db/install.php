@@ -20,7 +20,7 @@
  * Documentation: {@link https://moodledev.io/docs/guides/upgrade}
  *
  * @package    mod_board
- * @copyright  2025 YOUR NAME <your@email.com>
+ * @copyright  2025 Brickfield Education Labs <https://www.brickfield.ie/>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
