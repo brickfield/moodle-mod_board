@@ -1,3 +1,5 @@
+/* eslint-env node */
+
 "use strict";
 
 // To use run following from mod/board/ directory:
@@ -28,7 +30,7 @@ module.exports = function(grunt) {
                     fix: true
                 },
                 files: {
-                    'styles.css' : 'styles.css'
+                    'styles.css': 'styles.css'
                 }
             }
         }
