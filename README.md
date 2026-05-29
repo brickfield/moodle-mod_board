@@ -60,3 +60,28 @@ Many thanks to [Stuart Lamour](https://github.com/stuartlamour) for our board ic
 2. Visit the admin page to install the plugin.
 
 Further installation instructions can be found on the "[Installing plugins](http://docs.moodle.org/en/Installing_contributed_modules_or_plugins)" Moodle documentation page.
+
+## Troubleshooting
+
+If you have any support queries regarding the usage of Board, you may contact Brickfield as follows:
+
+* Via the [Board github Issues page here](https://github.com/brickfield/moodle-mod_board/issues).
+* Via the [Moodle Plugins Database page here](https://moodle.org/plugins/mod_board).
+* Via the Brickfield support desk at 'support @ brickfield . ie'.
+
+## Configurations
+
+The global configurations for the Board module are:
+
+* New column icon – Icon (Favicon v4.7) displayed on the new button for columns.
+* New post icon – Icon (Favicon v4.7) displayed on the new button for posts.
+* Media selection – Configure how the media selection for posts will be displayed as.
+* Post maximum length – The maximum allowed content length. Anything over this length will be trimmed.
+* Board refresh timer – Timeout in seconds between automatic board refreshes. If set to 0 or empty then the board will only refresh during board actions (add/update/etc)
+* Column colours – The colours used at the top of each column. These are hex colours and should be placed once per line as 3 or 6 characters in length. If any of these values are not equal to a colour then the defaults will be used.
+* Allow youtube – If activated, a button to add an embeded Youtube Video is supported.
+* Embed width – Width to use for the iframe when embedding the board within the course. This should be a valid CSS value, e.g. px, rem, %, etc...
+* Embed height – Height to use for the iframe when embedding the board within the course main page. This should be a valid CSS value, e.g. px, rem, %, etc...
+* Accepted filetypes for background images – Select the filetypes for background images to be supported.
+* Accepted filetypes for content images – Select the filetypes for content to be supported.
+* Enabled single user modes – Allow/Disallow usage of certain single user modes. Does not affect already created boards.
