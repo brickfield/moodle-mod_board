@@ -237,7 +237,12 @@ class provider implements
         $user = $contextlist->get_user();
         $userid = $user->id;
 
-        [$contextsql, $contextparams] = $DB->get_in_or_equal($contextlist->get_contextids(), SQL_PARAMS_NAMED);
+        $contextids = $contextlist->get_contextids();
+        if (empty($contextids)) {
+            return;
+        }
+
+        [$contextsql, $contextparams] = $DB->get_in_or_equal($contextids, SQL_PARAMS_NAMED);
         $params = $contextparams;
 
         $sql = "SELECT
@@ -296,7 +301,12 @@ class provider implements
         global $DB;
 
         // Find all of the notes for this board.
-        [$boardinsql, $boardparams] = $DB->get_in_or_equal(array_keys($mappings), SQL_PARAMS_NAMED);
+        $boardids = array_keys($mappings);
+        if (empty($boardids)) {
+            return;
+        }
+
+        [$boardinsql, $boardparams] = $DB->get_in_or_equal($boardids, SQL_PARAMS_NAMED);
         $sql = "SELECT
                     n.*,
                     b.id AS boardid, bc.id AS columnid
@@ -414,8 +424,13 @@ class provider implements
     protected static function export_ratings_data(int $userid, array $mappings) {
         global $DB;
 
+        $boardids = array_keys($mappings);
+        if (empty($boardids)) {
+            return;
+        }
+
         // Find all of the ratings for these boards.
-        [$boardinsql, $boardparams] = $DB->get_in_or_equal(array_keys($mappings), SQL_PARAMS_NAMED);
+        [$boardinsql, $boardparams] = $DB->get_in_or_equal($boardids, SQL_PARAMS_NAMED);
         $sql = "SELECT
                     n.*,
                     b.id AS boardid, bc.id AS columnid
@@ -471,8 +486,13 @@ class provider implements
     protected static function export_comments_data(int $userid, array $mappings) {
         global $DB;
 
+        $boardids = array_keys($mappings);
+        if (empty($boardids)) {
+            return;
+        }
+
         // Find all of the comments for these boards.
-        [$boardinsql, $boardparams] = $DB->get_in_or_equal(array_keys($mappings), SQL_PARAMS_NAMED);
+        [$boardinsql, $boardparams] = $DB->get_in_or_equal($boardids, SQL_PARAMS_NAMED);
         $sql = "SELECT
                     bcm.id AS commentid, bcm.deleted AS cdeleted, n.*,
                     b.id AS boardid, bc.id AS columnid, bcm.content AS comment
@@ -576,6 +596,10 @@ class provider implements
             ['boardid' => $boardid]
         );
 
+        if (empty($columnids)) {
+            return;
+        }
+
         [$columnsinsql, $columnsinparams] = $DB->get_in_or_equal($columnids, SQL_PARAMS_NAMED);
         $noteids = $DB->get_fieldset_select(
             'board_notes',
@@ -583,6 +607,10 @@ class provider implements
             "columnid {$columnsinsql}",
             $columnsinparams
         );
+
+        if (empty($noteids)) {
+            return;
+        }
 
         [$notesinsql, $notesinparams] = $DB->get_in_or_equal($noteids, SQL_PARAMS_NAMED);
 
@@ -636,6 +664,10 @@ class provider implements
                 ['boardid' => $board->id]
             );
 
+            if (empty($columnids)) {
+                return;
+            }
+
             [$columnsinsql, $columnsinparams] = $DB->get_in_or_equal($columnids, SQL_PARAMS_NAMED);
             $noteids = $DB->get_fieldset_select(
                 'board_notes',
@@ -643,6 +675,10 @@ class provider implements
                 "columnid {$columnsinsql}",
                 $columnsinparams
             );
+
+            if (empty($noteids)) {
+                return;
+            }
 
             [$notesinsql, $notesinparams] = $DB->get_in_or_equal($noteids, SQL_PARAMS_NAMED);
             $notesparams = array_merge(['userid' => $userid], $notesinparams);
@@ -691,7 +727,12 @@ class provider implements
         $cm = $DB->get_record('course_modules', ['id' => $context->instanceid]);
         $board = $DB->get_record('board', ['id' => $cm->instance]);
 
-        [$userinsql, $userinparams] = $DB->get_in_or_equal($userlist->get_userids(), SQL_PARAMS_NAMED);
+        $userids = $userlist->get_userids();
+        if (empty($userids)) {
+            return;
+        }
+
+        [$userinsql, $userinparams] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
         $params = array_merge(['boardid' => $board->id], $userinparams);
 
         $columnids = $DB->get_fieldset_select(
@@ -701,6 +742,10 @@ class provider implements
             ['boardid' => $board->id]
         );
 
+        if (empty($columnids)) {
+            return;
+        }
+
         [$columnsinsql, $columnsinparams] = $DB->get_in_or_equal($columnids, SQL_PARAMS_NAMED);
         $noteids = $DB->get_fieldset_select(
             'board_notes',
@@ -708,6 +753,10 @@ class provider implements
             "columnid {$columnsinsql}",
             $columnsinparams
         );
+
+        if (empty($noteids)) {
+            return;
+        }
 
         $notesparams = array_merge(['boardid' => $board->id], $userinparams);
         [$notesinsql, $notesinparams] = $DB->get_in_or_equal($noteids, SQL_PARAMS_NAMED);
