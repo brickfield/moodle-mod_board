@@ -176,8 +176,8 @@ $string['media_selection_desc'] = 'Configure how the media selection for posts w
 $string['media_selection_dropdown'] = 'Dropdown';
 $string['messageprovider:comment_added'] = 'Confirmation of a new comment on your board post on board';
 $string['messageprovider:contexturlname'] = 'Board post here';
-$string['messageprovider:fullmessage'] = 'A new comment has been added to your board post \'{$a->noteheading}\' on \'{$a->boardname}\'.';
-$string['messageprovider:fullmessagehtml'] = '<p>A new comment has been added to your board post \'{$a->noteheading}\' on \'{$a->boardname}\'.</p>';
+$string['messageprovider:fullmessage'] = 'A new comment has been added to your board post \'{$a->noteheading}\' on \'{$a->boardname}\'. View it here: {$a->link}';
+$string['messageprovider:fullmessagehtml'] = '<p>A new comment has been added to your board post \'{$a->noteheading}\' on \'{$a->boardname}\'.</p><p><a href="{$a->link}">View the board post</a></p>';
 $string['messageprovider:smallmessage'] = 'A new comment has been added to your board post \'{$a->noteheading}\' on \'{$a->boardname}\'.';
 $string['messageprovider:subject'] = 'Comment added to your board post';
 $string['modal_title_edit'] = 'Edit post for column {column}';
