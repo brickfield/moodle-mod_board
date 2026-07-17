@@ -2,6 +2,12 @@
 
 _NOTE - This release will work on Moodle 4.5, 5.0, 5.1, & 5.2_
 
+##### 1.405.05 (Build 2025070719)
+
+Improvements:
+
+* README and CSS changes.
+
 ##### 1.405.04 (Build 2025070718)
 
 Bug fixes:
