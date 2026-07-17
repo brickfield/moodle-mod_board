@@ -104,7 +104,7 @@ if ($board->enableblanktarget) {
 }
 
 if (get_config('mod_board', 'enableprivacystatement')) {
-    echo html_writer::tag('div', get_string('privacystatement', 'mod_board'), ['class' => 'normal']);
+    echo html_writer::tag('div', get_string('privacystatement', 'mod_board'), ['class' => 'small']);
 }
 
 if ($board->singleusermode != board::SINGLEUSER_PRIVATE || has_capability('mod/board:manageboard', $context)) {
