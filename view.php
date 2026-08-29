@@ -111,6 +111,11 @@ if ($board->singleusermode != board::SINGLEUSER_PRIVATE || has_capability('mod/b
     echo html_writer::tag('div', groups_print_activity_menu($cm, $baseurl, true));
 }
 
+if ($embed && !empty($cm->showdescription)) {
+    $board->intro = filter_manager::instance()->filter_text($board->intro, $context);
+    echo html_writer::tag('div', $board->intro, ['class' => 'intro']);
+}
+
 if (
     $board->singleusermode == board::SINGLEUSER_PUBLIC ||
     ($board->singleusermode == board::SINGLEUSER_PRIVATE && has_capability('mod/board:manageboard', $context))
