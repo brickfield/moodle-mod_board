@@ -12,7 +12,7 @@ Commenting on posts is enabled by default via capabilities, and rating posts can
 2023 Onward [Brickfield Education Labs](https://www.brickfield.ie)
 
 ## Version support
-This plugin has been developed to work on Moodle releases 4.00, 4.01, 4.02, and 4.03.
+This plugin has been developed to work on Moodle releases 4.0, 4.1, 4.2, and 4.3.
 
 ## Funding credits
 Initial funding for this plugin was provided by the National Institute for Digital Learning at Dublin City University under the SATLE fund from the National Forum. Subsequent funding has been received from Athlone Institute of Technology under the SATLE fund from the National Forum, and also from UCL.
@@ -27,7 +27,7 @@ This module uses code derived from ["jquery.editable.amd.js"](https://github.com
 This code written by [Victor Jonsson](http://victorjonsson.se/) is licensed under [GNU GPLv2](http://www.gnu.org/licenses/gpl-2.0.html).
 
 ### Icon design
-Many thanks to [Stuart Lamour](https://github.com/stuartlamour) for our new board icon! Also thanks to [Luca Bosch](https://github.com/lucaboesch) for our updated 4.04 icon!
+Many thanks to [Stuart Lamour](https://github.com/stuartlamour) for our new board icon! Also thanks to [Luca Bosch](https://github.com/lucaboesch) for our updated 4.4 icon!
 
 ## Important Links
 * [Code repository](https://github.com/brickfield/moodle-mod_board)
