@@ -299,7 +299,7 @@ export default function(settings) {
 
             note.find('.mod_board_rating').attr('aria-label', strings.aria_ratepost.replace('{column}',
                 columnIdentifier).replace('{post}', noteIdentifier));
-            note.find('.note_ariatext').html(noteIdentifier);
+            note.find('.note_ariatext').text(noteIdentifier);
         }
 
     };
