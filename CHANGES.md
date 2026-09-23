@@ -2,6 +2,20 @@
 
 _NOTE - This release will work on Moodle 4.5, 5.0, 5.1, & 5.2_
 
+##### 1.405.06 (Build 2025070721)
+
+Improvements:
+
+* Adding new 'managenotes' capability
+* Adding board links to notification messages.
+
+Bug fixes:
+
+* Privacy API deleting files fix.
+* Fixing completion tracking for Timeline, Calendar, and Events.
+* Fixing malformed SQL.
+* Escape untrusted output to prevent XSS in edge-case content.
+
 ##### 1.405.05 (Build 2025070719)
 
 Improvements:
