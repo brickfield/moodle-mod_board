@@ -3,7 +3,7 @@ name: Moodle Plugin CI
 # Copied (with minor strategy section tweaks) from https://github.com/moodlehq/moodle-plugin-ci/blob/main/gha.dist.yml
 
 #on: [push, pull_request]
-on: [push, pull_request, workflow_dispatch]
+on: [pull_request, workflow_dispatch]
 
 jobs:
   test:

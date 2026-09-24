@@ -124,6 +124,7 @@ if (
         echo $OUTPUT->notification(get_string('nousers', 'mod_board'));
         echo $OUTPUT->box_end();
         echo $OUTPUT->footer();
+        die();
     } else {
         $nothing = $ownerid ? null : ['' => 'choosedots'];
         $select = new single_select($baseurl, 'ownerid', $users, $ownerid, $nothing);
