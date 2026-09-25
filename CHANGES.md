@@ -2,6 +2,13 @@
 
 _NOTE - This release will work on Moodle 4.5, 5.0, 5.1, & 5.2_
 
+##### 1.405.08 (Build 2025070723)
+
+Bug fixes:
+
+* Removing unnecessary package files.
+* Fixing scss and css mismatch and rebuilding.
+
 ##### 1.405.07 (Build 2025070722)
 
 Bug fixes:

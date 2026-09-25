@@ -3,7 +3,7 @@
 @import "../../theme/boost/scss/bootstrap/mixins";
 
 /* stylelint-disable selector-list-comma-newline-after */
-.mod_board {
+.mod_board_wrapper .mod_board {
     display: flex;
     flex-flow: row nowrap;
     align-items: flex-start;
@@ -12,7 +12,9 @@
     overflow-x: auto;
     padding-left: 6px;
     padding-right: 6px;
+}
 
+.mod_board {
     .board_column {
         display: flex;
         flex-direction: column;
@@ -48,7 +50,6 @@
         font-weight: 800;
         position: relative;
         .mod_board_column_name {
-            cursor: pointer;
             float: left;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -65,11 +66,16 @@
             top: 3px;
             right: 5px;
             color: #333;
-            cursor: pointer;
             &:hover,
             &:focus {
                 opacity: 0.8;
             }
+        }
+        .mod_board_update {
+            position: absolute;
+            top: 3px;
+            right: 5px;
+            color: #333;
         }
         .icon {
             margin-top: 5px;
@@ -139,7 +145,6 @@
             width: 100%;
             padding-bottom: 5px;
             font-weight: 600;
-            word-break: break-word;
         }
         .mod_board_note_heading > textarea {
             border: 0;
@@ -185,6 +190,10 @@
         right: 25px;
     }
 
+    .mod_board_rating_value {
+        font-family: inherit;
+    }
+
     .mod_board_remove_attachment {
         position: relative;
         width: 100%;
@@ -218,8 +227,10 @@
         margin-left: 8px;
         margin-bottom: 4px;
     }
-    .mod_board_note_text {
+    .mod_board_note_text, .mod_board_note_heading {
         word-break: break-word;
+    }
+    .mod_board_note_text {
         ul, ol, p {
             margin-bottom: 4px;
             margin-left: 4px;
@@ -376,4 +387,17 @@ iframe.mod_board-iframe {
 
 .mod_board_embed_container {
     width: 100%;
+}
+
+/* Comment-count badge on a board post. Styled to match the rating star
+ * (fa icon + a count). Clickable to open the note's comments UI. */
+.mod_board_commentcount {
+    padding: 2px 8px 0;
+    cursor: pointer;
+}
+
+.mod_board_commentcount_value {
+    font-family: inherit;
+    font-weight: 800;
+    margin-inline-start: 0.15em;
 }
