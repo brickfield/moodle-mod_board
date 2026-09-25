@@ -9,6 +9,7 @@
     padding-left: 6px;
     padding-right: 6px;
 }
+
 .mod_board .board_column {
     display: flex;
     flex-direction: column;
@@ -58,14 +59,14 @@
     right: 5px;
     color: #333;
 }
+.mod_board .board_column_header .mod_board_remove:hover, .mod_board .board_column_header .mod_board_remove:focus {
+    opacity: 0.8;
+}
 .mod_board .board_column_header .mod_board_update {
     position: absolute;
     top: 3px;
     right: 5px;
     color: #333;
-}
-.mod_board .board_column_header .mod_board_remove:hover, .mod_board .board_column_header .mod_board_remove:focus {
-    opacity: 0.8;
 }
 .mod_board .board_column_header .icon {
     margin-top: 5px;
@@ -101,8 +102,7 @@
 }
 .mod_board .delete_note,
 .mod_board .move_note,
-.mod_board .edit_note,
-.mod_board_commentcount {
+.mod_board .edit_note {
     padding: 2px 8px 0;
 }
 .mod_board .board_note {
@@ -337,6 +337,7 @@ iframe.mod_board-iframe {
 /* Comment-count badge on a board post. Styled to match the rating star
  * (fa icon + a count). Clickable to open the note's comments UI. */
 .mod_board_commentcount {
+    padding: 2px 8px 0;
     cursor: pointer;
 }
 
