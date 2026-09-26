@@ -56,7 +56,7 @@ class behat_mod_board extends behat_base {
     /**
      * Double click column heading and type new name.
      *
-     * @When /^I change mod_board "(?P<column_string>(?:[^"]|\\")*)" column name to "(?P<name_string>[^"]*)"$/
+     * @When /^I change mod_board "(?P<column_string>(?:[^"]|\\")*)" column name to "(?P<name_string>(?:[^"]|\\")*)"$/
      * @param int $column column number
      * @param string $name name of column to type
      */

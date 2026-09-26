@@ -126,7 +126,7 @@ final class get_board extends external_api {
             if ($hideheaders) {
                 $column->name = ++$columnindex;
             } else {
-                $column->name = note::format_plain_text($column->name);
+                $column->name = note::format_plain_text(format_string($column->name));
             }
             $params = ['columnid' => $column->id, 'deleted' => 0];
             if (!empty($groupid)) {
