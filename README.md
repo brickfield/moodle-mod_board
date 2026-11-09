@@ -32,10 +32,10 @@ Students can include the following in their notes:
 - Rate any viewable notes, if enabled.
 
 ## License
-2023 Onward [Brickfield Education Labs](https://www.brickfield.ie)
+2026 Onward [Brickfield Education Labs](https://www.brickfield.ie)
 
 ## Version support
-This plugin has been developed to work on Moodle releases 4.5, 5.0, 5.1, and 5.2.
+This plugin has been developed to work on Moodle releases 4.5, 5.1, 5.2, and 5.3.
 
 ## Funding credits
 Initial funding for this plugin was provided by the National Institute for Digital Learning at Dublin City University under the SATLE fund from the National Forum. Subsequent funding has been received from Athlone Institute of Technology under the SATLE fund from the National Forum, and also from UCL.

@@ -1,6 +1,16 @@
 # Release Notes
 
-_NOTE - This release will work on Moodle 4.5, 5.0, 5.1, & 5.2_
+_NOTE - This release will work on Moodle 4.5, 5.1, 5.2, & 5.3_
+
+##### 1.405.09 (Build 2025070724)
+
+Improvements:
+
+* Adding 5.3 support.
+
+Bug fixes:
+
+* Fixing move_note capability checking.
 
 ##### 1.405.08 (Build 2025070723)
 
