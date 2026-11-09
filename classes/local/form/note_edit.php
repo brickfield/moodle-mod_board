@@ -121,7 +121,7 @@ class note_edit extends \moodleform {
                 $html .= "<div class=\"mod_board_attachment_button file_button fa fa-file-text\" role=\"button\" tabindex=\"0\" title='$titlefile' aria-label='$titlefile'></div>";
             }
             if ($config->allowyoutube) {
-                $html .= "<div class=\"mod_board_attachment_button youtube_button fa fa-youtube\" role=\"button\" tabindex=\"0\" title='$titleyoutube' aria-label='$titleyoutube'></div>";
+                $html .= "<div class=\"mod_board_attachment_button youtube_button fa-brands fa-youtube\" role=\"button\" tabindex=\"0\" title='$titleyoutube' aria-label='$titleyoutube'></div>";
             }
             $html .= '</div>';
             // phpcs:enable moodle.Files.LineLength.TooLong,moodle.Files.LineLength.MaxExceeded
