@@ -90,6 +90,18 @@ final class move_note extends external_api {
             throw new \core\exception\required_capability_exception($context, 'mod/board:managenotes', 'nopermissions', '');
         }
 
+        if ($note->groupid) {
+            board::require_access_for_group($board, $note->groupid);
+        }
+
+        if (board::board_readonly($board, $note->groupid)) {
+            throw new \core\exception\invalid_parameter_exception('board is read only');
+        }
+
+        if ($board->singleusermode != board::SINGLEUSER_DISABLED && !board::can_post($board, (int)$note->ownerid)) {
+            throw new \core\exception\required_capability_exception($context, 'mod/board:post', 'nopermissions', '');
+        }
+
         $historyid = note::move($id, $columnid, $sortorder);
 
         return ['status' => true, 'historyid' => $historyid];
