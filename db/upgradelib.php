@@ -68,7 +68,7 @@ function mod_board_migrate_image_url_to_filename(): void {
             $oldnoteid = $matches[1];
             $contextid = $note->cid;
             unset($note->cid);
-            $note->filename = $matches[2];
+            $note->filename = rawurldecode($matches[2]);
             $note->url = null;
             $DB->update_record('board_notes', $note);
             if ($oldnoteid != $note->id) {
@@ -80,6 +80,41 @@ function mod_board_migrate_image_url_to_filename(): void {
                     // full cleanup of notes and files should be done later.
                 }
             }
+        }
+    }
+    $rs->close();
+}
+
+/**
+ * Decode MEDIATYPE_IMAGE filenames left URL-encoded by mod_board_migrate_image_url_to_filename()
+ * before it decoded them; only names whose decoded form matches the note's stored file are changed.
+ *
+ * @return void
+ */
+function mod_board_fix_encoded_image_filenames(): void {
+    global $DB;
+
+    $fs = get_file_storage();
+    $sql = "SELECT bn.id, bn.filename, ctx.id AS cid
+              FROM {board_notes} bn
+              JOIN {board_columns} bc ON bc.id = bn.columnid
+              JOIN {board} b ON b.id = bc.boardid
+              JOIN {course_modules} cm ON cm.instance = b.id
+              JOIN {modules} md ON md.id = cm.module AND md.name = 'board'
+              JOIN {context} ctx ON ctx.instanceid = cm.id AND ctx.contextlevel = 70
+             WHERE bn.type = 2 AND " . $DB->sql_like('bn.filename', ':pct');
+    $rs = $DB->get_recordset_sql($sql, ['pct' => '%\\%%']);
+    foreach ($rs as $note) {
+        $decoded = rawurldecode($note->filename);
+        if ($decoded === $note->filename) {
+            continue;
+        }
+        if ($fs->file_exists($note->cid, 'mod_board', 'images', $note->id, '/', $note->filename)) {
+            // The stored name is the real filename.
+            continue;
+        }
+        if ($fs->file_exists($note->cid, 'mod_board', 'images', $note->id, '/', $decoded)) {
+            $DB->set_field('board_notes', 'filename', $decoded, ['id' => $note->id]);
         }
     }
     $rs->close();

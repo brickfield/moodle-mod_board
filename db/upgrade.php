@@ -455,5 +455,13 @@ function xmldb_board_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2025070714, 'board');
     }
 
+    if ($oldversion < 2025070724) {
+        // Decode image filenames left URL-encoded by the 2025070708 step.
+        mod_board_fix_encoded_image_filenames();
+
+        // Board savepoint reached.
+        upgrade_mod_savepoint(true, 2025070724, 'board');
+    }
+
     return true;
 }
