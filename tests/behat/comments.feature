@@ -213,3 +213,23 @@ Feature: Add and delete comments in mod_board
     And I click on ".fa-trash-can" "css_element" in the "Some comment from teacher" "mod_board > comment"
     Then I should see "0 Comments" in the "Heading S1" "dialogue"
     And I click on "Close" "button" in the "Heading S1" "dialogue"
+
+  Scenario: Comments are formatted with limited Markdown syntax
+    Given the following "activity" exists:
+      | activity       | board                  |
+      | course         | C1                     |
+      | name           | Sample board           |
+      | groupmode      | 0                      |
+      | singleusermode | 0                      |
+    And the following "mod_board > notes" exist:
+      | board        | column      | heading    | content     | user     |
+      | Sample board | 1           | Heading T1 | Content T1  | teacher1 |
+    And I am on the "Sample board" "board activity" page logged in as "student1"
+
+    When I click on ".mod_board_note_content" "css_element" in the "Heading T1" "mod_board > note"
+    And I type mod_board comment "Answer with **bold** and *italic* text"
+    And I click on "Add comment" "button" in the "Heading T1" "dialogue"
+    Then I should see "1 Comments" in the "Heading T1" "dialogue"
+    And "strong" "css_element" should exist in the "Answer with bold and italic text" "mod_board > comment"
+    And "em" "css_element" should exist in the "Answer with bold and italic text" "mod_board > comment"
+    And I should not see "**bold**" in the "Heading T1" "dialogue"

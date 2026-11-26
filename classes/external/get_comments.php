@@ -23,6 +23,7 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_warnings;
 use mod_board\board;
+use mod_board\local\note;
 
 /**
  * Returns note comments.
@@ -77,7 +78,7 @@ final class get_comments extends external_api {
             $comment = (object)[];
             $comment->id = $note->id;
             $comment->noteid = $note->noteid;
-            $comment->content = clean_param($note->content, PARAM_TEXT);
+            $comment->content = note::format_limited_markdown($note->content);
             $comment->candelete = (($canpost && $note->userid === $USER->id) || $candeleteall) ? true : false;
             $comment->date = userdate($note->timecreated);
             $comments[] = $comment;
