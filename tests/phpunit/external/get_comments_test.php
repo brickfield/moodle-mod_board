@@ -121,4 +121,36 @@ final class get_comments_test extends \advanced_testcase {
         $this->assertStringContainsString('<em>italic</em>', $content);
         $this->assertStringNotContainsString('<b>', $content);
     }
+
+    /**
+     * Comments are passed through the text filters, so URLs become links.
+     */
+    public function test_execute_links(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        filter_set_global_state('urltolink', TEXTFILTER_ON);
+
+        /** @var \mod_board_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_board');
+
+        $course = $this->getDataGenerator()->create_course([]);
+        $board = $this->getDataGenerator()->create_module('board', [
+            'course' => $course->id,
+            'singleusermode' => board::SINGLEUSER_DISABLED,
+        ]);
+        $student = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($student->id, $course->id, 'student');
+        $columns = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
+        $note = $generator->create_note(['columnid' => $columns[0]->id, 'userid' => $student->id]);
+
+        $this->setUser($student);
+        comment::create($note->id, 'See https://example.com/page for details');
+
+        $result = get_comments::execute($note->id);
+        $result = get_comments::clean_returnvalue(get_comments::execute_returns(), $result);
+        $content = $result['comments'][0]['content'];
+
+        $this->assertStringContainsString('href="https://example.com/page"', $content);
+    }
 }

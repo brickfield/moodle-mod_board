@@ -78,7 +78,11 @@ final class get_comments extends external_api {
             $comment = (object)[];
             $comment->id = $note->id;
             $comment->noteid = $note->noteid;
-            $comment->content = note::format_limited_markdown($note->content);
+            $comment->content = format_text(
+                note::format_limited_markdown($note->content),
+                FORMAT_HTML,
+                ['context' => $context]
+            );
             $comment->candelete = (($canpost && $note->userid === $USER->id) || $candeleteall) ? true : false;
             $comment->date = userdate($note->timecreated);
             $comments[] = $comment;
