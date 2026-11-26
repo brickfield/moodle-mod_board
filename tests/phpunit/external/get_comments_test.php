@@ -79,4 +79,78 @@ final class get_comments_test extends \advanced_testcase {
 
         $this->setUser($student2);
     }
+
+    /**
+     * Comments are formatted with the same limited markdown as notes.
+     */
+    public function test_execute_formatting(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        /** @var \mod_board_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_board');
+
+        $course = $this->getDataGenerator()->create_course([]);
+        $board = $this->getDataGenerator()->create_module('board', [
+            'course' => $course->id,
+            'singleusermode' => board::SINGLEUSER_DISABLED,
+        ]);
+        $student = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($student->id, $course->id, 'student');
+        $columns = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
+        $note = $generator->create_note(['columnid' => $columns[0]->id, 'userid' => $student->id]);
+
+        $this->setUser($student);
+
+        // HTML as produced by the contenteditable comment input.
+        $html = 'Answer<div><br></div><div>- First</div><div>- Second</div><div><br></div>'
+            . '<div>1. One</div><div>2. Two</div><div><br></div>'
+            . '<div>**bold** and *italic*</div><div>&lt;b&gt;no tags&lt;/b&gt;</div>';
+        comment::create($note->id, $html);
+
+        $result = get_comments::execute($note->id);
+        $result = get_comments::clean_returnvalue(get_comments::execute_returns(), $result);
+        $content = $result['comments'][0]['content'];
+
+        $this->assertStringContainsString('<p>Answer</p>', $content);
+        $this->assertStringContainsString('<ul><li>First</li>', $content);
+        $this->assertStringContainsString('<li>Second</li></ul>', $content);
+        $this->assertStringContainsString('<ol><li>One</li>', $content);
+        $this->assertStringContainsString('<strong>bold</strong>', $content);
+        $this->assertStringContainsString('<em>italic</em>', $content);
+        $this->assertStringNotContainsString('<b>', $content);
+    }
+
+    /**
+     * Comments are passed through the text filters, so URLs become links.
+     */
+    public function test_execute_links(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        filter_set_global_state('urltolink', TEXTFILTER_ON);
+
+        /** @var \mod_board_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_board');
+
+        $course = $this->getDataGenerator()->create_course([]);
+        $board = $this->getDataGenerator()->create_module('board', [
+            'course' => $course->id,
+            'singleusermode' => board::SINGLEUSER_DISABLED,
+        ]);
+        $student = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($student->id, $course->id, 'student');
+        $columns = array_values($DB->get_records('board_columns', ['boardid' => $board->id], 'id ASC'));
+        $note = $generator->create_note(['columnid' => $columns[0]->id, 'userid' => $student->id]);
+
+        $this->setUser($student);
+        comment::create($note->id, 'See https://example.com/page for details');
+
+        $result = get_comments::execute($note->id);
+        $result = get_comments::clean_returnvalue(get_comments::execute_returns(), $result);
+        $content = $result['comments'][0]['content'];
+
+        $this->assertStringContainsString('href="https://example.com/page"', $content);
+    }
 }

@@ -118,7 +118,8 @@ class behat_mod_board extends behat_base {
     public static function get_partial_named_selectors(): array {
         return [
             new behat_component_named_selector('comment', [
-                "//div[contains(@class,'comment ') and div[contains(@class,'comment-content') and contains(text(), %locator%)]]",
+                "//div[contains(@class,'comment ') and div[contains(@class,'comment-content')"
+                    . " and contains(normalize-space(.), %locator%)]]",
             ]),
         ];
     }
